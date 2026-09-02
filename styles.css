@@ -36,3 +36,17 @@ input,select,textarea{width:100%;background:#0c1422;border:1px solid #334159;col
 .gap-row{display:grid;grid-template-columns:minmax(130px,1.1fr) minmax(150px,1.3fr) 110px minmax(150px,.9fr);gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #26334a}.gap-row:last-child{border-bottom:0}.gap-person span,.gap-topic span{display:block;margin-top:4px}.gap-score{white-space:nowrap}.gap-action{text-align:right}
 @media(max-width:900px){.recommend-grid{grid-template-columns:1fr}.gap-row{grid-template-columns:1fr 1fr}.gap-action{text-align:left}}
 @media(max-width:520px){.gap-row{grid-template-columns:1fr}.gap-action{text-align:left}}
+
+
+/* SkillHub 6.2 — детализация ответов */
+.review-summary{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.review-item{border:1px solid #2c3a53;background:#0d1524;border-radius:15px;padding:15px;margin:12px 0}
+.review-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.review-question{font-size:16px;font-weight:800;line-height:1.45;margin:10px 0}
+.review-options{display:grid;gap:7px}
+.review-option{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;border:1px solid #293850;background:#101a2a;border-radius:10px;padding:9px 10px}
+.review-option.right{border-color:#2f8b70;background:#103128}
+.review-option.picked-wrong{border-color:#94424e;background:#341820}
+.review-num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#1d2a42;font-weight:900;font-size:11px}
+.review-tag{font-size:10px;color:#aebdd4;font-weight:850;text-align:right}
+@media(max-width:520px){.review-option{grid-template-columns:28px 1fr}.review-tag{grid-column:2;text-align:left}}
