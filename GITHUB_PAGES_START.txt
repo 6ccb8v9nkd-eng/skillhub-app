@@ -1,0 +1,15 @@
+SkillHub 6.0 — готовая сборка
+
+1. Создайте НОВЫЙ GitHub-репозиторий skillhub-app.
+2. Сделайте его Public — это нужно для бесплатного GitHub Pages.
+3. Загрузите в корень репозитория ВСЕ файлы из этой папки.
+4. GitHub → Settings → Pages.
+5. Source: Deploy from a branch.
+6. Branch: main, folder: /(root) → Save.
+7. После публикации GitHub покажет HTTPS-ссылку SkillHub.
+
+Важно:
+- В этой сборке нет списка сотрудников.
+- Publishable key предназначен для клиентских приложений и защищается RLS.
+- Secret/service_role key в GitHub никогда не загружать.
+- Перед первым входом отключите подтверждение email в Supabase Authentication, иначе логины @skillhub.local не смогут зарегистрироваться.
