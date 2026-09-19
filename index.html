@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090d18">
+<meta name="theme-color" content="#0b0b0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SkillHub">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="stylesheet" href="./styles.css">
-<title>SkillHub 7.1.5</title>
+<title>SkillHub</title>
 </head>
 <body>
 <div id="setupView" class="login-screen hidden">
   <div class="login-card wide">
-    <div class="brand"><div class="logo">S</div><div><b>SkillHub</b><small>7.1 Access</small></div></div>
+    <div class="brand"><div class="logo">SH</div><div><b><span class="brand-skill">Skill</span><span class="brand-hub">Hub</span></b><small>обучение и развитие</small></div></div>
     <h1>Подключение общей базы</h1>
     <p>Эти два значения берутся из Supabase один раз. Они не являются паролем администратора: приложение использует публичный anon key, а доступ к данным ограничивает RLS.</p>
     <label>Project URL</label><input id="setupUrl" placeholder="https://xxxxx.supabase.co">
@@ -27,7 +27,7 @@
 
 <div id="loginView" class="login-screen hidden">
   <div class="login-card">
-    <div class="brand"><div class="logo">S</div><div><b>SkillHub</b><small>Adaptive training</small></div></div>
+    <div class="brand"><div class="logo">SH</div><div><b><span class="brand-skill">Skill</span><span class="brand-hub">Hub</span></b><small>обучение и развитие</small></div></div>
     <h1 id="authTitle">Давайте потренируемся</h1>
     <p id="authText">Введите корпоративный логин и ваш PIN.</p>
     <label>Корпоративный логин</label><input id="loginInput" autocomplete="username" placeholder="Например, d.i.sharipova">
@@ -43,7 +43,7 @@
 
 <div id="appView" class="app hidden">
   <aside class="sidebar">
-    <div class="brand side-brand"><div class="logo">S</div><div><b>SkillHub</b><small>7.1 Access</small></div></div>
+    <div class="brand side-brand"><div class="logo">SH</div><div><b><span class="brand-skill">Skill</span><span class="brand-hub">Hub</span></b><small>обучение и развитие</small></div></div>
     <nav>
       <button class="nav-btn active" data-page="home" onclick="go('home')">🏠 <span>Главная</span></button>
       <button class="nav-btn" data-page="training" onclick="go('training')">🎯 <span>Тренировки</span></button>
@@ -86,9 +86,9 @@
 </div>
 <div id="modal" class="modal hidden"><div id="modalCard" class="modal-card"></div></div>
 <div id="toast" class="toast hidden"></div>
-<script src="./config.js?v=716"></script>
+<script src="./config.js?v=717"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="./app.js?v=716"></script>
+<script src="./app.js?v=717"></script>
 </body>
 </html>

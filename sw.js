@@ -1,5 +1,5 @@
-const CACHE='skillhub-7-1-6-role-labels-v1';
-const SHELL=['./','./index.html','./styles.css','./app.js?v=716','./config.js?v=716','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='skillhub-7-1-7-tbank-style-v1';
+const SHELL=['./','./index.html','./styles.css','./app.js?v=717','./config.js?v=717','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

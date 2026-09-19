@@ -50,3 +50,86 @@ input,select,textarea{width:100%;background:#0c1422;border:1px solid #334159;col
 .review-num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#1d2a42;font-weight:900;font-size:11px}
 .review-tag{font-size:10px;color:#aebdd4;font-weight:850;text-align:right}
 @media(max-width:520px){.review-option{grid-template-columns:28px 1fr}.review-tag{grid-column:2;text-align:left}}
+
+/* =========================================================
+   SkillHub 7.1.7 — yellow / black / white visual system
+   ========================================================= */
+:root{
+  --bg:#0b0b0c;
+  --panel:#171719;
+  --panel2:#111113;
+  --ink:#ffffff;
+  --muted:#9d9da4;
+  --line:#303034;
+  --primary:#ffdd2d;
+  --violet:#ffdd2d;
+  --green:#4bd39b;
+  --orange:#ffb23f;
+  --red:#ff6b78;
+}
+html,body{background:#0b0b0c;color:#fff}
+body{letter-spacing:-.01em}
+.main{background:
+  radial-gradient(circle at 92% 2%,rgba(255,221,45,.10),transparent 24%),
+  radial-gradient(circle at 0% 100%,rgba(255,221,45,.05),transparent 28%),
+  #0b0b0c}
+.sidebar{background:#0a0a0b;border-color:#27272a}
+.brand b{font-weight:950;letter-spacing:-.04em}.brand-skill{color:#fff}.brand-hub{color:#ffdd2d}
+.brand small{color:#8f8f96}.logo{width:44px;height:44px;border-radius:14px;background:#ffdd2d;color:#0a0a0b;box-shadow:0 8px 30px rgba(255,221,45,.18);font-size:15px;letter-spacing:-.05em}
+.nav-btn{color:#9b9ba2;border-radius:13px;transition:.15s ease;background:transparent}
+.nav-btn:hover{background:#1c1c1f;color:#fff}.nav-btn.active{background:#ffdd2d;color:#090909;box-shadow:0 8px 24px rgba(255,221,45,.14)}
+.nav-btn.active .badge{background:#0b0b0c;color:#ffdd2d}
+.sync-card{background:#141416;border-color:#2e2e32}.sync-card span{background:#ffdd2d}.sync-card small{color:#8f8f96}
+.topbar h1{font-weight:950;letter-spacing:-.04em}.topbar p{color:#9a9aa1}
+.profile{background:#151517;border-color:#303034;border-radius:16px}.profile>span{background:#ffdd2d;color:#0b0b0c}.profile small{color:#8e8e95}
+.profile-menu{background:#171719;border-color:#343438}.profile-menu button:hover{background:#252528}
+.btn{border-radius:12px;letter-spacing:-.015em}.btn.primary{background:#ffdd2d;color:#090909;box-shadow:0 8px 22px rgba(255,221,45,.10)}
+.btn.primary:hover{filter:brightness(.97)}
+.btn.secondary{background:#252529;color:#fff;border:1px solid #343438}.btn.secondary:hover{background:#303034}
+.btn.ghost{background:#111113;color:#ffdd2d;border-color:#3d3d42}.btn.danger{background:#33171c;color:#ffbbc2;border-color:#6d313b}
+.login-screen{background:
+  radial-gradient(circle at 82% 12%,rgba(255,221,45,.22),transparent 28%),
+  radial-gradient(circle at 5% 95%,rgba(255,221,45,.08),transparent 28%),
+  #0b0b0c}
+.login-card{background:#fff;color:#101012;border:0;border-radius:28px;box-shadow:0 28px 90px rgba(0,0,0,.48);padding:30px}
+.login-card .brand small,.login-card p{color:#717178}.login-card label{color:#252529}.login-card h1{font-weight:950;letter-spacing:-.045em}
+.login-card input,.login-card select,.login-card textarea{background:#f2f3f5;border-color:#e1e2e5;color:#111113}
+.login-card input::placeholder,.login-card textarea::placeholder{color:#9c9ca2}
+.login-card .hint{background:#f6f6f7;border-color:#e6e6e8;color:#717178}.login-card .link-btn{color:#1c1c1f}.login-card .link-btn:hover{color:#000}
+.login-card .error{color:#d92d3d}
+.card{background:#171719;border-color:#303034;border-radius:20px;box-shadow:0 12px 34px rgba(0,0,0,.18)}
+.kpi{background:#f5f5f6;color:#111113;border-color:#f5f5f6;box-shadow:none}.kpi small{color:#77777f}.kpi strong{color:#101012;font-weight:950}
+.section-title h2{font-weight:950;letter-spacing:-.025em}.muted,.meta{color:#9a9aa2}
+.train-card,.topic,.option,.review-item,.review-option{background:#151517;border-color:#303034}
+.topic:hover,.option:hover{border-color:#ffdd2d}
+.pill{background:#2b2b30;color:#dedee3}.pill.good{background:#11382d;color:#9be8c9}.pill.warn{background:#3b2e11;color:#ffd77a}.pill.bad{background:#3b191f;color:#ffc0c7}
+.progress{background:#29292d}.progress>span{background:#ffdd2d}
+.tab{background:#171719;color:#aaaab2;border-color:#37373c}.tab.active{background:#ffdd2d;border-color:#ffdd2d;color:#0b0b0c}
+input,select,textarea{background:#111113;border-color:#343438;color:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,221,45,.30);border-color:#ffdd2d}
+.import-box{background:#121214;border-color:#414147}.table th{color:#8f8f96}.table td,.table th{border-color:#2a2a2e}
+.modal{background:rgba(0,0,0,.70)}.modal-card{background:#171719;border-color:#36363a;border-radius:22px}
+.toast{background:#ffdd2d;color:#0b0b0c;border:0}.offline-banner{background:#3a3112;border-color:#6b5a19;color:#ffe98a}
+.code-card{background:#111113;border-color:#3a3a3f;color:#f0f0f2}.access-code{color:#ffdd2d}
+.link-btn{color:#ffdd2d}.adaptive-rule{background:#121214;border-color:#323237}.recommendation{background:linear-gradient(145deg,#171719,#201b0f);border-color:#4a4018}
+.review-option.right{background:#103128;border-color:#2f8b70}.review-option.picked-wrong{background:#341820;border-color:#94424e}
+.mobile-install{background:linear-gradient(135deg,#1b1b1d,#28220f);border-color:#4f4316}
+
+/* T-style content rows */
+.content-row,.employee-row,.assignment,.notification{border-color:#2d2d31;padding:14px 0}
+.content-row b,.employee-row b,.assignment b,.notification b{font-weight:900}
+
+/* Mobile bottom navigation */
+@media(max-width:720px){
+  body{padding-bottom:84px}
+  .sidebar{background:rgba(10,10,11,.97);backdrop-filter:blur(18px);border-color:#28282c;padding-top:8px}
+  .sidebar nav{gap:4px;padding:0 2px}
+  .nav-btn{min-width:67px;padding:8px 5px 9px;border-radius:14px;color:#8f8f96}
+  .nav-btn span{font-size:9px;font-weight:800;line-height:1.1}
+  .nav-btn.active{background:#ffdd2d;color:#090909}
+  .main{padding:16px 12px 20px}
+  .topbar h1{font-size:26px}
+  .profile{border-radius:14px}
+  .card{border-radius:20px}
+  .login-card{padding:24px 20px;border-radius:24px}
+  .modal-card{background:#171719;border-color:#353539}
+}
