@@ -43,21 +43,19 @@ function showModal(html){$('modalCard').innerHTML=html;$('modal').classList.remo
 function closeModal(){$('modal').classList.add('hidden')}
 function normalizeLogin(s){return String(s||'').trim().toLowerCase()}
 function emailFor(login){return normalizeLogin(login).replace(/[^a-z0-9._-]/g,'')+'@skillhub.local'}
+const BUILTIN_SUPABASE_URL='https://yglmovhdmzbpnwsqcntb.supabase.co';
+const BUILTIN_SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnbG1vdmhkbXpicG53c3FjbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTY1MjIsImV4cCI6MjEwNTI3MjUyMn0.39CHtbuq6B-xmCXZrRmDAZJ_hfls4ouhT7o3fJ2w1H8';
 function currentConfig(){
-  // For the published SkillHub build, bundled config.js is authoritative.
-  // This deliberately ignores stale sburl/sbkey query params and old localStorage values
-  // when config.js is present, so an old employee link cannot point the app at a wrong project.
-  const bundledUrl=window.SKILLHUB_CONFIG?.SUPABASE_URL||'',bundledKey=window.SKILLHUB_CONFIG?.SUPABASE_ANON_KEY||'';
-  if(bundledUrl&&bundledKey){
-    localStorage.setItem('sh6_sb_url',bundledUrl);
-    localStorage.setItem('sh6_sb_key',bundledKey);
-    const q=new URLSearchParams(location.search);
-    if(q.has('sburl')||q.has('sbkey'))history.replaceState({},'',location.pathname+location.hash);
-    return {url:bundledUrl,key:bundledKey};
-  }
-  const q=new URLSearchParams(location.search),qUrl=q.get('sburl'),qKey=q.get('sbkey');
-  if(qUrl&&qKey){localStorage.setItem('sh6_sb_url',qUrl);localStorage.setItem('sh6_sb_key',qKey);history.replaceState({},'',location.pathname+location.hash);return {url:qUrl,key:qKey}}
-  return {url:localStorage.getItem('sh6_sb_url')||'',key:localStorage.getItem('sh6_sb_key')||''};
+  // 7.1.2: bundled config is preferred, but the public project URL/key are also
+  // embedded as a safe fallback so a missing/cached config.js cannot strand the app
+  // on the setup screen. The anon/publishable key is intentionally public.
+  const bundledUrl=window.SKILLHUB_CONFIG?.SUPABASE_URL||BUILTIN_SUPABASE_URL;
+  const bundledKey=window.SKILLHUB_CONFIG?.SUPABASE_ANON_KEY||BUILTIN_SUPABASE_KEY;
+  localStorage.setItem('sh6_sb_url',bundledUrl);
+  localStorage.setItem('sh6_sb_key',bundledKey);
+  const q=new URLSearchParams(location.search);
+  if(q.has('sburl')||q.has('sbkey'))history.replaceState({},'',location.pathname+location.hash);
+  return {url:bundledUrl,key:bundledKey};
 }
 function saveSetup(){const url=$('setupUrl').value.trim(),key=$('setupKey').value.trim();if(!/^https:\/\//.test(url)||key.length<40){toast('Проверьте Project URL и anon key');return}localStorage.setItem('sh6_sb_url',url);localStorage.setItem('sh6_sb_key',key);location.reload()}
 function initClient(){const c=currentConfig();if(!c.url||!c.key){$('setupView').classList.remove('hidden');return false}S.sb=supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return true}
@@ -255,7 +253,7 @@ async function submitAuth(){
     if(low.includes('invalid login')||low.includes('invalid credentials'))m='Неверный логин или PIN.';
     if(low.includes('already registered')||low.includes('user already registered'))m='Для этого логина PIN уже создан. Используйте обычный вход или сбросьте доступ.';
     if(low.includes('load failed')||low.includes('failed to fetch')||low.includes('network'))m='Нет связи с базой SkillHub. Обновите страницу и проверьте интернет. Настройки подключения обновляются автоматически.';
-    $('loginError').textContent=m;
+    if(m==='Load failed'||m.toLowerCase().includes('failed to fetch'))m='Не удалось связаться с Supabase. Обновите страницу и повторите. Если ошибка останется — проверьте защиту Safari/VPN.';$('loginError').textContent=m;
   }
 }
 async function afterAuth(){const {data:{user}}=await S.sb.auth.getUser();if(!user)throw new Error('Нет сессии');S.user=user;const {data,error}=await S.sb.from('profiles').select('*').eq('id',user.id).single();if(error)throw error;if(!data.active){await S.sb.auth.signOut();throw new Error('Доступ к SkillHub отключён.')}S.profile=data;localStorage.setItem('sh7_profile',JSON.stringify(data));enterApp();await syncAll()}
