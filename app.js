@@ -92,7 +92,7 @@ function recordAttempt(a){const row={id:crypto.randomUUID(),user_id:S.user.id,lo
 async function flushQueue(){if(!S.queue.length||!navigator.onLine)return;const copy=[...S.queue];const {error}=await S.sb.from('attempts').insert(copy);if(!error){S.queue=[];localStorage.setItem('sh7_queue','[]');updateNetwork()}}
 
 function assignmentHtml(x){const due=x.due?new Date(x.due+'T12:00:00'):null,days=due?Math.ceil((due-new Date())/86400000):null;return `<div class="assignment"><div><b>${esc(x.title)}</b><div class="meta">${x.section?secName(x.section):''}${x.topic?' · '+esc(x.topic):''}${x.due?' · до '+esc(x.due):''}${days!==null&&days<=1?' · ⏰ скоро':''}</div></div><div class="actions"><span class="pill">${x.target}%+</span><button class="btn secondary" onclick="startAssignment('${x.id}')">Начать</button></div></div>`}
-function trainingCards(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Присоединение, негатив, отказ и формулировки.</p><button class="btn primary" onclick="openSection('soft')">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>Минутная тренировка скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`}
+function trainingCards(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Присоединение, негатив, отказ и формулировки.</p><button class="btn primary" onclick="openSection('soft')">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`}
 function avgSection(sec){const a=S.attempts.filter(x=>x.login===S.profile.login&&x.section===sec);return a.length?Math.round(a.reduce((s,x)=>s+Number(x.score),0)/a.length):null}
 function renderHome(){const ass=S.assignments.filter(x=>x.status==='active'),recs=gapTopics(S.profile.login).slice(0,3),topicCount=topicStats(S.profile.login).filter(x=>x.diagnosed).length;const adaptive=recs.length?`<div class="section-title"><h2>🧭 Рекомендуем подтянуть</h2><span class="muted small">по вашим результатам</span></div><div class="recommend-grid">${recs.map(x=>`<div class="card recommendation"><div class="actions" style="justify-content:space-between"><span class="pill bad">${x.avgRecent}%</span><span class="muted small">${secName(x.section)}</span></div><h3>${esc(x.topic)}</h3><p class="muted">${x.attempts} попыток · последние ${Math.min(x.attempts,ADAPTIVE.recentWindow)}: ${x.avgRecent}% · ${trendText(x.trend)}</p>${hasTopicContent(x.section,x.topic)?`<button class="btn primary" onclick="startTopic('${x.section}','${jsq(x.topic)}')">Потренироваться</button>`:'<span class="muted small">Пока нет опубликованных материалов для повторения.</span>'}</div>`).join('')}</div>`:`<div class="section-title"><h2>🧭 Персональные рекомендации</h2></div><div class="card"><div class="muted">${topicCount?`Выраженных пробелов сейчас нет. Темы ниже ${ADAPTIVE.target}% будут отмечены как «закрепить».`:`Когда появятся минимум ${ADAPTIVE.minAttempts} результата по одной теме, SkillHub начнёт определять персональные зоны развития.`}</div></div>`;$('page-home').innerHTML=`<div class="grid4"><div class="card kpi"><small>Soft Skills</small><strong>${avgSection('soft')===null?'—':avgSection('soft')+'%'}</strong></div><div class="card kpi"><small>Hard Skills</small><strong>${avgSection('hard')===null?'—':avgSection('hard')+'%'}</strong></div><div class="card kpi"><small>Потребность</small><strong>${avgSection('needs')===null?'—':avgSection('needs')+'%'}</strong></div><div class="card kpi"><small>Активные задания</small><strong>${ass.length}</strong></div></div>${adaptive}<div class="section-title"><h2>📌 Мои задания</h2></div><div class="card">${ass.length?ass.map(assignmentHtml).join(''):'<div class="muted">Активных заданий пока нет.</div>'}</div><div class="section-title"><h2>Быстрый старт</h2></div>${trainingCards()}<div class="section-title"><h2>📲 На телефоне</h2></div><div class="card mobile-install"><h3>Установите SkillHub</h3><p class="muted">После установки появится отдельная иконка. Загруженные тренировки сохраняются для офлайн-работы.</p><div class="actions"><button class="btn primary" onclick="installApp()">Установить / инструкция</button><button class="btn secondary" onclick="enableNotifications()">🔔 Уведомления</button></div></div>`}
 function renderTraining(){$('page-training').innerHTML=trainingCards()+`<div class="section-title"><h2>Библиотека</h2><span class="muted small">${S.content.filter(x=>x.status==='published').length} материалов</span></div><div class="card">${['soft','hard','needs'].map(sec=>`<div class="assignment"><div><b>${secName(sec)}</b><div class="meta">${S.content.filter(x=>x.section===sec&&x.status==='published').length} материалов</div></div><button class="btn secondary" onclick="openSection('${sec}')">Открыть</button></div>`).join('')}</div>`}
@@ -109,9 +109,117 @@ function startDialogue(x){S.currentRun={type:'dialogue',x,i:0,score:0,details:[]
 function renderDialogue(){const r=S.currentRun,x=r.x;if(r.i>=(x.steps||[]).length){finishDialogue();return}const s=x.steps[r.i];$('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${x.steps.length}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(s.client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${s.options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`}
 function answerDialogue(i){const r=S.currentRun,s=r.x.steps[r.i],correct=Number(s.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'dialogue',content_id:r.x.id||null,title:r.x.title||'',step:r.i+1,question:s.client||'',options:[...(s.options||[])],selected:i,correct,is_correct:ok,next_client:s.next_client||'',explanation:s.explanation||''});if(ok)r.score++;$('runFeedback').innerHTML=`<div class="explain">${esc(s.explanation||'')}</div>${s.next_client?`<div class="bubble client"><b>Клиент</b><br>${esc(s.next_client)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
 function finishDialogue(){const r=S.currentRun,p=Math.round(r.score/r.x.steps.length*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${r.x.steps.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
-let typingInt=null;function startTyping(){S.currentRun={start:0,text:'Понимаю, что ситуация для вас важна. Давайте я проверю информацию и подскажу, какие варианты доступны сейчас.'};goRun();$('page-run').innerHTML=`<div class="card" style="max-width:850px;margin:auto"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>Скорость печати</b><span id="typingTimer" class="muted">60 сек.</span></div><div class="explain" style="font-size:18px;margin:15px 0">${esc(S.currentRun.text)}</div><textarea id="typingBox" placeholder="Начните печатать…" oninput="typingInput()"></textarea><div id="typingStats" class="grid3" style="margin-top:12px"></div></div>`;typingInput()}
-function typingInput(){const b=$('typingBox');if(!b)return;const v=b.value,r=S.currentRun;if(!r.start&&v.length){r.start=Date.now();typingInt=setInterval(updateTyping,500)}updateTyping()}
-function updateTyping(){const b=$('typingBox');if(!b)return;const r=S.currentRun,v=b.value,e=r.start?Math.max((Date.now()-r.start)/1000,1):1,left=Math.max(0,60-Math.floor(e));let m=0;for(let i=0;i<v.length;i++)if(v[i]===r.text[i])m++;const ac=v.length?Math.round(m/v.length*100):100,cpm=Math.round(v.length/(e/60));$('typingTimer').textContent=left+' сек.';$('typingStats').innerHTML=`<div class="card kpi"><small>Скорость</small><strong>${cpm}</strong><span class="muted small">зн./мин</span></div><div class="card kpi"><small>Точность</small><strong>${ac}%</strong></div><div class="card kpi"><small>Знаков</small><strong>${v.length}</strong></div>`;if(left<=0){clearInterval(typingInt);b.disabled=true;recordAttempt({section:'typing',topic:'60 секунд',score:ac,type:'typing',cpm});toast('Результат сохранён')}}
+const TYPING_TEXTS=[
+  "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
+  "Спасибо, что подробно описали ситуацию. Сейчас уточню детали по операции и вернусь к вам с понятным решением.",
+  "Вижу, что платёж пока не прошёл. Проверю статус операции и расскажу, что можно сделать дальше.",
+  "Понимаю ваше беспокойство из-за задержки. Давайте посмотрим, на каком этапе находится перевод и когда ожидать результат.",
+  "Сейчас проверю условия по вашему тарифу и подскажу, можно ли подключить нужную услугу без дополнительных расходов.",
+  "Спасибо за ожидание. Я уже проверяю информацию по вашему обращению и постараюсь решить вопрос как можно быстрее.",
+  "Чтобы помочь точнее, уточните, пожалуйста, дату операции и последние четыре цифры карты, с которой проводилась оплата.",
+  "Вижу причину отклонения операции. Сейчас объясню её простыми словами и подскажу, как повторить платёж успешно.",
+  "Понимаю, что повторно вводить данные неудобно. Проверю, можно ли восстановить доступ другим способом.",
+  "Давайте сначала уточним, что именно вы хотите изменить. После этого подберём самый быстрый вариант решения.",
+  "Проверил информацию: ограничение временное. Расскажу, что нужно сделать, чтобы снова пользоваться услугой.",
+  "Сейчас операция находится в обработке. Как только статус изменится, информация появится в приложении автоматически.",
+  "Понимаю, что вам важно получить деньги вовремя. Проверю сроки зачисления и возможные причины задержки.",
+  "Для безопасности нужно подтвердить личность. Это займёт несколько минут, после чего мы сможем продолжить решение вопроса.",
+  "Спасибо, данные получил. Сейчас сверю их с системой и подскажу следующий шаг без лишних действий с вашей стороны.",
+  "В этом тарифе услуга не включена, но есть другой вариант. Сейчас расскажу, чем он отличается и сколько стоит.",
+  "Отменить операцию уже не получится, потому что она ушла в обработку. Проверю, какие варианты остаются в вашей ситуации.",
+  "Понимаю, что ответ поддержки мог показаться сложным. Объясню проще и по шагам, что происходит с вашим обращением.",
+  "Чтобы обновить данные, понадобится подтверждающий документ. Подскажу, где его загрузить и сколько займёт проверка.",
+  "Проверка ещё не завершена. Как только появится решение, вы получите уведомление в доступном канале связи.",
+  "Сейчас посмотрю, почему изменились условия обслуживания, и объясню, какие параметры действуют по вашему продукту.",
+  "Возврат уже оформлен. Срок зачисления зависит от платёжной системы, но я подскажу ориентировочную дату поступления денег.",
+  "Вижу, что у вас нет доступа к этому разделу. Проверю причину и подскажу, как получить нужные права.",
+  "Для решения вопроса не хватает одной детали. Уточните её, пожалуйста, и я сразу продолжу проверку.",
+  "По счёту действует ограничение, поэтому операция сейчас недоступна. Объясню, откуда оно появилось и что можно сделать.",
+  "Часть данных не совпадает с информацией в системе. Давайте сверим их вместе, чтобы быстро найти расхождение.",
+  "Перед подключением услуги нужно подтвердить данные. Расскажу, как это сделать в приложении без обращения в офис.",
+  "Повторно сформировать документ можно после завершения текущей операции. Проверю её статус и подскажу, сколько ждать.",
+  "После оформления заявки способ получения изменить нельзя. Но я проверю, есть ли подходящая альтернатива для вас.",
+  "Чтобы восстановить доступ, потребуется повторное подтверждение личности. Проведу вас по шагам, чтобы всё получилось с первого раза.",
+  "Перевод отправлен, но банк получателя ещё обрабатывает его. Подскажу стандартные сроки и когда стоит обратиться повторно.",
+  "Нужно подключить профильных специалистов. Я передам им обращение и объясню, когда ожидать результат проверки.",
+  "Текущий лимит меньше суммы операции. Покажу, где посмотреть ограничения и какие варианты доступны для проведения платежа.",
+  "Результат проверки придёт уведомлением. Вам не нужно постоянно обновлять страницу или создавать новое обращение.",
+  "Проверьте реквизиты ещё раз, особенно номер счёта и данные получателя. После этого можно безопасно повторить операцию.",
+  "Условия продукта меняются после завершения расчётного периода. Подскажу точную дату, с которой начнут действовать новые параметры.",
+  "Сейчас проходят технические работы, поэтому часть функций временно недоступна. Сообщу, когда сервис должен восстановиться.",
+  "Эту информацию можем предоставить только владельцу продукта. Подскажу быстрый способ подтвердить личность и продолжить.",
+  "Перед закрытием продукта нужно погасить задолженность. Сейчас покажу её размер и варианты оплаты.",
+  "Решение по заявке формируется автоматически на основе доступных данных. Объясню, где увидеть итоговый статус.",
+  "Понимаю, что списание оказалось неожиданным. Проверю назначение операции и помогу разобраться, можно ли вернуть деньги.",
+  "Если карта потеряна, лучше сразу ограничить операции. Подскажу, как заблокировать её и заказать новую в приложении.",
+  "Сейчас проверю, почему не приходит код подтверждения. Заодно посмотрим, правильно ли указан номер телефона.",
+  "Уведомления можно настроить в приложении. Расскажу, где выбрать нужные события и отключить лишние сообщения.",
+  "Проверю, почему комиссия отличается от ожидаемой. Объясню расчёт и покажу, где заранее увидеть стоимость операции.",
+  "Понимаю, что вам неудобно ждать ответа. Уточню текущий статус обращения и сообщу, есть ли возможность ускорить проверку.",
+  "Если приложение не открывается, начнём с самых простых шагов. Проверим интернет, обновление и повторный вход в аккаунт.",
+  "Платёж мог пройти, даже если чек ещё не появился. Сначала проверю статус операции, чтобы не создавать повторное списание.",
+  "Давайте разберёмся с подпиской. Проверю дату подключения, стоимость и доступные способы отключения без лишних списаний.",
+  "Вижу, что вопрос касается нескольких операций. Разберём их по очереди, чтобы ничего не пропустить и дать точный ответ."
+];
+let typingInt=null;
+function shuffledTypingTexts(){
+  const a=TYPING_TEXTS.map((text,i)=>({text,n:i+1}));
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function startTyping(){
+  if(typingInt)clearInterval(typingInt);
+  S.currentRun={type:'typing',items:shuffledTypingTexts(),i:0,start:0,saved:false,finished:false};
+  goRun();renderTypingRound();
+}
+function typingRound(){return S.currentRun?.items?.[S.currentRun.i]||null}
+function renderTypingRound(){
+  if(typingInt)clearInterval(typingInt);typingInt=null;
+  const r=S.currentRun,item=typingRound();if(!r||!item){go('training');return}
+  r.start=0;r.saved=false;r.finished=false;
+  $('page-run').innerHTML=`<div class="card typing-run-card" style="max-width:900px;margin:auto"><div class="actions" style="justify-content:space-between;align-items:center"><button class="btn secondary" onclick="exitTyping()">← Выйти</button><div style="text-align:center"><b>Скорость печати</b><div class="muted small">Текст ${r.i+1} из ${r.items.length}</div></div><span id="typingTimer" class="pill">60 сек.</span></div><div class="typing-source-label">Перепечатайте текст</div><div id="typingSource" class="typing-source no-copy" oncopy="return false" oncut="return false" oncontextmenu="return false" ondragstart="return false" onselectstart="return false" draggable="false">${esc(item.text)}</div><textarea id="typingBox" class="typing-box" rows="8" placeholder="Начните печатать…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="typingInput()"></textarea><div id="typingStats" class="grid3" style="margin-top:12px"></div><div id="typingRoundResult" class="hidden"></div><div class="actions typing-actions"><button class="btn secondary" onclick="exitTyping()">Выйти</button><button id="typingNextBtn" class="btn primary" onclick="nextTyping()">Далее →</button></div><div class="hint">При нажатии «Далее» или «Выйти» текущий результат сохраняется. Исходный текст выделить и скопировать нельзя.</div></div>`;
+  typingInput();
+  setTimeout(()=>$('typingBox')?.focus(),50);
+}
+function typingMetrics(){
+  const b=$('typingBox'),r=S.currentRun,item=typingRound();if(!b||!r||!item)return{v:'',elapsed:0,left:60,matched:0,accuracy:100,cpm:0};
+  const v=b.value,elapsed=r.start?Math.max((Date.now()-r.start)/1000,1):0,left=Math.max(0,60-Math.floor(elapsed));let matched=0;
+  for(let i=0;i<v.length;i++)if(v[i]===item.text[i])matched++;
+  const accuracy=v.length?Math.round(matched/v.length*100):100,cpm=elapsed?Math.round(v.length/(elapsed/60)):0;
+  return{v,elapsed,left,matched,accuracy,cpm};
+}
+function typingInput(){
+  const b=$('typingBox'),r=S.currentRun;if(!b||!r||r.finished)return;
+  if(!r.start&&b.value.length){r.start=Date.now();typingInt=setInterval(updateTyping,500)}
+  updateTyping();
+}
+function updateTyping(){
+  const b=$('typingBox'),r=S.currentRun;if(!b||!r)return;const m=typingMetrics();
+  $('typingTimer').textContent=m.left+' сек.';
+  $('typingStats').innerHTML=`<div class="card kpi"><small>Скорость</small><strong>${m.cpm}</strong><span class="muted small">зн./мин</span></div><div class="card kpi"><small>Точность</small><strong>${m.accuracy}%</strong></div><div class="card kpi"><small>Знаков</small><strong>${m.v.length}</strong></div>`;
+  if(m.left<=0)finishTypingRound(false);
+}
+function saveTypingRound(){
+  const r=S.currentRun,item=typingRound();if(!r||!item||r.saved)return false;const m=typingMetrics();
+  if(!r.start&&!m.v.length)return false;
+  recordAttempt({section:'typing',topic:'Текст '+String(item.n).padStart(2,'0'),score:m.accuracy,type:'typing',cpm:m.cpm});
+  r.saved=true;return true;
+}
+function finishTypingRound(showToast=true){
+  const r=S.currentRun;if(!r||r.finished)return;if(typingInt)clearInterval(typingInt);typingInt=null;r.finished=true;
+  const m=typingMetrics(),b=$('typingBox');if(b)b.disabled=true;saveTypingRound();
+  const result=$('typingRoundResult');if(result){result.classList.remove('hidden');result.innerHTML=`<div class="typing-result"><b>Результат сохранён</b><span>${m.cpm} зн./мин · точность ${m.accuracy}%</span></div>`}
+  if(r.i>=r.items.length-1){const n=$('typingNextBtn');if(n)n.textContent='Завершить'}
+  if(showToast)toast('Результат сохранён');
+}
+function nextTyping(){
+  const r=S.currentRun;if(!r)return;finishTypingRound(false);
+  if(r.i>=r.items.length-1){toast('Все 50 текстов завершены');go('training');return}
+  r.i++;renderTypingRound();
+}
+function exitTyping(){
+  const r=S.currentRun;if(r)finishTypingRound(false);if(typingInt)clearInterval(typingInt);typingInt=null;go('training');toast('Результат сохранён');
+}
 
 function attemptDetails(a){return Array.isArray(a?.details)?a.details:[]}
 function attemptTypeName(t){return t==='dialogue'?'Живой диалог':t==='typing'?'Печать':'Тест'}
@@ -489,7 +597,7 @@ syncAll=async function(manual=false){
   }catch(e){const c=JSON.parse(localStorage.getItem('sh7_cache_'+S.profile.login)||'null');if(c){Object.assign(S,c);S.manualAnswers=S.manualAnswers||[];renderUnread();renderCurrent()}if(manual)toast('Нет связи с базой — показана локальная копия')}
 };
 
-trainingCards=function(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>Минутная тренировка скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`};
+trainingCards=function(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`};
 
 renderTraining=function(){
   const auto=autoSoftContent().length,manual=manualSoftContent().length;

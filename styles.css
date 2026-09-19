@@ -144,3 +144,13 @@ input,select,textarea{background:#111113;border-color:#343438;color:#fff}input:f
 .manual-history{margin-top:24px;border-top:1px solid var(--border);padding-top:16px}.manual-history h3{margin:0 0 10px}.manual-history-item{padding:14px 0;border-bottom:1px solid var(--border)}.manual-answer-text{white-space:pre-wrap;line-height:1.5;margin-top:9px}.review-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);line-height:1.45}.review-note.suggestion{background:rgba(255,221,45,.07)}
 .manual-review-list .content-row:last-child,.manual-row:last-child{border-bottom:0}.review-prompt,.review-current-answer{padding:16px;border-radius:16px;margin:12px 0;border:1px solid var(--border);line-height:1.5}.review-prompt{background:rgba(255,221,45,.07)}.review-prompt small{display:block;color:var(--muted);margin-top:8px}.review-current-answer{background:rgba(255,255,255,.035)}.review-current-answer>div{white-space:pre-wrap;margin-top:8px}.review-actions{justify-content:flex-end;gap:10px;margin-top:14px}
 @media(max-width:680px){.manual-choice-grid{grid-template-columns:1fr}.manual-choice{min-height:155px}.manual-prompt{font-size:18px}.review-actions{flex-direction:column-reverse}.review-actions .btn{width:100%}}
+
+/* ===== 7.2.0 typing 50 ===== */
+.typing-source-label{font-size:13px;font-weight:800;margin-top:18px;margin-bottom:8px;color:var(--muted)}
+.typing-source{font-size:19px;line-height:1.65;padding:18px;border-radius:18px;background:rgba(255,221,45,.09);border:1px solid rgba(255,221,45,.25);letter-spacing:.1px}
+.no-copy{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:default}
+.typing-box{margin-top:14px;min-height:170px;font-size:17px;line-height:1.55}
+.typing-actions{justify-content:flex-end;margin-top:14px}
+.typing-result{margin-top:12px;padding:13px 16px;border-radius:14px;background:rgba(64,190,109,.12);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:640px){.typing-source{font-size:17px;padding:14px}.typing-actions .btn{flex:1}.typing-run-card .grid3{grid-template-columns:1fr 1fr 1fr}}
+/* ===== end 7.2.0 ===== */
