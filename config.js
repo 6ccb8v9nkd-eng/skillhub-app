@@ -1,4 +1,1 @@
-window.SKILLHUB_CONFIG = {
-  SUPABASE_URL: "https://yglmowhdmzbpnswqcntb.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnbG1vdmhkbXpicG53c3FjbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTY1MjIsImV4cCI6MjEwNTI3MjUyMn0.39CHtbuq6B-xmCXZrRmDAZJ_hfls4ouhT7o3fJ2w1H8"
-};
+Unsupported Media Type
