@@ -31,13 +31,13 @@
     <h1 id="authTitle">Давайте потренируемся</h1>
     <p id="authText">Введите корпоративный логин и ваш PIN.</p>
     <label>Корпоративный логин</label><input id="loginInput" autocomplete="username" placeholder="Например, d.i.sharipova">
-    <div id="inviteWrap" class="hidden"><label>Код первого входа (если выдан)</label><input id="inviteInput" inputmode="numeric" placeholder="Например, 482731"></div>
+    <div id="inviteWrap" class="hidden"><label>Код первого входа (только для сотрудников)</label><input id="inviteInput" inputmode="numeric" placeholder="Например, 482731"></div>
     <label id="pinLabel">PIN</label><input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Минимум 6 символов">
     <button id="authBtn" class="btn primary full" onclick="submitAuth()">Войти</button>
     <button class="link-btn" onclick="toggleAuthMode()" id="authModeBtn">Первый вход / создать PIN</button>
     <button class="link-btn" onclick="showForgotPinHelp()">Не помню PIN</button>
     <div id="loginError" class="error"></div>
-    <div class="hint">Технический администратор, руководитель сектора и руководитель группы создают PIN при первом входе. Если техадминистратор выдал код — введите его. Сотруднику код первого входа обязателен.</div>
+    <div class="hint">Технический администратор, руководитель сектора и руководитель группы при первом входе вводят корпоративный логин и создают свой PIN без кода. Сотруднику код первого входа обязателен.</div>
   </div>
 </div>
 
@@ -86,9 +86,9 @@
 </div>
 <div id="modal" class="modal hidden"><div id="modalCard" class="modal-card"></div></div>
 <div id="toast" class="toast hidden"></div>
-<script src="./config.js?v=713"></script>
+<script src="./config.js?v=714"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="./app.js?v=713"></script>
+<script src="./app.js?v=714"></script>
 </body>
 </html>
