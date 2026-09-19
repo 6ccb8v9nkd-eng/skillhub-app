@@ -154,3 +154,5 @@ input,select,textarea{background:#111113;border-color:#343438;color:#fff}input:f
 .typing-result{margin-top:12px;padding:13px 16px;border-radius:14px;background:rgba(64,190,109,.12);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:640px){.typing-source{font-size:17px;padding:14px}.typing-actions .btn{flex:1}.typing-run-card .grid3{grid-template-columns:1fr 1fr 1fr}}
 /* ===== end 7.2.0 ===== */
+
+.user-search-box{margin-top:12px;position:relative}.user-search-box input{padding-left:42px;background:#111113;border:1px solid #343438;border-radius:15px;min-height:48px;font-weight:700}.user-search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:23px;color:#8d8d93;pointer-events:none;z-index:1}
