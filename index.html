@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SkillHub">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<link rel="stylesheet" href="./styles.css">
+<link rel="manifest" href="./manifest.webmanifest?v=718">
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192-v718.png">
+<link rel="stylesheet" href="./styles.css?v=718">
 <title>SkillHub</title>
 </head>
 <body>
@@ -49,7 +49,7 @@
       <button class="nav-btn" data-page="training" onclick="go('training')">🎯 <span>Тренировки</span></button>
       <button class="nav-btn" data-page="progress" onclick="go('progress')">📈 <span>Прогресс</span></button>
       <button class="nav-btn" data-page="notifications" onclick="go('notifications')">🔔 <span>Уведомления</span><i id="bellBadge" class="badge hidden">0</i></button>
-      <button class="nav-btn mentor-only hidden" data-page="mentor" onclick="go('mentor')">📊 <span>Руководитель группы</span></button>
+      <button class="nav-btn mentor-only hidden" data-page="mentor" onclick="go('mentor')">📊 <span id="mentorNavLabel">Раздел</span></button>
       <button class="nav-btn mentor-only hidden" data-page="content" onclick="go('content')">🧩 <span>Контент</span></button>
       <button class="nav-btn mentor-only hidden" data-page="assignments" onclick="go('assignments')">📌 <span>Назначения</span></button>
       <button class="nav-btn mentor-only hidden" data-page="employees" onclick="go('employees')">👥 <span>Сотрудники</span></button>
@@ -89,6 +89,6 @@
 <script src="./config.js?v=717"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="./app.js?v=717"></script>
+<script src="./app.js?v=718"></script>
 </body>
 </html>
