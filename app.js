@@ -42,7 +42,7 @@ function randCode(){return String(Math.floor(100000+Math.random()*900000))}
 function showModal(html){$('modalCard').innerHTML=html;$('modal').classList.remove('hidden')}
 function closeModal(){$('modal').classList.add('hidden')}
 function normalizeLogin(s){return String(s||'').trim().toLowerCase()}
-function emailFor(login){return normalizeLogin(login).replace(/[^a-z0-9._-]/g,'')+'@skillhub.local'}
+function emailFor(login){return normalizeLogin(login).replace(/[^a-z0-9._-]/g,'')+'@skillhub.example.com'}
 const BUILTIN_SUPABASE_URL='https://yglmovhdmzbpnwsqcntb.supabase.co';
 const BUILTIN_SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnbG1vdmhkbXpicG53c3FjbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2OTY1MjIsImV4cCI6MjEwNTI3MjUyMn0.39CHtbuq6B-xmCXZrRmDAZJ_hfls4ouhT7o3fJ2w1H8';
 function currentConfig(){

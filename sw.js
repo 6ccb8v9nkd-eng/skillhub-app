@@ -1,5 +1,5 @@
-const CACHE='skillhub-7-1-2-connect-fix-v1';
-const SHELL=['./','./index.html','./styles.css','./app.js?v=712','./config.js?v=712','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='skillhub-7-1-3-email-fix-v1';
+const SHELL=['./','./index.html','./styles.css','./app.js?v=713','./config.js?v=713','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
