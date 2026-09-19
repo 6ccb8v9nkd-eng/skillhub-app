@@ -133,3 +133,14 @@ input,select,textarea{background:#111113;border-color:#343438;color:#fff}input:f
   .login-card{padding:24px 20px;border-radius:24px}
   .modal-card{background:#171719;border-color:#353539}
 }
+
+/* SkillHub 7.1.9 — manual Soft trainers */
+.manual-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.manual-choice{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:22px;padding:22px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:190px;transition:.18s ease}
+.manual-choice:hover{transform:translateY(-2px);border-color:#ffdd2d}
+.manual-choice b{font-size:19px}.manual-choice small{color:var(--muted);line-height:1.45}.manual-choice em{font-style:normal;color:#ffdd2d;margin-top:auto;font-weight:700}.manual-choice-icon{font-size:34px}
+.manual-run-card{max-width:820px;margin:auto}.manual-prompt{font-size:20px;line-height:1.55;padding:20px;border-radius:18px;background:rgba(255,221,45,.08);border:1px solid rgba(255,221,45,.28);margin:18px 0}
+.manual-answer-field{margin-top:18px}.manual-answer-field textarea{min-height:150px}.manual-status-box{padding:16px 18px;border-radius:16px;margin:16px 0;background:rgba(255,255,255,.04);border:1px solid var(--border);display:grid;gap:8px}.manual-status-box.warn{border-color:rgba(255,193,7,.45)}.manual-status-box.good{border-color:rgba(44,199,128,.45)}
+.manual-history{margin-top:24px;border-top:1px solid var(--border);padding-top:16px}.manual-history h3{margin:0 0 10px}.manual-history-item{padding:14px 0;border-bottom:1px solid var(--border)}.manual-answer-text{white-space:pre-wrap;line-height:1.5;margin-top:9px}.review-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);line-height:1.45}.review-note.suggestion{background:rgba(255,221,45,.07)}
+.manual-review-list .content-row:last-child,.manual-row:last-child{border-bottom:0}.review-prompt,.review-current-answer{padding:16px;border-radius:16px;margin:12px 0;border:1px solid var(--border);line-height:1.5}.review-prompt{background:rgba(255,221,45,.07)}.review-prompt small{display:block;color:var(--muted);margin-top:8px}.review-current-answer{background:rgba(255,255,255,.035)}.review-current-answer>div{white-space:pre-wrap;margin-top:8px}.review-actions{justify-content:flex-end;gap:10px;margin-top:14px}
+@media(max-width:680px){.manual-choice-grid{grid-template-columns:1fr}.manual-choice{min-height:155px}.manual-prompt{font-size:18px}.review-actions{flex-direction:column-reverse}.review-actions .btn{width:100%}}

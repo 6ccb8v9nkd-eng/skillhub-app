@@ -451,3 +451,138 @@ function showForgotPinHelp(){showModal(`<div class="modal-head"><h2>Не пом�
 async function startForgotPin(){const login=normalizeLogin($('forgotLogin')?.value);const err=$('forgotError');if(err)err.textContent='';if(!login){if(err)err.textContent='Введите корпоративный логин.';return}try{const {data,error}=await S.sb.rpc('forgot_pin_start',{p_login:login});if(error)throw error;closeModal();$('loginInput').value=login;$('pinInput').value='';$('inviteInput').value='';if(data==='employee'){setAuthMode('register',{title:'Создайте новый PIN',text:'Запросите у своего руководителя группы новый код первого входа. Затем введите код и придумайте новый PIN.',hideInvite:false,pinLabel:'Придумайте новый PIN',button:'Создать новый PIN'});$('inviteInput').focus()}else{setAuthMode('register',{title:'Создайте новый PIN',text:'Введите новый PIN. Код первого входа не нужен.',hideInvite:true,pinLabel:'Придумайте новый PIN',button:'Создать новый PIN'});$('pinInput').focus()}}catch(e){let m=e.message||String(e);if(m.includes('LOGIN_NOT_FOUND'))m='Такой активный логин не найден.';if(err)err.textContent=m}}
 
 (async function init(){updateNetwork();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});if(!initClient())return;const {data:{session}}=await S.sb.auth.getSession();if(session){try{await afterAuth();return}catch(e){console.warn(e)}}$('loginView').classList.remove('hidden')})();
+
+/* ===== SkillHub 7.1.9 — manual Soft trainers ===== */
+S.manualAnswers=S.manualAnswers||[];
+
+function manualTypeName(x){return x==='manual'?'Ручной тренажёр':x==='dialogue'?'Диалог':x==='hardcase'?'Hard-кейс':'Кейс'}
+function manualStatusText(s){return s==='submitted'?'На проверке':s==='revision_requested'?'На доработке':s==='accepted'?'Принято':'Не начато'}
+function manualStatusClass(s){return s==='accepted'?'good':s==='revision_requested'?'warn':s==='submitted'?'':'status-draft'}
+function manualHistory(contentId,login=S.profile?.login){return (S.manualAnswers||[]).filter(x=>x.content_id===contentId&&x.login===login).slice().sort((a,b)=>Number(a.version)-Number(b.version))}
+function latestManualAnswer(contentId,login=S.profile?.login){const a=manualHistory(contentId,login);return a.length?a[a.length-1]:null}
+function autoSoftContent(){return S.content.filter(x=>x.status==='published'&&x.section==='soft'&&x.type!=='manual')}
+function manualSoftContent(){return S.content.filter(x=>x.status==='published'&&x.section==='soft'&&x.type==='manual')}
+
+// Manual trainers never participate in automatic score/adaptive selection.
+topicProgress=function(sec,topic,login=S.profile?.login){const arr=S.content.filter(x=>x.status==='published'&&x.section===sec&&x.topic===topic&&x.type!=='manual'),seen=seenContentMap(login);return {done:arr.filter(x=>seen.has(x.id)).length,total:arr.length}};
+pickSmartContent=function(sec,topic){const arr=S.content.filter(x=>x.status==='published'&&x.section===sec&&x.topic===topic&&x.type!=='manual');if(!arr.length)return null;const seen=seenContentMap(S.profile.login),unseen=arr.filter(x=>!seen.has(x.id));let pool=unseen.length?unseen:[...arr];if(!unseen.length&&pool.length>1){let last=null,lastT=-1;for(const x of pool){const t=seen.get(x.id)||0;if(t>lastT){last=x.id;lastT=t}}const alt=pool.filter(x=>x.id!==last);if(alt.length)pool=alt}return pool[Math.floor(Math.random()*pool.length)]};
+hasTopicContent=function(sec,topic){return S.content.some(x=>x.status==='published'&&x.section===sec&&x.topic===topic&&x.type!=='manual')};
+
+syncAll=async function(manual=false){
+  updateNetwork();if(!S.user)return;if(navigator.onLine)await flushQueue();
+  try{
+    const qs=[
+      S.sb.from('content').select('*').order('updated_at',{ascending:false}),
+      S.sb.from('assignments').select('*').order('created_at',{ascending:false}),
+      S.sb.from('attempts').select('*').order('created_at',{ascending:true}),
+      S.sb.from('notifications').select('*').order('created_at',{ascending:true}),
+      S.sb.from('manual_answers').select('*').order('created_at',{ascending:true})
+    ];
+    const [c,a,t,n,m]=await Promise.all(qs);for(const r of [c,a,t,n,m])if(r.error)throw r.error;
+    S.content=(c.data||[]).map(normalizeContent);S.assignments=a.data||[];S.attempts=t.data||[];S.notifications=n.data||[];S.manualAnswers=m.data||[];
+    if(isManager()){
+      const [al,pr]=await Promise.all([S.sb.from('allowed_logins').select('*').order('login'),S.sb.from('profiles').select('*').order('login')]);
+      if(al.error)throw al.error;if(pr.error)throw pr.error;S.allowed=al.data||[];S.profiles=pr.data||[];
+    }else{S.allowed=[];S.profiles=[S.profile]}
+    localStorage.setItem('sh7_cache_'+S.profile.login,JSON.stringify({content:S.content,assignments:S.assignments,attempts:S.attempts,notifications:S.notifications,manualAnswers:S.manualAnswers,allowed:S.allowed,profiles:S.profiles}));
+    renderUnread();renderCurrent();if(manual)toast('Данные обновлены');
+  }catch(e){const c=JSON.parse(localStorage.getItem('sh7_cache_'+S.profile.login)||'null');if(c){Object.assign(S,c);S.manualAnswers=S.manualAnswers||[];renderUnread();renderCurrent()}if(manual)toast('Нет связи с базой — показана локальная копия')}
+};
+
+trainingCards=function(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>Минутная тренировка скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`};
+
+renderTraining=function(){
+  const auto=autoSoftContent().length,manual=manualSoftContent().length;
+  $('page-training').innerHTML=trainingCards()+`<div class="section-title"><h2>Библиотека</h2><span class="muted small">${S.content.filter(x=>x.status==='published').length} материалов</span></div><div class="card"><div class="assignment"><div><b>Soft Skills</b><div class="meta">${auto} обычных · ${manual} ручных</div></div><button class="btn secondary" onclick="openSoftHub()">Открыть</button></div>${['hard','needs'].map(sec=>`<div class="assignment"><div><b>${secName(sec)}</b><div class="meta">${S.content.filter(x=>x.section===sec&&x.status==='published').length} материалов</div></div><button class="btn secondary" onclick="openSection('${sec}')">Открыть</button></div>`).join('')}</div>`;
+};
+
+function openSoftHub(){
+  const auto=autoSoftContent().length,manual=manualSoftContent().length;
+  showModal(`<div class="modal-head"><div><h2>Soft Skills</h2><div class="muted small">Выберите формат тренировки</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="manual-choice-grid"><button class="manual-choice" onclick="openSection('soft','auto')"><span class="manual-choice-icon">⚡</span><b>Обычные тренажёры</b><small>Тесты с автоматической проверкой и результатом сразу</small><em>${auto} материалов</em></button><button class="manual-choice" onclick="openManualSoft()"><span class="manual-choice-icon">✍️</span><b>Ручные тренажёры</b><small>Свободный ответ → проверка руководителем группы</small><em>${manual} материалов</em></button></div>`);
+}
+
+openSection=function(sec,mode=''){
+  if(sec==='soft'&&!mode){openSoftHub();return}
+  let arr=S.content.filter(x=>x.section===sec&&x.status==='published');
+  if(sec==='soft'&&mode==='auto')arr=arr.filter(x=>x.type!=='manual');
+  else arr=arr.filter(x=>x.type!=='manual');
+  const topics=[...new Set(arr.map(x=>x.topic))];
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}${sec==='soft'?' · обычные тренажёры':''}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+};
+
+function openManualSoft(){
+  const arr=manualSoftContent();
+  showModal(`<div class="modal-head"><div><h2>Ручные тренажёры</h2><div class="muted small">Ответ проверяет ваш руководитель группы</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>${arr.map(x=>{const a=latestManualAnswer(x.id),st=a?.status||'';return `<div class="content-row manual-row"><div><span class="pill ${manualStatusClass(st)}">${manualStatusText(st)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${a?` · версия ${a.version}`:''}</div></div><button class="btn ${st==='revision_requested'?'primary':'secondary'}" onclick="closeModal();startManualContent('${x.id}')">${st==='revision_requested'?'Доработать':st==='submitted'?'Посмотреть':st==='accepted'?'Результат':'Начать'}</button></div>`}).join('')||'<div class="muted">Ручных тренажёров пока нет.</div>'}`);
+}
+
+startTopic=function(sec,topic){const x=pickSmartContent(sec,topic);if(!x){toast('В теме пока нет опубликованных обычных материалов');return}startContent(x.id)};
+startContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;if(x.type==='manual'){startManualContent(id);return}x.type==='dialogue'?startDialogue(x):startQuiz([x],x.section,x.topic)};
+startAssignment=function(id){const a=S.assignments.find(x=>x.id===id);if(!a)return;a.content_id?startContent(a.content_id):startTopic(a.section,a.topic)};
+
+function manualHistoryHtml(contentId,login){
+  const rows=manualHistory(contentId,login);if(!rows.length)return'';
+  return `<div class="manual-history"><h3>История</h3>${rows.map(r=>`<div class="manual-history-item"><div class="actions" style="justify-content:space-between"><b>Версия ${r.version}</b><span class="pill ${manualStatusClass(r.status)}">${manualStatusText(r.status)}</span></div><div class="manual-answer-text">${esc(r.answer)}</div>${r.mentor_comment?`<div class="review-note"><b>Комментарий РГ</b><div>${esc(r.mentor_comment)}</div></div>`:''}${r.mentor_suggestion?`<div class="review-note suggestion"><b>Как можно сформулировать</b><div>${esc(r.mentor_suggestion)}</div></div>`:''}</div>`).join('')}</div>`;
+}
+
+function startManualContent(id){
+  const x=S.content.find(c=>c.id===id);if(!x||x.type!=='manual')return;goRun();
+  const instruction=x.instruction||'Сформулируйте ответ своими словами.',question=x.question||x.title||'';
+  if(S.profile.role!=='employee'){
+    $('page-run').innerHTML=`<div class="card manual-run-card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Назад</button><span class="pill">Ручной тренажёр</span></div><h2>${esc(x.title||'Ручной тренажёр')}</h2><p class="muted">${esc(instruction)}</p><div class="manual-prompt">${esc(question)}</div><div class="hint">Это режим просмотра. Отправлять ответы на проверку могут сотрудники.</div></div>`;return;
+  }
+  const last=latestManualAnswer(id),canEdit=!last||last.status==='revision_requested',prefill=last?.status==='revision_requested'?last.answer:'';
+  const statusBlock=last?`<div class="manual-status-box ${manualStatusClass(last.status)}"><b>${manualStatusText(last.status)}</b>${last.status==='submitted'?'<div class="muted small">Ответ отправлен руководителю группы. После проверки здесь появится результат.</div>':''}${last.mentor_comment?`<div><b>Комментарий РГ:</b> ${esc(last.mentor_comment)}</div>`:''}${last.mentor_suggestion?`<div><b>Как можно сформулировать:</b> ${esc(last.mentor_suggestion)}</div>`:''}</div>`:'';
+  $('page-run').innerHTML=`<div class="card manual-run-card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Назад</button><span class="pill">Ручной тренажёр</span></div><h2>${esc(x.title||'Ручной тренажёр')}</h2><p class="muted">${esc(instruction)}</p><div class="manual-prompt">${esc(question)}</div>${statusBlock}${canEdit?`<div class="field manual-answer-field"><label>${last?'Доработанный вариант':'Ваш вариант ответа'}</label><textarea id="manualAnswerInput" rows="7" placeholder="Напишите ответ так, как сказали бы его клиенту...">${esc(prefill)}</textarea></div><div class="actions" style="justify-content:flex-end"><button class="btn primary" onclick="submitManualAnswer('${id}')">${last?'Повторно отправить на проверку':'Отправить на проверку'}</button></div>`:`<div class="actions" style="justify-content:flex-end"><button class="btn primary" onclick="go('training')">Готово</button></div>`}${manualHistoryHtml(id,S.profile.login)}</div>`;
+}
+
+async function submitManualAnswer(contentId){
+  const answer=$('manualAnswerInput')?.value.trim()||'';if(answer.length<3){toast('Напишите ответ');return}
+  const btn=document.querySelector('[onclick="submitManualAnswer(\''+contentId+'\')"]');if(btn)btn.disabled=true;
+  const {error}=await S.sb.rpc('submit_manual_answer',{p_content_id:contentId,p_answer:answer});
+  if(error){let m=error.message||String(error);if(m.includes('MANAGER_NOT_ASSIGNED'))m='К вам не закреплён руководитель группы. Обратитесь к администратору.';else if(m.includes('ALREADY_PENDING'))m='Этот ответ уже находится на проверке.';else if(m.includes('ALREADY_ACCEPTED'))m='Эта работа уже принята.';toast(m);if(btn)btn.disabled=false;return}
+  await syncAll();startManualContent(contentId);toast('Отправлено руководителю группы');
+}
+
+assignmentCompletedForUser=function(x,login,attemptRows=S.attempts){
+  const start=new Date(x.created_at||0).getTime(),content=x.content_id?S.content.find(c=>c.id===x.content_id):null;
+  if(content?.type==='manual')return (S.manualAnswers||[]).some(m=>m.login===login&&m.content_id===x.content_id&&m.status==='accepted'&&new Date(m.reviewed_at||m.updated_at||m.created_at).getTime()>=start);
+  return attemptRows.some(a=>a.login===login&&new Date(a.created_at).getTime()>=start&&Number(a.score)>=Number(x.target||0)&&((x.content_id&&(attemptDetails(a)||[]).some(d=>d.content_id===x.content_id))||(!x.content_id&&(!x.section||a.section===x.section)&&(!x.topic||a.topic===x.topic))));
+};
+
+function pendingManualForMentor(){
+  if(S.profile?.role!=='mentor')return[];const team=new Set((S.allowed||[]).filter(x=>x.active&&x.role==='employee'&&x.manager_login===S.profile.login).map(x=>x.login));
+  return (S.manualAnswers||[]).filter(x=>x.status==='submitted'&&team.has(x.login)).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+}
+function manualReviewPanelHtml(){
+  const rows=pendingManualForMentor();
+  return `<div class="section-title"><h2>✍️ Проверка работ</h2><span class="pill ${rows.length?'warn':'good'}">${rows.length} на проверке</span></div><div class="card manual-review-list">${rows.length?rows.map(r=>{const u=S.allowed.find(x=>x.login===r.login),c=S.content.find(x=>x.id===r.content_id);return `<div class="content-row"><div><b>${esc(u?.name||r.login)}</b><div class="meta">${esc(c?.title||'Ручной тренажёр')} · версия ${r.version} · ${new Date(r.created_at).toLocaleString('ru-RU')}</div></div><button class="btn primary" onclick="openManualReview('${r.id}')">Проверить</button></div>`}).join(''):'<div class="muted">Новых работ на проверку нет.</div>'}</div>`;
+}
+const renderManagerMentorV718=renderManagerMentor;
+renderManagerMentor=function(){
+  renderManagerMentorV718();const page=$('page-mentor'),toolbar=page?.querySelector('.toolbar');if(toolbar)toolbar.insertAdjacentHTML('afterend',manualReviewPanelHtml());else if(page)page.insertAdjacentHTML('afterbegin',manualReviewPanelHtml());
+};
+
+function openManualReview(answerId){
+  const r=(S.manualAnswers||[]).find(x=>x.id===answerId);if(!r)return;const c=S.content.find(x=>x.id===r.content_id),u=S.allowed.find(x=>x.login===r.login);const history=manualHistory(r.content_id,r.login);
+  showModal(`<div class="modal-head"><div><h2>${esc(c?.title||'Ручной тренажёр')}</h2><div class="meta">${esc(u?.name||r.login)} · ${esc(r.login)} · версия ${r.version}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="review-prompt"><b>Задание</b><div>${esc(c?.question||'')}</div>${c?.instruction?`<small>${esc(c.instruction)}</small>`:''}</div><div class="review-current-answer"><b>Ответ сотрудника</b><div>${esc(r.answer)}</div></div><div class="form-grid"><div class="field full"><label>Комментарий РГ</label><textarea id="manualReviewComment" rows="4" placeholder="Что хорошо / что нужно поправить"></textarea></div><div class="field full"><label>Как можно было сформулировать <span class="muted">(необязательно)</span></label><textarea id="manualReviewSuggestion" rows="4" placeholder="Ваш рекомендуемый вариант"></textarea></div></div><div class="actions review-actions"><button class="btn secondary" onclick="reviewManualAnswer('${r.id}','revision_requested')">↩ На доработку</button><button class="btn primary" onclick="reviewManualAnswer('${r.id}','accepted')">✓ Принято</button></div>${history.length>1?`<div class="section-title"><h3>Предыдущие версии</h3></div>${history.filter(x=>x.id!==r.id).map(x=>`<div class="manual-history-item"><div class="actions" style="justify-content:space-between"><b>Версия ${x.version}</b><span class="pill ${manualStatusClass(x.status)}">${manualStatusText(x.status)}</span></div><div class="manual-answer-text">${esc(x.answer)}</div>${x.mentor_comment?`<div class="review-note"><b>Ваш комментарий:</b> ${esc(x.mentor_comment)}</div>`:''}</div>`).join('')}`:''}`);
+}
+async function reviewManualAnswer(answerId,decision){
+  const comment=$('manualReviewComment')?.value.trim()||'',suggestion=$('manualReviewSuggestion')?.value.trim()||'';if(decision==='revision_requested'&&!comment){toast('Для доработки добавьте комментарий');return}
+  const {error}=await S.sb.rpc('review_manual_answer',{p_answer_id:answerId,p_decision:decision,p_comment:comment||null,p_suggestion:suggestion||null});
+  if(error){toast(error.message||String(error));return}closeModal();await syncAll();toast(decision==='accepted'?'Работа принята':'Отправлено на доработку');
+}
+
+renderContentLibrary=function(){$('contentPane').innerHTML=`<div class="toolbar"><span class="muted small">${S.content.length} материалов</span><div><button class="btn secondary" onclick="exportExcel()">⬇ Экспорт Excel</button></div></div><div class="card" style="margin-top:10px">${S.content.map(x=>`<div class="content-row"><div><span class="pill ${x.status==='published'?'status-published':'status-draft'}">${x.status==='published'?'Опубликовано':'Черновик'}</span> <span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${secName(x.section)} · ${esc(x.topic)}</div></div><div class="actions"><button class="btn secondary" onclick="editContent('${x.id}')">Изменить</button><button class="btn danger" onclick="deleteContent('${x.id}')">Удалить</button></div></div>`).join('')||'<div class="muted">Материалов нет.</div>'}</div>`};
+renderCreateContent=function(){$('contentPane').innerHTML=`<div class="grid4"><button class="topic" onclick="openCaseEditor('quiz')">✅ Обычный кейс<small>Автоматическая проверка</small></button><button class="topic" onclick="openManualEditor()">✍️ Ручной тренажёр<small>Свободный ответ → проверка РГ</small></button><button class="topic" onclick="openCaseEditor('hardcase')">🧠 Hard-кейс<small>Клиентская ситуация → решение</small></button><button class="topic" onclick="openDialogueEditor()">💬 Живой диалог<small>Несколько последовательных шагов</small></button></div>`};
+
+function openManualEditor(x=null){
+  S.editing=x?.id||null;showModal(`<div class="modal-head"><h2>${x?'Редактировать ручной тренажёр':'Новый ручной тренажёр'}</h2><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>Раздел</label><input value="Soft Skills" disabled></div><div class="field"><label>Тема</label><input id="emTopic" placeholder="Например, Формулировки"></div><div class="field"><label>Статус</label><select id="emStatus"><option value="draft">Черновик</option><option value="published">Опубликовать</option></select></div><div class="field"><label>Кому</label><input id="emAudience" value="ALL"></div><div class="field full"><label>Название</label><input id="emTitle" placeholder="Например, С роботского на человеческий"></div><div class="field full"><label>Инструкция сотруднику</label><textarea id="emInstruction" rows="3" placeholder="Например: Переформулируйте фразу простым и понятным языком"></textarea></div><div class="field full"><label>Фраза / ситуация</label><textarea id="emQuestion" rows="6" placeholder="Текст, который сотрудник должен переработать"></textarea></div></div><div class="hint">Сотрудник напишет свободный ответ и отправит его своему РГ. РГ сможет принять работу или вернуть на доработку с комментарием.</div><div class="actions" style="justify-content:flex-end;margin-top:13px"><button class="btn primary" onclick="saveManualEditor()">Сохранить</button></div>`);$('emTopic').value=x?.topic||'';$('emStatus').value=x?.status||'draft';$('emAudience').value=(x?.audience||['ALL']).join(', ');$('emTitle').value=x?.title||'';$('emInstruction').value=x?.instruction||'';$('emQuestion').value=x?.question||'';
+}
+async function saveManualEditor(){
+  const topic=$('emTopic').value.trim(),title=$('emTitle').value.trim(),question=$('emQuestion').value.trim(),instruction=$('emInstruction').value.trim();if(!topic||!title||!question){toast('Заполните тему, название и фразу / ситуацию');return}
+  const row={type:'manual',section:'soft',topic,status:$('emStatus').value,difficulty:'Средний',title,payload:{instruction,question},audience:$('emAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;
+  const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый ручной тренажёр',row.title,row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Ручной тренажёр сохранён');
+}
+editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='manual'?openManualEditor(x):x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)};
+
+/* ===== end 7.1.9 ===== */
