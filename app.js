@@ -703,3 +703,16 @@ async function saveManualEditor(){
 editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='manual'?openManualEditor(x):x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)};
 
 /* ===== end 7.1.9 ===== */
+
+/* ===== SkillHub 7.2.3 — external game: Master Line ===== */
+const MASTER_LINE_URL='https://masterlinii-game.website.yandexcloud.net/';
+trainingCards=function(){
+  return `<div class="grid4">
+    <div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div>
+    <div class="card train-card"><div class="icon">🎮</div><h3>Мастер линии</h3><p>Игровой тренажёр · практика навыков в игровом формате.</p><a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить</a></div>
+  </div>`;
+};
+/* ===== end 7.2.3 ===== */
