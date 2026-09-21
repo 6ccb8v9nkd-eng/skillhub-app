@@ -156,3 +156,9 @@ input,select,textarea{background:#111113;border-color:#343438;color:#fff}input:f
 /* ===== end 7.2.0 ===== */
 
 .user-search-box{margin-top:12px;position:relative}.user-search-box input{padding-left:42px;background:#111113;border:1px solid #343438;border-radius:15px;min-height:48px;font-weight:700}.user-search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:23px;color:#8d8d93;pointer-events:none;z-index:1}
+
+/* SkillHub 7.2.5 — multi-select assignment picker */
+.as-material-picker{margin-top:8px;max-height:330px;overflow:auto;border:1px solid #343438;border-radius:14px;background:#111113;padding:7px}
+.as-material-group{padding:3px 0 8px}.as-material-group-title{position:sticky;top:-7px;z-index:2;display:flex;justify-content:space-between;gap:8px;padding:8px 9px;background:#111113;color:#ffdd2d;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em}.as-material-group-title span{color:var(--muted)}
+.as-material-item{display:flex;align-items:flex-start;gap:10px;padding:10px 9px;border-radius:11px;cursor:pointer}.as-material-item:hover{background:#202023}.as-material-item input{width:18px;height:18px;margin:1px 0 0;accent-color:#ffdd2d;flex:0 0 auto}.as-material-item span{min-width:0}.as-material-item b{display:block;font-size:13px}.as-material-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.as-material-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+@media(max-width:720px){.as-material-picker{max-height:38vh}.as-material-item{padding:11px 8px}.as-material-footer{align-items:flex-start}}

@@ -750,3 +750,65 @@ trainingCards=function(){
 /* ===== end 7.2.3 ===== */
 
 /* ===== SkillHub 7.2.4 — manual sequence + smart no-repeat feed ===== */
+
+/* ===== SkillHub 7.2.5 — multi-select assignments ===== */
+function assignmentSelectedContentIds(){
+  return [...document.querySelectorAll('.as-material-check:checked')].map(x=>x.value);
+}
+function assignmentSelectionChanged(){
+  const ids=assignmentSelectedContentIds(),count=ids.length;
+  const counter=$('asMaterialCount');if(counter)counter.textContent=count?`Выбрано: ${count}`:'Ничего не выбрано — назначение по теме';
+  const topicWrap=$('asTopicMode');if(topicWrap){topicWrap.style.opacity=count?'.45':'1';topicWrap.querySelectorAll('select,input').forEach(el=>el.disabled=!!count)}
+}
+function filterAssignmentMaterials(){
+  const q=String($('asMaterialSearch')?.value||'').trim().toLowerCase();
+  document.querySelectorAll('.as-material-item').forEach(el=>{el.style.display=!q||String(el.dataset.search||'').includes(q)?'flex':'none'});
+  document.querySelectorAll('.as-material-group').forEach(group=>{const visible=[...group.querySelectorAll('.as-material-item')].some(x=>x.style.display!=='none');group.style.display=visible?'block':'none'});
+}
+function clearAssignmentMaterials(){document.querySelectorAll('.as-material-check').forEach(x=>x.checked=false);assignmentSelectionChanged()}
+
+openAssignmentEditor=function(prefill={}){
+  const selected=new Set((prefill.content_ids||[prefill.content_id]).filter(Boolean));
+  const published=S.content.filter(x=>x.status==='published').slice().sort((a,b)=>{
+    const sr={soft:0,hard:1,needs:2};return (sr[a.section]??9)-(sr[b.section]??9)||String(a.topic||'').localeCompare(String(b.topic||''),'ru')||String(a.title||a.question||'').localeCompare(String(b.title||b.question||''),'ru')
+  });
+  const groups=['soft','hard','needs'].map(sec=>{
+    const rows=published.filter(x=>x.section===sec);if(!rows.length)return'';
+    return `<div class="as-material-group"><div class="as-material-group-title">${esc(secName(sec))} <span>${rows.length}</span></div>${rows.map(x=>{const name=x.title||x.question||'Материал';const search=`${name} ${x.topic||''} ${secName(sec)}`.toLowerCase();return `<label class="as-material-item" data-search="${esc(search)}"><input class="as-material-check" type="checkbox" value="${x.id}" ${selected.has(x.id)?'checked':''} onchange="assignmentSelectionChanged()"><span><b>${esc(name)}</b><small>${esc(x.topic||'Без темы')}${x.type==='manual'?' · ручной':''}</small></span></label>`}).join('')}</div>`
+  }).join('');
+  const scope=isTechAdmin()?'ALL = все сотрудники SkillHub':isRS()?'ALL = все сотрудники моего сектора':'ALL = вся моя команда';
+  showModal(`<div class="modal-head"><h2>Новое назначение</h2><button class="btn secondary" onclick="closeModal()">✕</button></div>
+  <div class="form-grid">
+    <div class="field full"><label>Название назначения</label><input id="asTitle" placeholder="Можно оставить пустым — возьмём название материала"><div class="meta">Если выбрано несколько материалов, для каждого будет создано отдельное назначение.</div></div>
+    <div class="field full"><label>Материалы <span class="muted">· можно выбрать один или несколько</span></label><input id="asMaterialSearch" placeholder="Поиск по названию или теме" oninput="filterAssignmentMaterials()"><div class="as-material-picker">${groups||'<div class="muted">Опубликованных материалов нет.</div>'}</div><div class="as-material-footer"><span id="asMaterialCount" class="meta"></span><button type="button" class="btn secondary" onclick="clearAssignmentMaterials()">Снять выбор</button></div></div>
+    <div id="asTopicMode" class="field full"><div class="explain" style="margin-bottom:9px">Если конкретные материалы не выбраны, можно назначить всю тему.</div><div class="form-grid"><div class="field"><label>Раздел</label><select id="asSec"><option value="soft">Soft</option><option value="hard">Hard</option><option value="needs">Потребность</option></select></div><div class="field"><label>Тема</label><input id="asTopic" placeholder="Например, Кредиты или Тарифы"></div></div></div>
+    <div class="field"><label>Дедлайн</label><input id="asDue" type="date"></div><div class="field"><label>Минимум %</label><input id="asTarget" type="number" value="${ADAPTIVE.target}"></div>
+    <div class="field full"><label>Кому</label><input id="asUsers" value="ALL" placeholder="ALL или логины через запятую"><div class="meta">${scope}</div></div>
+  </div><div class="actions" style="justify-content:flex-end;margin-top:13px"><button class="btn primary" onclick="saveAssignment()">Назначить и уведомить</button></div>`);
+  $('asTitle').value=prefill.title||'';$('asSec').value=prefill.section||'soft';$('asTopic').value=prefill.topic||'';$('asDue').value=prefill.due||'';$('asTarget').value=String(prefill.target??ADAPTIVE.target);$('asUsers').value=(prefill.recipients||['ALL']).join(', ');assignmentSelectionChanged();
+};
+
+saveAssignment=async function(){
+  let rec=$('asUsers').value.split(',').map(normalizeLogin).filter(Boolean);if(!rec.length)rec=['ALL'];
+  if(!isTechAdmin()&&rec.includes('ALL'))rec=assignmentScopeEmployees().map(x=>x.login);
+  if(!isTechAdmin()){
+    const ok=new Set(assignmentScopeEmployees().map(x=>x.login));if(rec.some(x=>!ok.has(x))){toast(isRS()?'Можно назначать только сотрудникам своего сектора':'Можно назначать только своей команде');return}
+  }
+  const ids=assignmentSelectedContentIds(),baseTitle=$('asTitle').value.trim(),due=$('asDue').value||null,target=Number($('asTarget').value||90),common={due,target,recipients:rec,status:'active',created_by:S.user.id};
+  let rows=[];
+  if(ids.length){
+    const byId=new Map(S.content.map(x=>[x.id,x]));
+    rows=ids.map(id=>byId.get(id)).filter(Boolean).map(x=>({
+      ...common,
+      title:ids.length===1?(baseTitle||x.title||x.question||'Материал'):(baseTitle?`${baseTitle} · ${x.title||x.question||x.topic}`:(x.title||x.question||x.topic||'Материал')),
+      content_id:x.id,section:x.section,topic:x.topic||''
+    }));
+  }else{
+    const topic=$('asTopic').value.trim(),section=$('asSec').value;if(!baseTitle){toast('Введите название назначения');return}if(!topic){toast('Выберите материалы или укажите тему');return}
+    rows=[{...common,title:baseTitle,content_id:null,section,topic}];
+  }
+  if(!rows.length){toast('Не удалось сформировать назначение');return}
+  const {error}=await S.sb.from('assignments').insert(rows);if(error){toast(error.message);return}
+  const note=rows.length===1?`Новое задание: ${rows[0].title}${due?' · до '+due:''}`:`Назначено материалов: ${rows.length}${baseTitle?' · '+baseTitle:''}${due?' · до '+due:''}`;
+  await notifyRecipients('Новое задание',note,rec,'assignment');closeModal();await syncAll();renderAssignments();toast(rows.length===1?'Задание назначено':`Назначено материалов: ${rows.length}`)
+};
