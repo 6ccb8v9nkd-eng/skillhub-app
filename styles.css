@@ -268,3 +268,7 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh742-manual-kpi{background:#17191c;border:1px solid #2a3035;border-radius:14px;padding:12px}.sh742-manual-kpi small{display:block;color:#939ba3}.sh742-manual-kpi strong{display:block;font-size:22px;margin-top:3px}
 .sh742-manual-list{display:grid;gap:10px}.sh742-manual-item{border:1px solid #2a3035;background:#111315;border-radius:14px;padding:13px}.sh742-manual-item-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.sh742-manual-item .manual-answer-text{margin-top:9px}.sh742-report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:720px){.sh742-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sh742-manual-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 7.4.4 — keep uploaded profile photos inside the top avatar circle */
+.profile>span{overflow:hidden;flex:0 0 auto}
+.profile>span img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
