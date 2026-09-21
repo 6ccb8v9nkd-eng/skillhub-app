@@ -1078,3 +1078,37 @@ renderNotifications=function(){
   page.prepend(box);
 };
 /* ===== end SkillHub 7.4.5 ===== */
+
+/* ===== SkillHub 7.4.6 — Master Line quick promo ===== */
+function sh746MasterLinePromoHtml(compact=false){
+  return `<div class="sh746-master-promo ${compact?'compact':''}">
+    <div class="sh746-master-copy">
+      <div class="sh746-master-kicker">Мастер линии</div>
+      <h3>Стань настоящим мастером линии</h3>
+      <p>Практика навыков в игровом формате</p>
+      <a class="sh746-master-btn" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a>
+    </div>
+    <img class="sh746-master-icon" src="./master-line-icon.png" alt="Мастер линии">
+  </div>`;
+}
+function sh746InjectHeroPromo(pageId){
+  const page=$(pageId),hero=page?.querySelector('.sh74-hero');
+  if(!hero||hero.querySelector('.sh746-master-promo'))return;
+  hero.insertAdjacentHTML('beforeend',sh746MasterLinePromoHtml(false));
+  hero.classList.add('sh746-has-promo');
+}
+const sh746RenderHomeBase=renderHome;
+renderHome=function(){
+  sh746RenderHomeBase();
+  if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh746InjectHeroPromo('page-home');
+};
+const sh746RenderManagerMentorBase=renderManagerMentor;
+renderManagerMentor=function(){
+  sh746RenderManagerMentorBase();
+  const page=$('page-mentor'),top=page?.querySelector('.sh74-manager-top');
+  if(page&&!page.querySelector('.sh746-master-strip')){
+    const holder=document.createElement('div');holder.className='sh746-master-strip';holder.innerHTML=sh746MasterLinePromoHtml(true);
+    if(top)top.insertAdjacentElement('afterend',holder);else page.prepend(holder);
+  }
+};
+/* ===== end SkillHub 7.4.6 ===== */
