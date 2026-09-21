@@ -1,5 +1,5 @@
-const CACHE='skillhub-7-3-2-design-avatars-v1';
-const SHELL=['./','./index.html','./styles.css?v=732','./app.js?v=732','./manifest.webmanifest?v=732','./icon-192-v718.png','./icon-512-v718.png'];
+const CACHE='skillhub-7-4-0-reference-ui-v1';
+const SHELL=['./','./index.html','./styles.css?v=740','./app.js?v=740','./manifest.webmanifest?v=740','./icon-192-v718.png','./icon-512-v718.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
