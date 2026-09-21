@@ -72,7 +72,7 @@ async function submitAuth(){const login=normalizeLogin($('loginInput').value),pi
 async function afterAuth(){const {data:{user}}=await S.sb.auth.getUser();if(!user)throw new Error('Нет сессии');S.user=user;const {data,error}=await S.sb.from('profiles').select('*').eq('id',user.id).single();if(error)throw error;if(!data.active){await S.sb.auth.signOut();throw new Error('Доступ к SkillHub отключён наставником.')}S.profile=data;localStorage.setItem('sh7_profile',JSON.stringify(data));enterApp();await syncAll()}
 async function logout(){if(S.sb)await S.sb.auth.signOut();if(S.subscription)S.sb.removeChannel(S.subscription);S.user=null;S.profile=null;$('appView').classList.add('hidden');$('loginView').classList.remove('hidden');$('profileMenu').classList.add('hidden')}
 function updateRoleNavLabels(){const mentorNav=document.querySelector('.nav-btn[data-page="mentor"] span');if(!mentorNav||!S.profile)return;mentorNav.textContent=S.profile.role==='mentor'?'Моя группа':S.profile.role==='rs'?'Сектор':'Руководитель группы'}
-function enterApp(){$('setupView').classList.add('hidden');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);$('avatar').textContent=initials(S.profile.name||S.profile.login);document.querySelectorAll('.mentor-only').forEach(x=>x.classList.toggle('hidden',!isManager()));updateRoleNavLabels();go(isManager()?'mentor':'home');subscribeRealtime()}
+function enterApp(){$('setupView').classList.add('hidden');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);renderTopAvatar();document.querySelectorAll('.mentor-only').forEach(x=>x.classList.toggle('hidden',!isManager()));updateRoleNavLabels();go(isManager()?'mentor':'home');subscribeRealtime()}
 
 function go(page){updateRoleNavLabels();S.currentPage=page;document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));const el=$('page-'+page);if(el)el.classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));if(titles[page]){$('pageTitle').textContent=titles[page][0];$('pageSub').textContent=titles[page][1]}render(page);updateRoleNavLabels()}
 function render(p){({home:renderHome,training:renderTraining,progress:renderProgress,notifications:renderNotifications,mentor:renderMentor,content:renderContent,assignments:renderAssignments,employees:renderEmployees,admin:renderTechAdmin}[p]||(()=>{}))()}
@@ -369,7 +369,7 @@ async function submitAuth(){
 async function afterAuth(){const {data:{user}}=await S.sb.auth.getUser();if(!user)throw new Error('Нет сессии');S.user=user;const {data,error}=await S.sb.from('profiles').select('*').eq('id',user.id).single();if(error)throw error;if(!data.active){await S.sb.auth.signOut();throw new Error('Доступ к SkillHub отключён.')}S.profile=data;localStorage.setItem('sh7_profile',JSON.stringify(data));enterApp();await syncAll()}
 function enterApp(){
   $('setupView').classList.add('hidden');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
-  $('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);$('avatar').textContent=initials(S.profile.name||S.profile.login);
+  $('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);renderTopAvatar();
   document.querySelectorAll('.mentor-only').forEach(x=>x.classList.toggle('hidden',!isManager()));
   document.querySelectorAll('.tech-only').forEach(x=>x.classList.toggle('hidden',!isTechAdmin()));
   go(isManager()?'mentor':'home');subscribeRealtime();
@@ -812,3 +812,172 @@ saveAssignment=async function(){
   const note=rows.length===1?`Новое задание: ${rows[0].title}${due?' · до '+due:''}`:`Назначено материалов: ${rows.length}${baseTitle?' · '+baseTitle:''}${due?' · до '+due:''}`;
   await notifyRecipients('Новое задание',note,rec,'assignment');closeModal();await syncAll();renderAssignments();toast(rows.length===1?'Задание назначено':`Назначено материалов: ${rows.length}`)
 };
+
+/* ===== SkillHub 7.3.1 — real dashboard redesign ===== */
+function sh731Ymd(d){const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`}
+function sh731ActivityDays(login){return new Set((S.attempts||[]).filter(x=>x.login===login).map(x=>sh731Ymd(x.created_at)))}
+function sh731Streak(login){
+  const days=sh731ActivityDays(login),today=new Date();let cur=new Date(today),n=0;
+  if(!days.has(sh731Ymd(cur))){cur.setDate(cur.getDate()-1);if(!days.has(sh731Ymd(cur)))return 0}
+  while(days.has(sh731Ymd(cur))){n++;cur.setDate(cur.getDate()-1)}return n;
+}
+function sh731WeekHtml(login){
+  const days=sh731ActivityDays(login),labels=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],out=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-i);const on=days.has(sh731Ymd(d));out.push(`<div class="streak-day ${on?'on':''}"><i>${on?'✓':'·'}</i><span>${labels[d.getDay()]}</span></div>`)}
+  return out.join('');
+}
+function sh731SectionStats(sec){
+  const rows=(S.attempts||[]).filter(x=>x.login===S.profile.login&&x.section===sec),avg=rows.length?Math.round(rows.reduce((s,x)=>s+Number(x.score||0),0)/rows.length):0;
+  return {rows:rows.length,avg};
+}
+function sh731LatestTyping(){return (S.attempts||[]).filter(x=>x.login===S.profile.login&&x.type==='typing').slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0]||null}
+function sh731AssignmentCard(a){
+  const st=assignmentStatusForUser(a,S.profile.login,S.attempts),cls=st==='Просрочено'?'bad':st==='Выполнено'?'good':'warn';
+  return `<div class="assignment-card-modern"><div><div class="assignment-title">${esc(a.title)}</div><div class="meta">${a.section?secName(a.section):''}${a.topic?' · '+esc(a.topic):''}${a.due?' · до '+esc(a.due):''}</div></div><div class="assignment-side"><span class="pill ${cls}">${st}</span>${st!=='Выполнено'?`<button class="btn secondary" onclick="startAssignment('${a.id}')">Открыть</button>`:''}</div></div>`;
+}
+
+renderHome=function(){
+  if(isManager()){
+    $('page-home').innerHTML='<div class="empty-state"><b>Для руководителя основная панель находится в разделе управления командой.</b><button class="btn primary" style="margin-top:12px" onclick="go(\'mentor\')">Открыть панель</button></div>';
+    return;
+  }
+  const active=(S.assignments||[]).filter(x=>x.status==='active'&&assignmentStatusForUser(x,S.profile.login,S.attempts)!=='Выполнено');
+  const next=active[0]||null,first=(S.profile.name||S.profile.login||'').trim().split(/\s+/)[0]||'коллега',streak=sh731Streak(S.profile.login);
+  const soft=sh731SectionStats('soft'),hard=sh731SectionStats('hard'),needs=sh731SectionStats('needs'),typing=sh731LatestTyping();
+  const manualLatest=(S.manualAnswers||[]).filter(x=>x.login===S.profile.login).slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  const manualText=manualLatest?manualStatusText(manualLatest.status):'Можно начать';
+  const hero=next?`<div class="hero-label">Текущая тренировка</div><div class="hero-title">${esc(next.title)}</div><div class="hero-meta">${next.section?secName(next.section):''}${next.topic?' · '+esc(next.topic):''}${next.due?' · до '+esc(next.due):''}</div><button class="btn hero-btn" onclick="startAssignment('${next.id}')">Продолжить →</button>`:`<div class="hero-label">Сегодня</div><div class="hero-title">Выберите тренировку</div><div class="hero-empty">Активных назначений сейчас нет — можно потренироваться самостоятельно.</div><button class="btn hero-btn" onclick="go('training')">К тренировкам →</button>`;
+  $('pageTitle').textContent='Главная';$('pageSub').textContent='Ваш прогресс и актуальные тренировки';
+  $('page-home').innerHTML=`<div class="employee-home">
+    <div class="employee-hero-grid"><div class="employee-hero"><h2 class="employee-greeting">Привет, ${esc(first)}! 👋</h2><div class="employee-sub">Продолжаем развиваться вместе</div>${hero}</div>
+      <div class="streak-panel"><div><div class="streak-head"><span class="streak-fire">🔥</span><div><small class="muted">Серия активности</small><strong>${streak} ${streak===1?'день':'дней'} подряд</strong></div></div><div class="streak-days">${sh731WeekHtml(S.profile.login)}</div></div><div class="streak-note">Любая завершённая тренировка засчитывается как активный день.</div></div>
+    </div>
+    <div class="section-title"><h2>Мои направления</h2><button class="btn ghost small" onclick="go('training')">Смотреть все</button></div>
+    <div class="direction-grid">
+      <button class="direction-card soft" onclick="openSoftHub()"><span class="direction-icon">💬</span><span class="direction-name">Soft Skills</span><span class="direction-value">${soft.rows?soft.avg+'%':'Начать'}</span><span class="direction-bar"><span style="width:${soft.rows?soft.avg:0}%"></span></span></button>
+      <button class="direction-card hard" onclick="openSection('hard')"><span class="direction-icon">📊</span><span class="direction-name">Hard Skills</span><span class="direction-value">${hard.rows?hard.avg+'%':'Начать'}</span><span class="direction-bar"><span style="width:${hard.rows?hard.avg:0}%"></span></span></button>
+      <button class="direction-card needs" onclick="openSection('needs')"><span class="direction-icon">🎯</span><span class="direction-name">Потребность</span><span class="direction-value">${needs.rows?needs.avg+'%':'Начать'}</span><span class="direction-bar"><span style="width:${needs.rows?needs.avg:0}%"></span></span></button>
+      <button class="direction-card typing" onclick="startTyping()"><span class="direction-icon">⌨️</span><span class="direction-name">Скорость печати</span><span class="direction-value">${typing?Number(typing.cpm||0)+' зн/мин':'Начать'}</span><span class="direction-bar"><span style="width:${typing?Math.min(100,Math.round(Number(typing.cpm||0)/4)):0}%"></span></span></button>
+    </div>
+    <div class="section-title"><h2>Ближайшие задания</h2><span class="muted small">${active.length} в работе</span></div>
+    <div class="assignment-stack">${active.length?active.slice(0,4).map(sh731AssignmentCard).join(''):'<div class="empty-state"><b>Все актуальные задания выполнены 🎉</b>Можно выбрать тренировку самостоятельно.</div>'}</div>
+    <div class="home-mini-row"><div class="card home-mini-card"><span>✍️</span><div><b>Ручной тренажёр</b><small>${esc(manualText)}</small></div><button class="btn secondary" onclick="openManualHub()">Открыть</button></div><div class="card home-mini-card"><span>🎮</span><div><b>Мастер линии</b><small>Игровой тренажёр</small></div><a class="btn secondary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить</a></div></div>
+  </div>`;
+};
+
+trainingCards=function(){
+  const soft=sh731SectionStats('soft'),hard=sh731SectionStats('hard'),needs=sh731SectionStats('needs'),typing=sh731LatestTyping();
+  const row=(icon,title,desc,val,pct,action,label='Открыть',featured='')=>`<div class="training-item-modern ${featured}"><div class="training-icon-modern">${icon}</div><div><h3>${title}</h3><p>${desc}</p><div class="training-inline-progress"><span class="direction-bar"><span style="width:${pct}%"></span></span><small>${val}</small></div></div><div class="training-action">${action.startsWith('http')?`<a class="btn ${featured?'primary':'secondary'}" href="${action}" target="_blank" rel="noopener noreferrer">${label}</a>`:`<button class="btn ${featured?'primary':'secondary'}" onclick="${action}">${label}</button>`}</div></div>`;
+  return `<div class="training-catalog">${row('✏️','Ручной тренажёр','Свободные ответы на реальные фразы и ситуации с проверкой РГ','30 кейсов',manualSubmittedContentIds().size?Math.min(100,Math.round(manualSubmittedContentIds().size/30*100)):0,"openManualHub()",'Открыть','featured')}${row('🎮','Мастер линии','Игровой тренажёр — практика навыков в игровом формате','Внешняя игра',0,MASTER_LINE_URL,'Запустить','featured')}${row('💬','Soft Skills','Коммуникация, клиентский язык и формулировки',soft.rows?soft.avg+'%':'Не начато',soft.rows?soft.avg:0,"openSoftHub()")}${row('📊','Hard Skills','Продукты, процессы и клиентские кейсы',hard.rows?hard.avg+'%':'Не начато',hard.rows?hard.avg:0,"openSection('hard')")}${row('🎯','Потребность','Вопросы, критерии и живые диалоги',needs.rows?needs.avg+'%':'Не начато',needs.rows?needs.avg:0,"openSection('needs')")}${row('⌨️','Скорость печати','50 текстов на скорость и точность',typing?Number(typing.cpm||0)+' зн/мин':'Не начато',typing?Math.min(100,Math.round(Number(typing.cpm||0)/4)):0,"startTyping()",'Начать')}</div>`;
+};
+renderTraining=function(){
+  $('pageTitle').textContent='Тренировки';$('pageSub').textContent='Выберите направление и продолжайте с нужного места';
+  $('page-training').innerHTML=`<div class="training-filter-row"><span class="training-filter active">Все</span><span class="training-filter">Soft</span><span class="training-filter">Hard</span><span class="training-filter">Потребность</span></div>${trainingCards()}`;
+};
+
+function sh731LatestManualByKey(){
+  const m=new Map();for(const x of (S.manualAnswers||[])){const k=x.login+'|'+x.content_id,prev=m.get(k);if(!prev||Number(x.version)>Number(prev.version))m.set(k,x)}return [...m.values()];
+}
+function sh731ManagerEmployeeCards(u){
+  return `<div class="manager-employee-list">${u.map(x=>`<div class="manager-employee-card"><div class="manager-person"><div class="manager-avatar">${esc(initials(x.name||x.login))}</div><div><b>${esc(x.name||x.login)}</b><small>${esc(x.login)}</small></div></div><div class="manager-scores"><span>Soft <b>${x.soft===null?'—':x.soft+'%'}</b></span><span>Hard <b>${x.hard===null?'—':x.hard+'%'}</b></span><span>Потребность <b>${x.needs===null?'—':x.needs+'%'}</b></span></div><div class="manager-card-actions">${x.overdue?`<span class="pill bad">${x.overdue} проср.</span>`:x.gaps.length?`<span class="pill warn">${x.gaps.length} зон развития</span>`:'<span class="pill good">Без критичных зон</span>'}<button class="btn secondary" onclick="openUserAttempts('${jsq(x.login)}')">Карточка</button></div></div>`).join('')||'<div class="empty-state">В группе пока нет сотрудников.</div>'}</div>`;
+}
+renderManagerMentor=function(){
+  const u=teamRows(S.profile.login),pending=pendingManualForMentor(),latest=sh731LatestManualByKey().filter(x=>u.some(a=>a.login===x.login)),revision=latest.filter(x=>x.status==='revision_requested'),overdue=u.reduce((n,x)=>n+x.overdue,0),completed=u.reduce((n,x)=>n+x.completed,0),work=u.reduce((n,x)=>n+x.work,0),totalAssign=completed+work+overdue,donePct=totalAssign?Math.round(completed/totalAssign*100):0;
+  const attention=[];
+  pending.slice(0,4).forEach(r=>{const emp=S.allowed.find(x=>x.login===r.login),c=S.content.find(x=>x.id===r.content_id);attention.push(`<div class="attention-row"><div><b>${esc(emp?.name||r.login)}</b><div class="meta">${esc(c?.title||'Ручной тренажёр')} · версия ${r.version}</div></div><button class="attention-status" onclick="openManualReview('${r.id}')">На проверке</button></div>`)});
+  revision.slice(0,3).forEach(r=>{const emp=S.allowed.find(x=>x.login===r.login),c=S.content.find(x=>x.id===r.content_id);attention.push(`<div class="attention-row"><div><b>${esc(emp?.name||r.login)}</b><div class="meta">${esc(c?.title||'Ручной тренажёр')}</div></div><span class="attention-status bad">На доработке</span></div>`)});
+  u.filter(x=>x.overdue).slice(0,3).forEach(x=>attention.push(`<div class="attention-row"><div><b>${esc(x.name||x.login)}</b><div class="meta">Есть просроченные назначения</div></div><span class="attention-status bad">${x.overdue} просрочено</span></div>`));
+  const gaps=u.flatMap(emp=>emp.gaps.map(g=>({...g,login:emp.login,name:emp.name||emp.login}))).sort((a,b)=>a.avgRecent-b.avgRecent);
+  $('pageTitle').textContent='Моя группа';$('pageSub').textContent=`${S.profile.group_name||'Команда'} · ${u.length} сотрудников`;
+  $('page-mentor').innerHTML=`<div class="manager-dashboard">
+    <div class="manager-topline"><div><span class="eyebrow">Панель руководителя</span><h2>${esc(S.profile.group_name||'Моя группа')}</h2><p class="muted">Сразу видно, где требуется ваше внимание</p></div><button class="btn secondary" onclick="openMentorExport('','${jsq(S.profile.login)}','')">⬇ Отчёт Excel</button></div>
+    <div class="manager-kpis"><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">✍️</span><small>На проверке</small></div><strong>${pending.length}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">↩️</span><small>На доработке</small></div><strong>${revision.length}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">⏰</span><small>Просрочено</small></div><strong>${overdue}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">✅</span><small>Выполнено</small></div><strong>${completed}</strong></div></div>
+    <div class="manager-grid-main"><div class="card attention-card manager-section-card"><div class="section-head-inline"><div><b>Требуют внимания</b><small>${attention.length?'Проверки, доработки и просрочки':'Сейчас всё спокойно'}</small></div>${pending.length?`<span class="pill warn">${pending.length} новых</span>`:''}</div>${attention.length?attention.join(''):'<div class="manager-empty-light">Новых работ и критичных задач нет 🎉</div>'}</div><div class="card team-progress-card"><small class="muted">Выполнение назначений</small><div class="team-ring" style="--p:${donePct}"><strong>${donePct}%</strong></div><div class="team-mini-legend"><div><b>${completed}</b><small>завершено</small></div><div><b>${work}</b><small>в работе</small></div><div><b>${overdue}</b><small>просрочено</small></div></div></div></div>
+    ${pending.length?`<div class="section-title"><h2>Проверка работ</h2><span class="pill warn">${pending.length} на проверке</span></div><div class="card manager-review-modern">${pending.map(r=>{const emp=S.allowed.find(x=>x.login===r.login),c=S.content.find(x=>x.id===r.content_id);return `<div class="manager-review-row"><div><b>${esc(emp?.name||r.login)}</b><div class="meta">${esc(c?.title||'Ручной тренажёр')} · версия ${r.version}</div></div><button class="btn primary" onclick="openManualReview('${r.id}')">Проверить</button></div>`}).join('')}</div>`:''}
+    <div class="section-title"><h2>Команда</h2><span class="muted small">${u.length} активных сотрудников</span></div>${sh731ManagerEmployeeCards(u)}
+    <div class="section-title"><h2>Зоны развития</h2><span class="muted small">${gaps.length} выявлено</span></div><div class="card manager-section-card">${gaps.length?gaps.slice(0,6).map(x=>`<div class="manager-gap-modern"><div><b>${esc(x.name)}</b><small>${secName(x.section)} · ${esc(x.topic)}</small></div><span class="pill bad">${x.avgRecent}%</span>${hasActiveTopicAssignment(x.login,x.section,x.topic)?'<span class="pill good">Назначено</span>':hasTopicContent(x.section,x.topic)?`<button class="btn secondary" onclick="openRecommendedAssignment('${jsq(x.login)}','${x.section}','${jsq(x.topic)}')">Назначить</button>`:'<span class="muted small">Нет материала</span>'}</div>`).join(''):'<div class="empty-state">Подтверждённых зон развития пока нет.</div>'}</div>
+  </div>`;
+};
+
+const sh731GoBase=go;
+go=function(page){sh731GoBase(page);setTimeout(()=>{const active=document.querySelector('.sidebar .nav-btn.active');if(active&&window.innerWidth<=720)active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})},0)};
+/* ===== end 7.3.1 ===== */
+
+
+/* ===== SkillHub 7.3.2 — profile photos + tech admin visual dashboard ===== */
+function sh732ProfileByLogin(login){return (S.profiles||[]).find(x=>x.login===login)||null}
+function sh732AvatarUrl(login){return sh732ProfileByLogin(login)?.avatar_url||((S.profile?.login===login)?S.profile?.avatar_url:null)||''}
+function sh732AvatarHtml(login,name,cls='manager-avatar'){
+  const url=sh732AvatarUrl(login),label=esc(initials(name||login||'SH'));
+  return `<div class="${cls}${url?' has-photo':''}">${url?`<img src="${esc(url)}" alt="Фото профиля" loading="lazy">`:label}</div>`;
+}
+function renderTopAvatar(){
+  const el=$('avatar');if(!el||!S.profile)return;const url=S.profile.avatar_url||'';
+  el.classList.toggle('has-photo',!!url);
+  el.innerHTML=url?`<img src="${esc(url)}" alt="Фото профиля">`:esc(initials(S.profile.name||S.profile.login));
+}
+function showProfileEditor(){
+  $('profileMenu')?.classList.add('hidden');
+  const url=S.profile?.avatar_url||'',role=roleName(S.profile?.role),group=S.profile?.role==='tech_admin'?'Все сектора':(S.profile?.group_name||'—');
+  showModal(`<div class="modal-head"><div><span class="eyebrow">Профиль</span><h2>${esc(S.profile?.name||S.profile?.login||'Пользователь')}</h2></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
+    <div class="profile-editor-shell">
+      <div class="profile-photo-pane">
+        <div class="profile-photo-big${url?' has-photo':''}" id="profilePhotoPreview">${url?`<img src="${esc(url)}" alt="Фото профиля">`:esc(initials(S.profile?.name||S.profile?.login||'SH'))}</div>
+        <div><b>Фото профиля</b><div class="meta">JPG, PNG, WEBP или фото с телефона · до 5 МБ</div></div>
+        <div class="profile-photo-actions"><label class="btn primary">${url?'Заменить фото':'Загрузить фото'}<input class="hidden" type="file" accept="image/*" onchange="uploadProfilePhoto(event)"></label>${url?'<button class="btn secondary" onclick="removeProfilePhoto()">Удалить</button>':''}</div>
+      </div>
+      <div class="profile-details-card"><div><small>Корпоративный логин</small><b>${esc(S.profile?.login||'—')}</b></div><div><small>Роль</small><b>${esc(role)}</b></div><div><small>${S.profile?.role==='tech_admin'?'Доступ':'Команда'}</small><b>${esc(group)}</b></div></div>
+    </div>`);
+}
+async function uploadProfilePhoto(ev){
+  const file=ev?.target?.files?.[0];if(!file)return;
+  if(!String(file.type||'').startsWith('image/')){toast('Выберите изображение');return}
+  if(file.size>5*1024*1024){toast('Фото должно быть не больше 5 МБ');return}
+  try{
+    toast('Загружаю фото…');
+    const path=`${S.user.id}/avatar`;
+    const {error:upErr}=await S.sb.storage.from('avatars').upload(path,file,{upsert:true,contentType:file.type||'image/jpeg',cacheControl:'3600'});if(upErr)throw upErr;
+    const {data}=S.sb.storage.from('avatars').getPublicUrl(path),url=(data?.publicUrl||'')+`?v=${Date.now()}`;
+    const {error}=await S.sb.rpc('set_my_avatar_url',{p_url:url});if(error)throw error;
+    S.profile.avatar_url=url;const p=(S.profiles||[]).find(x=>x.login===S.profile.login);if(p)p.avatar_url=url;
+    localStorage.setItem('sh7_profile',JSON.stringify(S.profile));renderTopAvatar();showProfileEditor();renderCurrent();toast('Фото профиля обновлено');
+  }catch(e){console.error(e);toast('Не удалось загрузить фото: '+(e.message||e))}
+}
+async function removeProfilePhoto(){
+  try{
+    const path=`${S.user.id}/avatar`;await S.sb.storage.from('avatars').remove([path]);
+    const {error}=await S.sb.rpc('set_my_avatar_url',{p_url:null});if(error)throw error;
+    S.profile.avatar_url=null;const p=(S.profiles||[]).find(x=>x.login===S.profile.login);if(p)p.avatar_url=null;
+    localStorage.setItem('sh7_profile',JSON.stringify(S.profile));renderTopAvatar();showProfileEditor();renderCurrent();toast('Фото удалено');
+  }catch(e){console.error(e);toast('Не удалось удалить фото: '+(e.message||e))}
+}
+
+sh731ManagerEmployeeCards=function(u){
+  return `<div class="manager-employee-list">${u.map(x=>`<div class="manager-employee-card"><div class="manager-person">${sh732AvatarHtml(x.login,x.name||x.login)}<div><b>${esc(x.name||x.login)}</b><small>${esc(x.login)}</small></div></div><div class="manager-scores"><span>Soft <b>${x.soft===null?'—':x.soft+'%'}</b></span><span>Hard <b>${x.hard===null?'—':x.hard+'%'}</b></span><span>Потребность <b>${x.needs===null?'—':x.needs+'%'}</b></span></div><div class="manager-card-actions">${x.overdue?`<span class="pill bad">${x.overdue} проср.</span>`:x.gaps.length?`<span class="pill warn">${x.gaps.length} зон развития</span>`:'<span class="pill good">Без критичных зон</span>'}<button class="btn secondary" onclick="openUserAttempts('${jsq(x.login)}')">Карточка</button></div></div>`).join('')||'<div class="empty-state">В группе пока нет сотрудников.</div>'}</div>`;
+};
+
+renderTechAdminMentor=function(){
+  const sectors=[...new Set(scopeEmployees().map(sectorOf).concat(S.allowed.filter(x=>x.active&&['rs','mentor'].includes(x.role)).map(sectorOf)))].filter(x=>x&&x!=='ALL').sort();
+  const employees=scopeEmployees(),managers=S.allowed.filter(x=>x.active&&x.role==='mentor'),rs=S.allowed.filter(x=>x.active&&x.role==='rs');
+  const rows=sectors.map(sec=>{const emps=employees.filter(x=>sectorOf(x)===sec),mans=managersInSector(sec),metrics=emps.map(u=>employeeMetrics(u,S.attempts));return{sec,employees:emps,mans,rs:rsInSector(sec),attempts:metrics.reduce((n,x)=>n+x.attempts,0),gaps:metrics.reduce((n,x)=>n+x.gaps.length,0),overdue:metrics.reduce((n,x)=>n+x.overdue,0)}});
+  const unclaimed=S.allowed.filter(x=>x.active&&x.role==='employee'&&!x.claimed_user_id).length,unassigned=employees.filter(x=>!x.manager_login).length,total=employees.length,activated=total?Math.round((total-unclaimed)/total*100):0;
+  $('pageTitle').textContent='Панель управления';$('pageSub').textContent='SkillHub · технический администратор';
+  $('page-mentor').innerHTML=`<div class="admin-dashboard-modern">
+    <div class="admin-hero-modern"><div><span class="admin-hero-kicker">SkillHub Control Center</span><h2>Вся платформа в одном месте</h2><p>Сектора, руководители, сотрудники и доступы — без лишних таблиц на первом экране.</p></div><div class="admin-hero-actions"><button class="btn admin-hero-btn" onclick="go('admin')">Управление доступами</button><button class="btn admin-hero-btn ghosty" onclick="openMentorExport()">Скачать Excel</button></div></div>
+    <div class="manager-kpis"><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">🏢</span><small>Секторов</small></div><strong>${rows.length}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">👤</span><small>РС</small></div><strong>${rs.length}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">👥</span><small>Руководителей</small></div><strong>${managers.length}</strong></div><div class="manager-kpi"><div class="manager-kpi-head"><span class="manager-kpi-icon">⚡</span><small>Сотрудников</small></div><strong>${employees.length}</strong></div></div>
+    <div class="manager-grid-main"><div class="card attention-card manager-section-card"><div class="section-head-inline"><div><b>Требуют внимания</b><small>Доступы и распределение сотрудников</small></div></div>${unclaimed?`<div class="attention-row"><div><b>${unclaimed} сотрудников</b><div class="meta">ещё не выполнили первый вход</div></div><button class="attention-status" onclick="go('admin')">Выдать код</button></div>`:''}${unassigned?`<div class="attention-row"><div><b>${unassigned} сотрудников</b><div class="meta">не закреплены за руководителем</div></div><button class="attention-status bad" onclick="go('employees')">Распределить</button></div>`:''}${!unclaimed&&!unassigned?'<div class="manager-empty-light">Критичных задач сейчас нет 🎉</div>':''}</div><div class="card team-progress-card"><small class="muted">Активация сотрудников</small><div class="team-ring" style="--p:${activated}"><strong>${activated}%</strong></div><div class="team-mini-legend"><div><b>${total-unclaimed}</b><small>PIN создан</small></div><div><b>${unclaimed}</b><small>первый вход</small></div></div></div></div>
+    <div class="section-title"><h2>Сектора</h2><span class="muted small">${rows.length} на платформе</span></div><div class="admin-sector-grid">${rows.map(r=>`<div class="admin-sector-card"><div class="admin-sector-top"><div><small>Сектор</small><h3>${esc(r.sec)}</h3></div><span class="pill ${r.overdue?'warn':'good'}">${r.overdue?r.overdue+' проср.':'В норме'}</span></div><div class="admin-sector-stats"><span><b>${r.mans.length}</b><small>РГ</small></span><span><b>${r.employees.length}</b><small>сотрудников</small></span><span><b>${r.attempts}</b><small>попыток</small></span><span><b>${r.gaps}</b><small>зон развития</small></span></div><div class="admin-sector-footer"><small>РС: ${esc(r.rs.map(x=>x.name||x.login).join(', ')||'не назначен')}</small><button class="btn secondary" onclick="openSectorDashboard70('${jsq(r.sec)}')">Открыть</button></div></div>`).join('')||'<div class="empty-state">Сектора пока не созданы.</div>'}</div>
+  </div>`;
+};
+
+function sh732AdminUserRow(x){
+  const self=x.login===S.profile.login,reset=canResetUserLocal(x),firstCode=!self&&x.role==='employee'&&x.active&&!x.claimed_user_id;
+  return `<div class="admin-user-card" data-admin-row="${esc(employeeSearchText(x))}"><div class="admin-user-person">${sh732AvatarHtml(x.login,x.name||x.login,'admin-user-avatar')}<div><b>${esc(x.name||x.login)}</b><div class="meta">${userMeta(x)}</div></div></div><div class="admin-user-actions"><span class="pill ${x.active?'good':'bad'}">${x.active?'Активен':'Отключён'}</span>${firstCode?`<button class="btn secondary" onclick="makeCode('${jsq(x.login)}')">🔐 Выдать код</button>`:''}${!self?`<button class="btn secondary" onclick="openEmployeeEditor(S.allowed.find(u=>u.login==='${jsq(x.login)}'))">Изменить</button>`:''}${reset&&x.claimed_user_id?`<button class="btn danger" onclick="resetAccess('${jsq(x.login)}')">Сбросить доступ</button>`:''}${!self?`<button class="btn danger compact-danger" onclick="deleteUser('${jsq(x.login)}')">Удалить</button>`:''}</div></div>`;
+}
+renderTechAdmin=function(){
+  if(!isTechAdmin()){$('page-admin').innerHTML='<div class="explain">Нет доступа.</div>';return}
+  const rows=S.allowed.slice().sort((a,b)=>roleRank(b.role)-roleRank(a.role)||String(a.name||a.login).localeCompare(String(b.name||b.login),'ru')),unclaimed=rows.filter(x=>x.role==='employee'&&x.active&&!x.claimed_user_id).length;
+  $('pageTitle').textContent='Доступы';$('pageSub').textContent='Пользователи SkillHub и первый вход';
+  $('page-admin').innerHTML=`<div class="admin-access-head"><div><span class="eyebrow">Технический администратор</span><h2>Управление доступами</h2><p class="muted">${rows.length} пользователей · ${unclaimed} ждут первый вход</p></div><div class="actions"><button class="btn secondary" onclick="generateAllCodes()">🔐 Коды новым</button><button class="btn primary" onclick="go('employees')">👥 Пользователи / Excel</button></div></div><div class="user-search-box"><span class="user-search-icon">⌕</span><input placeholder="Поиск по ФИО, логину, роли или сектору" oninput="filterAdminUsers(this.value)"></div><div class="admin-users-grid" id="adminUsersList">${rows.map(sh732AdminUserRow).join('')}</div>`;
+};
+/* ===== end 7.3.2 ===== */
