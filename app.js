@@ -921,3 +921,64 @@ function startManualContent(id){
 }
 
 /* ===== end SkillHub 7.4.0 ===== */
+
+/* ===== SkillHub 7.4.2 — TECH ADMIN FULL ACCESS / MANUAL REPORT ===== */
+function updateRoleNavLabels(){
+  if(!S.profile)return;
+  const mentor=document.querySelector('.nav-btn[data-page="mentor"] .nav-text');
+  if(mentor)mentor.textContent=S.profile.role==='mentor'?'Моя группа':S.profile.role==='rs'?'Сектор':'Все сектора';
+  const admin=document.querySelector('.nav-btn[data-page="admin"] .nav-text');
+  if(admin)admin.textContent='Доступы';
+}
+
+enterApp=function(){
+  $('setupView').classList.add('hidden');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+  document.body.dataset.role=S.profile.role;$('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);renderTopAvatar();
+  document.querySelectorAll('.mentor-only').forEach(x=>x.classList.toggle('hidden',!isManager()));document.querySelectorAll('.tech-only').forEach(x=>x.classList.toggle('hidden',!isTechAdmin()));
+  updateRoleNavLabels();go(isTechAdmin()?'home':isManager()?'mentor':'home');subscribeRealtime();
+};
+
+function sh742TechAdminHome(){
+  $('pageTitle').textContent='Главная';$('pageSub').textContent='Технический администратор · полный доступ SkillHub';
+  const employees=scopeEmployees(),sectors=[...new Set(employees.map(sectorOf))].filter(x=>x&&x!=='ALL'),rs=S.allowed.filter(x=>x.active&&x.role==='rs'),mans=S.allowed.filter(x=>x.active&&x.role==='mentor'),unclaimed=S.allowed.filter(x=>x.active&&x.role==='employee'&&!x.claimed_user_id).length,pending=(S.manualAnswers||[]).filter(x=>x.status==='submitted').length,prog=sh74TeamAssignmentProgress(employees);
+  $('page-home').innerHTML=`<div class="sh74-manager"><div class="sh74-hero" style="margin-bottom:14px"><div class="sh74-hero-kicker">SkillHub Control Center</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh74-hero-sub">У вас полный доступ к тренировкам, аналитике и управлению платформой</div><div class="sh74-current"><div class="sh74-current-label">ОБЩИЙ ПРОГРЕСС</div><div class="sh74-current-title">${prog.pct}% назначений выполнено</div><div class="sh74-current-meta">${employees.length} сотрудников · ${sectors.length} секторов · ${pending} работ на проверке</div><div class="sh74-hero-progress"><span style="width:${prog.pct}%"></span></div></div></div><div class="sh74-kpis"><div class="sh74-kpi"><small>Секторов</small><strong>${sectors.length}</strong></div><div class="sh74-kpi"><small>РС / РГ</small><strong>${rs.length} / ${mans.length}</strong></div><div class="sh74-kpi"><small>Сотрудников</small><strong>${employees.length}</strong></div><div class="sh74-kpi ${unclaimed?'warn':'good'}"><small>Ждут первый вход</small><strong>${unclaimed}</strong></div></div><div class="sh74-section-head"><h2>Быстрый доступ</h2></div><div class="sh742-quick-grid"><button class="sh742-quick" onclick="go('mentor')"><b>Все сектора</b><small>РС, РГ, команды и общая аналитика</small></button><button class="sh742-quick" onclick="go('training')"><b>Тренировки</b><small>Открыть и проверить все тренажёры</small></button><button class="sh742-quick" onclick="go('progress')"><b>Прогресс</b><small>Общая динамика сотрудников</small></button><button class="sh742-quick" onclick="go('content')"><b>Контент</b><small>Создание и редактирование материалов</small></button><button class="sh742-quick" onclick="go('assignments')"><b>Назначения</b><small>Выдача одного или нескольких материалов</small></button><button class="sh742-quick" onclick="go('employees')"><b>Сотрудники</b><small>Поиск, карточки, коды и доступы</small></button><button class="sh742-quick" onclick="go('admin')"><b>Доступы</b><small>Роли, РС, РГ и техническое управление</small></button><button class="sh742-quick" onclick="sh741OpenProfile()"><b>Профиль</b><small>Фото и данные вашего профиля</small></button></div></div>`;
+}
+const sh742RenderHomeBase=renderHome;
+renderHome=function(){if(isTechAdmin())return sh742TechAdminHome();return sh742RenderHomeBase()};
+
+function sh742TechProgress(){
+  $('pageTitle').textContent='Прогресс';$('pageSub').textContent='Аналитика по всей платформе';
+  const employees=scopeEmployees(),metrics=employees.map(u=>employeeMetrics(u,S.attempts)),prog=sh74TeamAssignmentProgress(employees),attempts=S.attempts.filter(a=>employees.some(u=>u.login===a.login)),avg=attempts.length?Math.round(attempts.reduce((s,a)=>s+Number(a.score||0),0)/attempts.length):0,manual=(S.manualAnswers||[]),accepted=manual.filter(x=>x.status==='accepted').length,revision=manual.filter(x=>x.status==='revision_requested').length;
+  $('page-progress').innerHTML=`<div class="sh74-manager"><div class="sh74-kpis"><div class="sh74-kpi"><small>Сотрудников</small><strong>${employees.length}</strong></div><div class="sh74-kpi good"><small>Средний результат</small><strong>${avg||'—'}${avg?'%':''}</strong></div><div class="sh74-kpi"><small>Выполнение назначений</small><strong>${prog.pct}%</strong></div><div class="sh74-kpi"><small>Ручная практика</small><strong>${accepted}</strong><span class="muted small">принято · ${revision} на доработке</span></div></div><div class="sh74-section-head"><h2>Прогресс по направлениям</h2></div><div class="card">${sh74DirectionsHtml(metrics)}</div><div class="sh74-section-head"><h2>Сотрудники</h2><button class="sh74-link" onclick="go('employees')">Открыть весь список</button></div>${sh74TeamRowsHtml(metrics.slice(0,12))}</div>`;
+}
+const sh742RenderProgressBase=renderProgress;
+renderProgress=function(){if(isTechAdmin())return sh742TechProgress();return sh742RenderProgressBase()};
+
+function sh742ManualLatestByContent(login){
+  const map=new Map();for(const r of (S.manualAnswers||[]).filter(x=>x.login===login).sort((a,b)=>Number(a.version)-Number(b.version))){map.set(r.content_id,r)}return [...map.values()].sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at));
+}
+function sh742ManualReportHtml(login){
+  const latest=sh742ManualLatestByContent(login),all=(S.manualAnswers||[]).filter(x=>x.login===login),accepted=latest.filter(x=>x.status==='accepted').length,pending=latest.filter(x=>x.status==='submitted').length,revision=latest.filter(x=>x.status==='revision_requested').length;
+  if(!latest.length)return `<div class="sh74-section-head"><h2>Ручная практика Soft</h2></div><div class="card"><div class="muted">Сотрудник пока не выполнял ручные Soft-кейсы.</div></div>`;
+  return `<div class="sh74-section-head"><h2>Ручная практика Soft</h2></div><div class="sh742-manual-summary"><div class="sh742-manual-kpi"><small>Кейсов</small><strong>${latest.length}</strong></div><div class="sh742-manual-kpi"><small>Принято</small><strong>${accepted}</strong></div><div class="sh742-manual-kpi"><small>На проверке</small><strong>${pending}</strong></div><div class="sh742-manual-kpi"><small>На доработке</small><strong>${revision}</strong></div></div><div class="sh742-manual-list">${latest.map(r=>{const c=S.content.find(x=>x.id===r.content_id),hist=manualHistory(r.content_id,login);return `<div class="sh742-manual-item"><div class="sh742-manual-item-head"><div><b>${esc(c?.title||'Ручной тренажёр')}</b><div class="meta">${esc(c?.topic||'Soft Skills')} · версия ${r.version} · ${new Date(r.updated_at||r.created_at).toLocaleString('ru-RU')}</div></div><span class="pill ${manualStatusClass(r.status)}">${manualStatusText(r.status)}</span></div><div class="manual-answer-text">${esc(r.answer)}</div>${r.mentor_comment?`<div class="review-note"><b>Комментарий РГ</b><div>${esc(r.mentor_comment)}</div></div>`:''}${r.mentor_suggestion?`<div class="review-note suggestion"><b>Рекомендуемый вариант</b><div>${esc(r.mentor_suggestion)}</div></div>`:''}<div class="sh742-report-actions"><button class="btn secondary" onclick="sh742OpenManualHistory('${r.content_id}','${jsq(login)}')">История (${hist.length})</button></div></div>`}).join('')}</div><div class="sh742-report-actions"><button class="btn secondary" onclick="sh742ExportManualPractice('${jsq(login)}')">⬇ Ручная практика Excel</button></div>`;
+}
+function sh742OpenManualHistory(contentId,login){
+  const c=S.content.find(x=>x.id===contentId),rows=manualHistory(contentId,login);showModal(`<div class="modal-head"><div><h2>${esc(c?.title||'Ручная практика')}</h2><div class="meta">${esc(login)} · все версии</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>${rows.map(r=>`<div class="manual-history-item"><div class="actions" style="justify-content:space-between"><b>Версия ${r.version}</b><span class="pill ${manualStatusClass(r.status)}">${manualStatusText(r.status)}</span></div><div class="manual-answer-text">${esc(r.answer)}</div>${r.mentor_comment?`<div class="review-note"><b>Комментарий РГ</b><div>${esc(r.mentor_comment)}</div></div>`:''}${r.mentor_suggestion?`<div class="review-note suggestion"><b>Рекомендуемый вариант</b><div>${esc(r.mentor_suggestion)}</div></div>`:''}</div>`).join('')||'<div class="muted">Истории пока нет.</div>'}`)
+}
+function sh742ExportManualPractice(login){
+  const u=S.allowed.find(x=>x.login===login)||{},rows=(S.manualAnswers||[]).filter(x=>x.login===login).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(r=>{const c=S.content.find(x=>x.id===r.content_id);return {'Сотрудник':u.name||login,'Логин':login,'Дата':new Date(r.created_at).toLocaleString('ru-RU'),'Тренажёр':c?.title||'','Тема':c?.topic||'','Версия':r.version,'Ответ сотрудника':r.answer,'Статус':manualStatusText(r.status),'Комментарий РГ':r.mentor_comment||'','Рекомендуемый вариант':r.mentor_suggestion||'','Дата проверки':r.reviewed_at?new Date(r.reviewed_at).toLocaleString('ru-RU'):''}});const wb=XLSX.utils.book_new(),ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([['Сотрудник','Логин','Дата','Тренажёр','Тема','Версия','Ответ сотрудника','Статус','Комментарий РГ','Рекомендуемый вариант','Дата проверки']]);XLSX.utils.book_append_sheet(wb,ws,'Ручная практика');XLSX.writeFile(wb,`SkillHub_Ручная_практика_${safeFilePart(login)}.xlsx`);toast('Отчёт сформирован')
+}
+
+openUserAttempts=function(login){
+  const rows=S.attempts.filter(x=>x.login===login).slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),u=S.allowed.find(x=>x.login===login);
+  showModal(`<div class="modal-head"><div><h2>${esc(u?.name||login)}</h2><div class="meta">${esc(login)} · карточка сотрудника</div></div><div class="actions">${isManager()?`<button class="btn secondary" onclick="openMentorExport('', '${jsq(login)}')">⬇ Excel</button>`:''}<button class="btn secondary" onclick="closeModal()">✕</button></div></div><div class="sh74-section-head"><h2>Автоматические тренировки</h2></div><div class="card table-wrap"><table class="table"><thead><tr><th>Дата</th><th>Раздел</th><th>Тема</th><th>Результат</th><th>Детали</th></tr></thead><tbody>${rows.length?rows.map(a=>`<tr><td>${new Date(a.created_at).toLocaleString('ru-RU')}</td><td>${secName(a.section)}</td><td>${esc(a.topic)}</td><td><span class="pill ${Number(a.score)>=90?'good':Number(a.score)>=75?'warn':'bad'}">${a.score}%</span></td><td>${a.type==='typing'?'Скорость печати':attemptDetails(a).length?`<button class="btn secondary" onclick="openAttemptReview('${a.id}')">Ответы</button>`:'<span class="muted small">без детализации</span>'}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">Автоматических попыток пока нет.</td></tr>'}</tbody></table></div>${sh742ManualReportHtml(login)}`);
+};
+
+// Tech admin can preview a manual Soft case without sending it to an RG.
+const sh742StartManualContentBase=startManualContent;
+startManualContent=function(id){
+  if(!isTechAdmin())return sh742StartManualContentBase(id);
+  const x=S.content.find(c=>c.id===id);if(!x||x.type!=='manual')return;goRun();const stats=manualTopicStats(x.topic),next=manualNextCandidate(x.topic,id);
+  $('page-run').innerHTML=`<div class="sh74-run-card"><div class="sh74-run-top"><button class="back" onclick="go('training')">‹</button><span class="sh74-run-counter">Предпросмотр техадмина</span></div><h2 style="margin:18px 0 5px">${esc(x.title||'Ручной тренажёр')}</h2><div class="meta">${esc(x.instruction||'Сформулируйте ответ своими словами.')}</div><div class="sh74-prompt"><b>Ситуация</b>${esc(x.question||x.title||'')}</div><div class="sh74-answer-panel"><label>Ваш тестовый ответ</label><textarea rows="8" placeholder="Можно проверить, как выглядит ввод ответа. Результат не отправляется РГ."></textarea></div><div class="sh74-run-actions"><button class="btn secondary" onclick="go('training')">Выйти</button>${next?`<button class="btn primary" onclick="startManualContent('${next.id}')">Далее →</button>`:'<button class="btn primary" onclick="openManualSoft()">К списку</button>'}</div></div>`;
+};
+/* ===== end SkillHub 7.4.2 ===== */

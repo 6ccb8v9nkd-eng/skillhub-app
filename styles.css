@@ -225,3 +225,46 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
  body[data-role="mentor"] .sidebar nav::-webkit-scrollbar,body[data-role="rs"] .sidebar nav::-webkit-scrollbar,body[data-role="tech_admin"] .sidebar nav::-webkit-scrollbar{display:none}
  .sh74-manager-list{display:grid;gap:10px}
 }
+
+/* ===== SkillHub 7.4.2 — tech admin access + manual reporting ===== */
+@media(max-width:720px){
+  body[data-role="tech_admin"] .sidebar nav{
+    display:flex!important;
+    grid-template-columns:none!important;
+    gap:4px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:0 2px;
+  }
+  body[data-role="tech_admin"] .sidebar nav::-webkit-scrollbar{display:none}
+  body[data-role="tech_admin"] .nav-btn{
+    display:flex!important;
+    flex:0 0 78px!important;
+    min-width:78px!important;
+    max-width:78px!important;
+    justify-content:center!important;
+    flex-direction:column!important;
+    gap:3px!important;
+    padding:5px 2px!important;
+  }
+  body[data-role="tech_admin"] .nav-btn[data-page="notifications"]{display:none!important}
+  body[data-role="tech_admin"] .nav-btn[data-page="home"],
+  body[data-role="tech_admin"] .nav-btn[data-page="training"],
+  body[data-role="tech_admin"] .nav-btn[data-page="progress"],
+  body[data-role="tech_admin"] .nav-btn[data-page="mentor"],
+  body[data-role="tech_admin"] .nav-btn[data-page="content"],
+  body[data-role="tech_admin"] .nav-btn[data-page="assignments"],
+  body[data-role="tech_admin"] .nav-btn[data-page="employees"],
+  body[data-role="tech_admin"] .nav-btn[data-page="profile"],
+  body[data-role="tech_admin"] .nav-btn[data-page="admin"]{display:flex!important}
+  body[data-role="tech_admin"] .nav-text{display:block!important;font-size:9px!important;line-height:1.05!important;white-space:nowrap}
+}
+.sh742-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sh742-quick{border:1px solid #2a3035;background:#17191c;color:#fff;border-radius:16px;padding:16px;text-align:left;cursor:pointer;min-height:92px}
+.sh742-quick:hover{border-color:#ffdd2d}.sh742-quick b{display:block;font-size:15px;margin-bottom:5px}.sh742-quick small{color:#939ba3;line-height:1.35}
+.sh742-manual-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.sh742-manual-kpi{background:#17191c;border:1px solid #2a3035;border-radius:14px;padding:12px}.sh742-manual-kpi small{display:block;color:#939ba3}.sh742-manual-kpi strong{display:block;font-size:22px;margin-top:3px}
+.sh742-manual-list{display:grid;gap:10px}.sh742-manual-item{border:1px solid #2a3035;background:#111315;border-radius:14px;padding:13px}.sh742-manual-item-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.sh742-manual-item .manual-answer-text{margin-top:9px}.sh742-report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:720px){.sh742-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sh742-manual-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
