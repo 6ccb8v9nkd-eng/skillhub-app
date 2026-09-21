@@ -982,3 +982,54 @@ startManualContent=function(id){
   $('page-run').innerHTML=`<div class="sh74-run-card"><div class="sh74-run-top"><button class="back" onclick="go('training')">‹</button><span class="sh74-run-counter">Предпросмотр техадмина</span></div><h2 style="margin:18px 0 5px">${esc(x.title||'Ручной тренажёр')}</h2><div class="meta">${esc(x.instruction||'Сформулируйте ответ своими словами.')}</div><div class="sh74-prompt"><b>Ситуация</b>${esc(x.question||x.title||'')}</div><div class="sh74-answer-panel"><label>Ваш тестовый ответ</label><textarea rows="8" placeholder="Можно проверить, как выглядит ввод ответа. Результат не отправляется РГ."></textarea></div><div class="sh74-run-actions"><button class="btn secondary" onclick="go('training')">Выйти</button>${next?`<button class="btn primary" onclick="startManualContent('${next.id}')">Далее →</button>`:'<button class="btn primary" onclick="openManualSoft()">К списку</button>'}</div></div>`;
 };
 /* ===== end SkillHub 7.4.2 ===== */
+
+/* ===== SkillHub 7.4.3 · unified reports incl. manual Soft practice ===== */
+function sh743ManualRowsForUsers(users,from='',to=''){
+  const logs=new Set((users||[]).map(x=>x.login));
+  return filterByPeriod((S.manualAnswers||[]).filter(x=>logs.has(x.login)),from,to);
+}
+function sh743LatestManualRows(rows){
+  const map=new Map();
+  for(const r of (rows||[]).slice().sort((a,b)=>Number(a.version)-Number(b.version))){
+    map.set(`${r.login}__${r.content_id}`,r);
+  }
+  return [...map.values()];
+}
+function sh743ManualCounts(login,rows){
+  const latest=sh743LatestManualRows((rows||[]).filter(x=>x.login===login));
+  return {
+    total:latest.length,
+    accepted:latest.filter(x=>x.status==='accepted').length,
+    pending:latest.filter(x=>x.status==='submitted').length,
+    revision:latest.filter(x=>x.status==='revision_requested').length
+  };
+}
+openMentorExport=function(sector='',manager='',login=''){
+  const title=login?'Полный отчёт по сотруднику':manager?'Полный отчёт по команде':sector?'Полный отчёт по сектору':isTechAdmin()?'Полный отчёт SkillHub':'Полный отчёт по доступной команде';
+  showModal(`<div class="modal-head"><div><h2>${title}</h2><div class="meta">Один Excel: сводка, автоматические тренировки, ответы, назначения и ручная практика Soft со всеми комментариями РГ</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>С даты</label><input id="repFrom" type="date"></div><div class="field"><label>По дату</label><input id="repTo" type="date"></div></div><div class="hint">Если даты не указывать — выгрузится вся доступная история. Для ручной практики в файле будут отдельные листы «итог» и «все версии».</div><div class="actions" style="justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="exportMentorExcel('${jsq(sector)}','${jsq(manager)}','${jsq(login)}',$('repFrom').value,$('repTo').value)">⬇ Скачать полный Excel</button></div>`)
+};
+exportMentorExcel=function(sector='',manager='',login='',from='',to=''){
+  const users=reportEmployees(sector,manager,login),logs=new Set(users.map(x=>x.login)),attempts=filterByPeriod(S.attempts.filter(x=>logs.has(x.login)),from,to),byLogin=new Map(S.allowed.map(x=>[x.login,x]));
+  const manualRows=sh743ManualRowsForUsers(users,from,to),manualLatest=sh743LatestManualRows(manualRows);
+  const summary=users.map(u=>{const m=employeeMetrics(u,attempts),am=userAssignmentMetrics(u.login,S.attempts),mc=sh743ManualCounts(u.login,manualRows);return {'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Команда':teamDisplay(u.manager_login),'Сотрудник':u.name||u.login,'Логин':u.login,'Soft %':m.soft??'','Hard %':m.hard??'','Потребность %':m.needs??'','Ручных кейсов':mc.total,'Ручных принято':mc.accepted,'Ручных на проверке':mc.pending,'Ручных на доработке':mc.revision,'Зон развития':m.gaps.length,'Авто-попыток':m.attempts,'Назначений выполнено':am.completed,'Назначений просрочено':am.overdue,'Назначений в работе':am.work,'Последняя активность':m.last?new Date(m.last).toLocaleString('ru-RU'):''}});
+  const dynamics=attempts.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(a=>{const u=byLogin.get(a.login)||{};return {'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||a.login,'Логин':a.login,'Дата':new Date(a.created_at).toLocaleString('ru-RU'),'Раздел':secName(a.section),'Тема':a.topic,'Результат %':Number(a.score),'Тип':attemptTypeName(a.type)}});
+  const zones=[];for(const u of users)for(const t of topicStatsFromRows(u.login,attempts))zones.push({'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||u.login,'Логин':u.login,'Раздел':secName(t.section),'Тема':t.topic,'Последние %':t.avgRecent,'Попыток':t.attempts,'Тренд':trendText(t.trend),'Статус':statusText(t)});
+  const answers=[];for(const a of attempts){const u=byLogin.get(a.login)||{};(attemptDetails(a)||[]).forEach((d,i)=>{const opts=Array.isArray(d.options)?d.options:[];answers.push({'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||a.login,'Логин':a.login,'Дата':new Date(a.created_at).toLocaleString('ru-RU'),'Раздел':secName(a.section),'Тема':a.topic,'Материал':d.title||'','Шаг / вопрос':d.step||i+1,'Вопрос':d.question||'','Выбранный ответ':opts[Number(d.selected)]||'','Правильный ответ':opts[Number(d.correct)]||'','Верно':d.is_correct?'Да':'Нет','Объяснение':d.explanation||''})})}
+  const assignmentRows=[];for(const x of S.assignments){const rec=x.recipients||[],relevant=rec.includes('ALL')?users:users.filter(u=>rec.includes(u.login));for(const u of relevant)assignmentRows.push({'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||u.login,'Логин':u.login,'Назначение':x.title,'Раздел':x.section?secName(x.section):'','Тема':x.topic||'','Создано':x.created_at?new Date(x.created_at).toLocaleString('ru-RU'):'','Дедлайн':x.due||'','Цель %':x.target,'Статус сотрудника':assignmentStatusForUser(x,u.login,S.attempts)})}
+  const manualSummary=manualLatest.slice().sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at)).map(r=>{const u=byLogin.get(r.login)||{},c=S.content.find(x=>x.id===r.content_id),reviewer=r.reviewed_by?S.profiles.find(x=>x.id===r.reviewed_by):null;return {'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||r.login,'Логин':r.login,'Тренажёр':c?.title||'Ручной тренажёр','Тема':c?.topic||'Soft Skills','Последняя версия':r.version,'Последний ответ':r.answer,'Статус':manualStatusText(r.status),'Комментарий РГ':r.mentor_comment||'','Рекомендуемый вариант':r.mentor_suggestion||'','Проверил':reviewer?.name||reviewer?.login||'','Дата отправки':r.created_at?new Date(r.created_at).toLocaleString('ru-RU'):'','Дата проверки':r.reviewed_at?new Date(r.reviewed_at).toLocaleString('ru-RU'):''}});
+  const manualHistory=manualRows.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).map(r=>{const u=byLogin.get(r.login)||{},c=S.content.find(x=>x.id===r.content_id),reviewer=r.reviewed_by?S.profiles.find(x=>x.id===r.reviewed_by):null;return {'Сектор':sectorOf(u),'Руководитель':managerDisplay(u.manager_login),'Сотрудник':u.name||r.login,'Логин':r.login,'Тренажёр':c?.title||'Ручной тренажёр','Тема':c?.topic||'Soft Skills','Версия':r.version,'Ответ сотрудника':r.answer,'Статус':manualStatusText(r.status),'Комментарий РГ':r.mentor_comment||'','Рекомендуемый вариант':r.mentor_suggestion||'','Проверил':reviewer?.name||reviewer?.login||'','Дата отправки':r.created_at?new Date(r.created_at).toLocaleString('ru-RU'):'','Дата проверки':r.reviewed_at?new Date(r.reviewed_at).toLocaleString('ru-RU'):''}});
+  const scope=login?login:manager?teamDisplay(manager):sector||(isTechAdmin()?'Все_сектора':S.profile.sector_name||'Команда');
+  const params=[['Параметр','Значение'],['Дата формирования',new Date().toLocaleString('ru-RU')],['Область',scope],['Период с',from||'Вся история'],['Период по',to||'Вся история'],['Сотрудников в отчёте',users.length],['Ручных работ в периоде',manualRows.length],['Ручных кейсов (последние версии)',manualLatest.length],['Формула зоны развития',`минимум ${ADAPTIVE.minAttempts} попытки; среднее последних ${ADAPTIVE.recentWindow} < ${ADAPTIVE.gap}%`]];
+  const wb=XLSX.utils.book_new();
+  const wsp=XLSX.utils.aoa_to_sheet(params);formatExportSheet(wsp,[31,52]);XLSX.utils.book_append_sheet(wb,wsp,'Параметры');
+  const add=(name,rows,headers,widths)=>{const ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([headers]);formatExportSheet(ws,widths);XLSX.utils.book_append_sheet(wb,ws,name)};
+  add('Сводка',summary,['Сектор','Руководитель','Команда','Сотрудник','Логин','Soft %','Hard %','Потребность %','Ручных кейсов','Ручных принято','Ручных на проверке','Ручных на доработке','Зон развития','Авто-попыток','Назначений выполнено','Назначений просрочено','Назначений в работе','Последняя активность'],[18,24,22,28,20,10,10,14,15,15,18,19,14,14,18,19,17,21]);
+  add('Динамика',dynamics,['Сектор','Руководитель','Сотрудник','Логин','Дата','Раздел','Тема','Результат %','Тип'],[18,24,28,20,21,20,28,13,16]);
+  add('Зоны развития',zones,['Сектор','Руководитель','Сотрудник','Логин','Раздел','Тема','Последние %','Попыток','Тренд','Статус'],[18,24,28,20,20,30,13,10,12,18]);
+  add('История ответов',answers,['Сектор','Руководитель','Сотрудник','Логин','Дата','Раздел','Тема','Материал','Шаг / вопрос','Вопрос','Выбранный ответ','Правильный ответ','Верно','Объяснение'],[18,24,28,20,21,18,24,30,12,45,45,45,9,55]);
+  add('Назначения',assignmentRows,['Сектор','Руководитель','Сотрудник','Логин','Назначение','Раздел','Тема','Создано','Дедлайн','Цель %','Статус сотрудника'],[18,24,28,20,35,18,25,21,13,10,18]);
+  add('Ручная практика итог',manualSummary,['Сектор','Руководитель','Сотрудник','Логин','Тренажёр','Тема','Последняя версия','Последний ответ','Статус','Комментарий РГ','Рекомендуемый вариант','Проверил','Дата отправки','Дата проверки'],[18,24,28,20,34,24,14,60,18,50,55,24,22,22]);
+  add('Ручная практика история',manualHistory,['Сектор','Руководитель','Сотрудник','Логин','Тренажёр','Тема','Версия','Ответ сотрудника','Статус','Комментарий РГ','Рекомендуемый вариант','Проверил','Дата отправки','Дата проверки'],[18,24,28,20,34,24,10,60,18,50,55,24,22,22]);
+  const period=(from||to)?`_${from||'start'}_${to||'today'}`:'';XLSX.writeFile(wb,`SkillHub_Полный_отчёт_${safeFilePart(scope)}${period}.xlsx`);toast('Полный Excel сформирован');
+};
+/* ===== end SkillHub 7.4.3 ===== */
