@@ -272,3 +272,11 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 /* 7.4.4 — keep uploaded profile photos inside the top avatar circle */
 .profile>span{overflow:hidden;flex:0 0 auto}
 .profile>span img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+
+/* ===== SkillHub 7.4.5 — manual rework visibility ===== */
+.sh745-rework-banner{margin:14px 0 18px;padding:16px;border:1px solid rgba(255,192,38,.38);border-radius:22px;background:linear-gradient(145deg,rgba(255,221,45,.12),rgba(255,166,0,.055));box-shadow:0 10px 30px rgba(0,0,0,.16)}
+.sh745-rework-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.sh745-rework-head>div{min-width:0}.sh745-rework-head b{font-size:18px}.sh745-rework-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:8px;border-radius:9px;background:#ffdd2d;color:#090b0d;font-weight:900}
+.sh745-rework-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,.08)}.sh745-rework-copy{min-width:0;flex:1}.sh745-rework-copy>b{display:block;margin-bottom:4px}.sh745-rework-comment{margin-top:7px;padding:9px 10px;border-radius:12px;background:rgba(255,221,45,.08);font-size:13px;line-height:1.4}.sh745-rework-item .btn{flex:none}.sh745-more{width:100%;margin-top:8px}
+.sh745-notification-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:14px;border-radius:18px;border:1px solid rgba(255,192,38,.35);background:rgba(255,221,45,.1)}
+@media(max-width:640px){.sh745-rework-head,.sh745-rework-item,.sh745-notification-action{align-items:stretch;flex-direction:column}.sh745-rework-item .btn,.sh745-notification-action .btn{width:100%}}
+/* ===== end SkillHub 7.4.5 ===== */

@@ -1033,3 +1033,48 @@ exportMentorExcel=function(sector='',manager='',login='',from='',to=''){
   const period=(from||to)?`_${from||'start'}_${to||'today'}`:'';XLSX.writeFile(wb,`SkillHub_Полный_отчёт_${safeFilePart(scope)}${period}.xlsx`);toast('Полный Excel сформирован');
 };
 /* ===== end SkillHub 7.4.3 ===== */
+
+/* ===== SkillHub 7.4.5 — employee manual rework visibility ===== */
+function sh745EmployeeManualReworks(){
+  if(S.profile?.role!=='employee')return [];
+  const login=S.profile.login;
+  const latest=new Map();
+  for(const r of (S.manualAnswers||[]).filter(x=>x.login===login).sort((a,b)=>Number(a.version||0)-Number(b.version||0))){
+    latest.set(r.content_id,r);
+  }
+  return [...latest.values()]
+    .filter(r=>r.status==='revision_requested')
+    .map(r=>({answer:r,content:S.content.find(c=>c.id===r.content_id)}))
+    .sort((a,b)=>new Date(b.answer.reviewed_at||b.answer.updated_at||0)-new Date(a.answer.reviewed_at||a.answer.updated_at||0));
+}
+function sh745ReworkBannerHtml(compact=false){
+  const rows=sh745EmployeeManualReworks();if(!rows.length)return'';
+  const list=rows.slice(0,compact?2:4).map(({answer:r,content:c})=>`<div class="sh745-rework-item"><div class="sh745-rework-copy"><b>${esc(c?.title||'Ручной тренажёр')}</b><div class="meta">${esc(c?.topic||'Soft Skills')} · версия ${r.version}</div>${r.mentor_comment?`<div class="sh745-rework-comment"><b>Комментарий РГ:</b> ${esc(r.mentor_comment)}</div>`:''}</div><button class="btn primary" onclick="startManualContent('${r.content_id}')">Доработать</button></div>`).join('');
+  return `<div class="sh745-rework-banner"><div class="sh745-rework-head"><div><span class="sh745-rework-icon">↩</span><b>Нужно доработать ${rows.length>1?'· '+rows.length:''}</b><div class="meta">Руководитель вернул ${rows.length>1?'работы':'работу'} с комментарием. Исправьте ответ и отправьте повторно.</div></div><button class="sh74-link" onclick="openManualSoft()">Все ручные</button></div>${list}${rows.length>(compact?2:4)?`<button class="btn secondary sh745-more" onclick="openManualSoft()">Показать все доработки (${rows.length})</button>`:''}</div>`;
+}
+function sh745InjectReworkBanner(pageId,afterSelector){
+  const page=$(pageId),html=sh745ReworkBannerHtml(pageId==='page-home');if(!page||!html)return;
+  const holder=document.createElement('div');holder.innerHTML=html;const banner=holder.firstElementChild;
+  const anchor=afterSelector?page.querySelector(afterSelector):null;
+  if(anchor)anchor.insertAdjacentElement('afterend',banner);else page.prepend(banner);
+}
+const sh745RenderHomeBase=renderHome;
+renderHome=function(){
+  sh745RenderHomeBase();
+  if(S.profile?.role==='employee')sh745InjectReworkBanner('page-home','.sh74-hero');
+};
+const sh745RenderTrainingBase=renderTraining;
+renderTraining=function(){
+  sh745RenderTrainingBase();
+  if(S.profile?.role==='employee')sh745InjectReworkBanner('page-training','.sh74-filterbar');
+};
+const sh745RenderNotificationsBase=renderNotifications;
+renderNotifications=function(){
+  sh745RenderNotificationsBase();
+  if(S.profile?.role!=='employee')return;
+  const rows=sh745EmployeeManualReworks(),page=$('page-notifications');if(!page||!rows.length)return;
+  const box=document.createElement('div');box.className='sh745-notification-action';
+  box.innerHTML=`<div><b>↩ Есть ${rows.length} ${rows.length===1?'работа':'работы'} на доработке</b><div class="meta">Откройте ручной тренажёр, посмотрите комментарий РГ и отправьте новую версию.</div></div><button class="btn primary" onclick="go('training');setTimeout(()=>openManualSoft(),0)">Открыть</button>`;
+  page.prepend(box);
+};
+/* ===== end SkillHub 7.4.5 ===== */
