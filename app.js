@@ -222,7 +222,7 @@ function exitTyping(){
 }
 
 function attemptDetails(a){return Array.isArray(a?.details)?a.details:[]}
-function attemptTypeName(t){return t==='dialogue'?'Живой диалог':t==='typing'?'Печать':'Тест'}
+function attemptTypeName(t){return t==='dialogue'?'Живой диалог':t==='typing'?'Скорость печати':'Тест'}
 function openAttemptReview(id){
   const a=S.attempts.find(x=>x.id===id);if(!a)return;
   const d=attemptDetails(a),correct=d.filter(x=>x.is_correct).length;
@@ -827,6 +827,7 @@ function enterApp(){
 }
 function renderUnread(){const n=S.notifications.filter(x=>!x.read).length;for(const id of ['bellBadge','topBellBadge']){const b=$(id);if(b){b.textContent=n;b.classList.toggle('hidden',!n)}}if(navigator.setAppBadge){if(n)navigator.setAppBadge(n).catch(()=>{});else navigator.clearAppBadge?.().catch(()=>{})}}
 
+function sh741OpenProfile(){document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page==='profile'));showProfileEditor()}
 function showProfileEditor(){
   $('profileMenu').classList.add('hidden');const url=S.profile?.avatar_url||'';
   showModal(`<div class="modal-head"><div><h2>Мой профиль</h2><div class="meta">${esc(roleName(S.profile?.role))}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
@@ -846,11 +847,19 @@ function sh74SectionProgress(sec){
   const arr=S.content.filter(x=>x.status==='published'&&x.section===sec),seen=seenContentMap(S.profile.login);let done=arr.filter(x=>seen.has(x.id)).length;if(sec==='soft')done=arr.filter(x=>seen.has(x.id)||(S.manualAnswers||[]).some(m=>m.login===S.profile.login&&m.content_id===x.id)).length;const total=arr.length;return{done,total,pct:total?Math.round(done/total*100):0}
 }
 function sh74Name(){const n=String(S.profile?.name||S.profile?.login||'').trim();return n||'коллега'}
+function sh741SkillIcon(sec){
+  const icons={
+    soft:`<span class="sh741-skill-icon soft"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a2.5 2.5 0 0 1 2.5 2.5v6A2.5 2.5 0 0 1 19 16.5H10l-5.5 3v-3.2A2.5 2.5 0 0 1 2.5 14V8A2.5 2.5 0 0 1 5 5.5Z"/><circle cx="8" cy="11" r="1"/><circle cx="12" cy="11" r="1"/><circle cx="16" cy="11" r="1"/></svg></span>`,
+    hard:`<span class="sh741-skill-icon hard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></span>`,
+    needs:`<span class="sh741-skill-icon needs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="13" r="7"/><circle cx="11" cy="13" r="3"/><path d="M14.5 9.5 21 3M17 3h4v4"/></svg></span>`,
+    typing:`<span class="sh741-skill-icon typing"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h1M10 10h1M14 10h1M18 10h.5M6 13.5h1M10 13.5h1M14 13.5h1M18 13.5h.5M7 16h10"/></svg></span>`
+  };return icons[sec]||''
+}
 
 function renderHome(){
   if(S.profile?.role!=='employee'){$('page-home').innerHTML='<div class="sh74-manager"><div class="sh74-light-card"><b>Для руководителя основная панель находится в разделе управления.</b><div class="meta">Откройте «'+(S.profile.role==='mentor'?'Моя группа':S.profile.role==='rs'?'Сектор':'Управление')+'».</div></div></div>';return}
   $('pageTitle').textContent='Главная';$('pageSub').textContent='Ваш прогресс и актуальные тренировки';
-  const a=sh74CurrentAssignment(),streak=sh74Streak(),dirs=[['soft','💬','Soft Skills','Коммуникация и клиентский сервис',"openSoftHub()"],['hard','▥','Hard Skills','Продукты, процессы и регламенты',"openSection('hard')"],['needs','◎','Потребность','Выявление и развитие потребности',"openSection('needs')"],['typing','⌨','Скорость печати','Точность и скорость набора',"startTyping()"]];
+  const a=sh74CurrentAssignment(),streak=sh74Streak(),dirs=[['soft',sh741SkillIcon('soft'),'Soft Skills','Коммуникация и клиентский сервис',"openSoftHub()"],['hard',sh741SkillIcon('hard'),'Hard Skills','Продукты, процессы и регламенты',"openSection('hard')"],['needs',sh741SkillIcon('needs'),'Потребность','Выявление и развитие потребности',"openSection('needs')"],['typing',sh741SkillIcon('typing'),'Скорость печати','Точность и скорость набора',"startTyping()"]];
   let currentTitle='Выберите тренировку',currentMeta='Активных назначений сейчас нет — можно потренироваться самостоятельно.',action="go('training')",actionText='К тренировкам →',heroPct=0;
   if(a){currentTitle=a.title||'Текущее задание';currentMeta=`${a.due?'До '+a.due+' · ':''}${a.section?sh74SecName(a.section):''}${a.topic?' · '+a.topic:''}`;action=`startAssignment('${a.id}')`;actionText='Продолжить →';heroPct=assignmentCompletedForUser(a,S.profile.login,S.attempts)?100:20}
   $('page-home').innerHTML=`<div class="sh74-home"><div class="sh74-hero"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh74-hero-sub">Продолжаем развиваться вместе</div><div class="sh74-current"><div class="sh74-current-label">СЕГОДНЯ</div><div class="sh74-current-title">${esc(currentTitle)}</div><div class="sh74-current-meta">${esc(currentMeta)}</div>${a?`<div class="sh74-hero-progress"><span style="width:${heroPct}%"></span></div>`:''}<button class="btn" onclick="${action}">${actionText}</button></div></div>
@@ -860,26 +869,26 @@ function renderHome(){
 
 let sh74TrainingFilter='all';
 function sh74SetTrainingFilter(v){sh74TrainingFilter=v;renderTraining()}
-function sh74TrainingProgress(sec){const p=sh74SectionProgress(sec);return p}
+function sh74TrainingProgress(sec){if(S.profile?.role!=='employee'){const total=sec==='typing'?50:S.content.filter(x=>x.status==='published'&&x.section===sec).length;return{done:0,total,pct:0}}const p=sh74SectionProgress(sec);return p}
 function renderTraining(){
   $('pageTitle').textContent='Тренировки';$('pageSub').textContent='Выберите направление и продолжайте с нужного места';
-  const manualTotal=manualSoftContent().length,manualStarted=(S.manualAnswers||[]).filter(x=>x.login===S.profile?.login).map(x=>x.content_id).filter((v,i,a)=>a.indexOf(v)===i).length;
+  const manualTotal=manualSoftContent().length,manualStarted=S.profile?.role==='employee'?(S.manualAnswers||[]).filter(x=>x.login===S.profile?.login).map(x=>x.content_id).filter((v,i,a)=>a.indexOf(v)===i).length:0;
   const rows=[
     {group:'soft',icon:'✎',title:'Ручной тренажёр',sub:'Пиши ответы на реальные кейсы · проверка РГ',done:manualStarted,total:manualTotal,act:"openManualSoft()",label:'Открыть'},
     {group:'game',icon:'🎮',title:'Мастер линии',sub:'Игровой тренажёр',done:0,total:0,url:MASTER_LINE_URL,label:'Запустить'},
-    {group:'soft',icon:'●',title:'Soft Skills',sub:'Коммуникация, клиенты, команда',...sh74TrainingProgress('soft'),act:"openSection('soft','auto')",label:'Открыть'},
-    {group:'hard',icon:'▥',title:'Hard Skills',sub:'Продукты, процессы, регламенты',...sh74TrainingProgress('hard'),act:"openSection('hard')",label:'Открыть'},
-    {group:'needs',icon:'◎',title:'Потребность',sub:'Выявление потребности и живые диалоги',...sh74TrainingProgress('needs'),act:"openSection('needs')",label:'Открыть'},
-    {group:'typing',icon:'⌨',title:'Скорость печати',sub:'Точность и скорость набора · 50 текстов',...sh74TrainingProgress('typing'),act:"startTyping()",label:'Начать'}
+    {group:'soft',icon:sh741SkillIcon('soft'),title:'Soft Skills',sub:'Коммуникация, клиенты, команда',...sh74TrainingProgress('soft'),act:"openSection('soft','auto')",label:'Открыть'},
+    {group:'hard',icon:sh741SkillIcon('hard'),title:'Hard Skills',sub:'Продукты, процессы, регламенты',...sh74TrainingProgress('hard'),act:"openSection('hard')",label:'Открыть'},
+    {group:'needs',icon:sh741SkillIcon('needs'),title:'Потребность',sub:'Выявление потребности и живые диалоги',...sh74TrainingProgress('needs'),act:"openSection('needs')",label:'Открыть'},
+    {group:'typing',icon:sh741SkillIcon('typing'),title:'Скорость печати',sub:'Точность и скорость набора · 50 текстов',...sh74TrainingProgress('typing'),act:"startTyping()",label:'Начать'}
   ];
   const visible=rows.filter(x=>sh74TrainingFilter==='all'||x.group===sh74TrainingFilter);
-  $('page-training').innerHTML=`<div class="sh74-training"><div class="sh74-filterbar">${[['all','Все'],['soft','Soft'],['hard','Hard'],['needs','Потребность'],['typing','Печать']].map(([v,n])=>`<button class="sh74-filter ${sh74TrainingFilter===v?'active':''}" onclick="sh74SetTrainingFilter('${v}')">${n}</button>`).join('')}</div><div class="sh74-training-list">${visible.map(x=>`<div class="sh74-training-row"><div class="sh74-training-icon">${x.icon}</div><div class="sh74-training-copy"><b>${x.title}</b><p>${x.sub}</p>${x.total?`<div class="sh74-training-progress"><div class="progress"><span style="width:${Math.round((x.done||0)/x.total*100)}%"></span></div><small>${x.done||0}/${x.total}</small></div>`:''}</div><div class="sh74-training-action">${x.url?`<a class="btn primary" target="_blank" rel="noopener noreferrer" href="${x.url}">${x.label}</a>`:`<button class="btn ${x.title==='Мастер линии'?'primary':'secondary'}" onclick="${x.act}">${x.label} ›</button>`}</div></div>`).join('')}</div></div>`
+  $('page-training').innerHTML=`<div class="sh74-training"><div class="sh74-filterbar">${[['all','Все'],['soft','Soft'],['hard','Hard'],['needs','Потребность'],['typing','Скорость печати']].map(([v,n])=>`<button class="sh74-filter ${sh74TrainingFilter===v?'active':''}" onclick="sh74SetTrainingFilter('${v}')">${n}</button>`).join('')}</div><div class="sh74-training-list">${visible.map(x=>`<div class="sh74-training-row"><div class="sh74-training-icon">${x.icon}</div><div class="sh74-training-copy"><b>${x.title}</b><p>${x.sub}</p>${x.total?`<div class="sh74-training-progress"><div class="progress"><span style="width:${Math.round((x.done||0)/x.total*100)}%"></span></div><small>${x.done||0}/${x.total}</small></div>`:''}</div><div class="sh74-training-action">${x.url?`<a class="btn primary" target="_blank" rel="noopener noreferrer" href="${x.url}">${x.label}</a>`:`<button class="btn ${x.title==='Мастер линии'?'primary':'secondary'}" onclick="${x.act}">${x.label} ›</button>`}</div></div>`).join('')}</div></div>`
 }
 
 function sh74TeamAssignmentProgress(users){let total=0,done=0;for(const a of S.assignments.filter(x=>x.status==='active'))for(const u of users){if(!sh74AssignedTo(a,u.login))continue;total++;if(assignmentCompletedForUser(a,u.login,S.attempts))done++}return{total,done,pct:total?Math.round(done/total*100):0}}
 function sh74Avg(vals){const a=vals.filter(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))).map(Number);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0}
 function sh74PendingRowsForMentor(){return typeof pendingManualForMentor==='function'?pendingManualForMentor():[]}
-function sh74TeamRowsHtml(u){return `<div class="sh74-manager-list">${u.slice(0,10).map(x=>{const avg=sh74Avg([x.soft,x.hard,x.needs]),trend=(x.gaps?.length||0)?'down':'up';return `<div class="sh74-team-row">${sh74AvatarHtml(x.login,x.name||x.login)}<div><b>${esc(x.name||x.login)}</b><small>${esc(x.login)} · ${x.attempts} попыток</small></div><span class="sh74-score">${avg||'—'}${avg?'%':''}</span><button class="btn secondary" onclick="openUserAttempts('${jsq(x.login)}')">Карточка</button></div>`}).join('')||'<div class="muted">Сотрудников пока нет.</div>'}</div>`}
+function sh74TeamRowsHtml(u){return `<div class="sh74-manager-list">${u.map(x=>{const avg=sh74Avg([x.soft,x.hard,x.needs]),trend=(x.gaps?.length||0)?'down':'up';return `<div class="sh74-team-row">${sh74AvatarHtml(x.login,x.name||x.login)}<div><b>${esc(x.name||x.login)}</b><small>${esc(x.login)} · ${x.attempts} попыток</small></div><span class="sh74-score">${avg||'—'}${avg?'%':''}</span><button class="btn secondary" onclick="openUserAttempts('${jsq(x.login)}')">Карточка</button></div>`}).join('')||'<div class="muted">Сотрудников пока нет.</div>'}</div>`}
 function sh74DirectionsHtml(u){const vals=sec=>sh74Avg(u.map(x=>x[sec]));return `<div class="sh74-bars"><div class="sh74-bar-row"><span>Soft Skills</span><div class="progress"><span class="soft" style="width:${vals('soft')}%"></span></div><b>${vals('soft')||'—'}${vals('soft')?'%':''}</b></div><div class="sh74-bar-row"><span>Hard Skills</span><div class="progress"><span class="hard" style="width:${vals('hard')}%"></span></div><b>${vals('hard')||'—'}${vals('hard')?'%':''}</b></div><div class="sh74-bar-row"><span>Потребность</span><div class="progress"><span class="needs" style="width:${vals('needs')}%"></span></div><b>${vals('needs')||'—'}${vals('needs')?'%':''}</b></div></div>`}
 
 function renderManagerMentor(){

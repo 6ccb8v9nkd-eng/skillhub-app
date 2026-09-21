@@ -205,3 +205,23 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
   body[data-role="tech_admin"] .nav-btn[data-page="content"]{display:none!important}
   .sh74-hero{padding:22px;border-radius:25px;min-height:255px}.sh74-hero h2{font-size:28px}.sh74-current{margin-top:24px}.sh74-streak{padding:18px}.sh74-day i{width:34px;height:34px}.sh74-directions{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sh74-direction{padding:15px;min-height:145px}.sh74-training-row{grid-template-columns:48px 1fr;gap:11px;padding:13px}.sh74-training-icon{width:46px;height:46px}.sh74-training-action{grid-column:1/-1;width:100%}.sh74-training-action .btn,.sh74-training-action.btn{width:100%}.sh74-training-progress .progress{width:100%}.sh74-training-progress{display:grid;grid-template-columns:1fr auto}.sh74-kpis{grid-template-columns:repeat(2,1fr);gap:9px}.sh74-kpi{padding:14px}.sh74-kpi strong{font-size:26px}.sh74-manager-top{align-items:flex-start}.sh74-manager-top .actions{display:none}.sh74-manager-main{grid-template-columns:1fr}.sh74-team-row{grid-template-columns:auto 1fr auto}.sh74-team-row .btn{grid-column:1/-1;width:100%}.sh74-bar-row{grid-template-columns:105px 1fr 38px}.sh74-light-card{padding:14px}.sh74-attention-row{grid-template-columns:auto 1fr}.sh74-attention-status{grid-column:2}.sh74-profile-card{grid-template-columns:1fr;justify-items:center;text-align:center}.sh74-profile-meta{width:100%;text-align:left}.modal-card{border-radius:22px 22px 0 0;max-height:88vh}.profile-menu{top:65px;right:12px}.sh74-success{padding:24px 10px}
 }
+
+
+/* SkillHub 7.4.1 reference fidelity fixes */
+.sh741-skill-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:0 0 46px}
+.sh741-skill-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sh741-skill-icon svg rect,.sh741-skill-icon svg circle{fill:currentColor;stroke:currentColor}
+.sh741-skill-icon.soft{background:rgba(68,208,194,.14);color:#51d5c6}
+.sh741-skill-icon.hard{background:rgba(76,161,255,.14);color:#56a9ff}
+.sh741-skill-icon.needs{background:rgba(174,91,255,.14);color:#aa63ff}
+.sh741-skill-icon.typing{background:rgba(255,158,69,.14);color:#ff9f45}
+.sh741-skill-icon.typing svg rect{fill:none}.sh741-skill-icon.typing svg path{fill:none}
+.sh74-direction-icon .sh741-skill-icon{width:44px;height:44px}.sh74-direction-icon .sh741-skill-icon svg{width:27px;height:27px}
+.sh74-training-icon .sh741-skill-icon{width:52px;height:52px;border-radius:16px}.sh74-training-icon .sh741-skill-icon svg{width:31px;height:31px}
+.nav-btn[data-page="profile"] .nav-icon svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:780px){
+ body[data-role="employee"] .sidebar nav{grid-template-columns:repeat(5,minmax(68px,1fr))}
+ body[data-role="mentor"] .sidebar nav,body[data-role="rs"] .sidebar nav,body[data-role="tech_admin"] .sidebar nav{grid-template-columns:repeat(6,minmax(72px,1fr));overflow-x:auto;scrollbar-width:none}
+ body[data-role="mentor"] .sidebar nav::-webkit-scrollbar,body[data-role="rs"] .sidebar nav::-webkit-scrollbar,body[data-role="tech_admin"] .sidebar nav::-webkit-scrollbar{display:none}
+ .sh74-manager-list{display:grid;gap:10px}
+}
