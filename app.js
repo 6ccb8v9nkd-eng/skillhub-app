@@ -106,15 +106,37 @@ function renderQuiz(){const r=S.currentRun;if(r.i>=r.items.length){finishQuiz();
 function answerQuiz(i){const r=S.currentRun,x=r.items[r.i],correct=Number(x.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'quiz',content_id:x.id||null,title:x.title||'',question:x.question||'',options:[...(x.answers||[])],selected:i,correct,is_correct:ok,explanation:x.explanation||''});if(ok)r.score++;$('runFeedback').innerHTML=`<div class="explain">${esc(x.explanation||'')}</div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderQuiz()">Дальше</button></div>`}
 function finishQuiz(){const r=S.currentRun,p=Math.round(r.score/r.items.length*100);recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Тренировка завершена</h2><p class="muted">${r.score} из ${r.items.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 function startDialogue(x){S.currentRun={type:'dialogue',x,i:0,score:0,details:[]};goRun();renderDialogue()}
-function renderDialogue(){const r=S.currentRun,x=r.x;if(r.i>=(x.steps||[]).length){finishDialogue();return}const s=x.steps[r.i];$('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${x.steps.length}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(s.client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${s.options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`}
-function answerDialogue(i){const r=S.currentRun,s=r.x.steps[r.i],correct=Number(s.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'dialogue',content_id:r.x.id||null,title:r.x.title||'',step:r.i+1,question:s.client||'',options:[...(s.options||[])],selected:i,correct,is_correct:ok,next_client:s.next_client||'',explanation:s.explanation||''});if(ok)r.score++;
-const e=s.review||s.payload?.review||s.payload?.explanation||{};
-if(!e.correct && s.payload?.explanation?.correct){e.correct=s.payload.explanation.correct.blocks||[]}
-if(!e.wrong && s.payload?.explanation?.wrong_answers){e.wrong=s.payload.explanation.wrong_answers.map((x,idx)=>({...x,variant:idx+1,error:x.mistake}))}
-if(!e.skill && s.payload?.explanation?.skill){e.skill=s.payload.explanation.skill;}
-const correctBlocks=(e.correct||[]).map(x=>`<div class="review-card"><b>${esc(x.title)}</b><div>${esc(x.text)}</div></div>`).join('');
-const wrongBlocks=(e.wrong||[]).map(x=>`<div class="wrong-card"><h4>🔴 Вариант ${esc(x.variant)}</h4><div class="mini"><b>✅ Что хорошо</b><br>${esc(x.good)}</div><div class="mini"><b>⚠️ Где ошибка</b><br>${esc(x.error)}</div><div class="mini"><b>🎯 Риск</b><br>${esc(x.risk)}</div></div>`).join('');
-$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''}${s.next_client?`<div class="bubble client"><b>Клиент</b><br>${esc(s.next_client)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
+function normalizeDialogueStep(x){
+  if(x.steps && x.steps.length) return x.steps;
+  const p=x.payload||{};
+  if(p.scenario && p.answers){
+    return [{
+      client:p.scenario.client||'',
+      options:(p.answers||[]).map(a=>a.text||''),
+      correct:(p.answers||[]).findIndex(a=>a.correct),
+      next_client:'',
+      review:p.review||p.feedback||{}
+    }];
+  }
+  return [];
+}
+function renderDialogue(){
+  const r=S.currentRun,x=r.x,steps=normalizeDialogueStep(x);
+  x._steps=steps;
+  if(r.i>=steps.length){finishDialogue();return}
+  const s=steps[r.i];
+  $('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${steps.length}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(s.client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${s.options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`
+}
+function answerDialogue(i){
+ const r=S.currentRun,steps=r.x._steps||normalizeDialogueStep(r.x),s=steps[r.i],correct=Number(s.correct),ok=i===correct;
+ document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});
+ r.details.push({kind:'dialogue',content_id:r.x.id||null,title:r.x.title||'',step:r.i+1,question:s.client||'',options:[...(s.options||[])],selected:i,correct,is_correct:ok});
+ if(ok)r.score++;
+ const e=s.review||r.x.payload?.review||r.x.payload?.feedback||{};
+ const correctBlocks=(e.correct?.blocks||e.correct||[]).map(x=>`<div class="review-card"><b>${esc(x.title)}</b><div>${esc(x.text)}</div></div>`).join('');
+ const wrongBlocks=(e.wrong||[]).map(x=>`<div class="wrong-card"><h4>🔴 Вариант ${esc(x.answer??x.variant)}</h4><div class="mini"><b>✅ Что хорошо</b><br>${esc(x.good)}</div><div class="mini"><b>⚠️ Где ошибка</b><br>${esc(x.mistake||x.error)}</div><div class="mini"><b>🎯 Риск</b><br>${esc(x.risk)}</div></div>`).join('');
+ $('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div>${correctBlocks}`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div>${wrongBlocks}`:''}${e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`
+}
 function finishDialogue(){const r=S.currentRun,p=Math.round(r.score/r.x.steps.length*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${r.x.steps.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 const TYPING_TEXTS=[
   "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
