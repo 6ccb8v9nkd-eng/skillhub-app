@@ -290,3 +290,15 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 @media(max-width:980px){.sh74-hero.sh746-has-promo{padding-right:22px}.sh74-hero.sh746-has-promo .sh746-master-promo{position:relative;inset:auto;width:auto;margin-top:18px;grid-template-columns:1fr 70px}.sh74-hero.sh746-has-promo .sh746-master-icon{width:66px;height:66px}}
 @media(max-width:640px){.sh746-master-promo{padding:15px;grid-template-columns:1fr 58px;border-radius:18px}.sh746-master-promo h3{font-size:17px}.sh746-master-promo p{font-size:12px}.sh746-master-icon{width:56px!important;height:56px!important;border-radius:15px!important}.sh746-master-strip .sh746-master-promo.compact{min-height:0;padding:15px}.sh746-master-btn{width:100%;box-sizing:border-box}}
 /* ===== end SkillHub 7.4.6 ===== */
+
+/* SkillHub 7.4.6 home mode cards */
+.sh746-home-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.sh746-mode-card{background:#151517;border:1px solid #303034;border-radius:22px;padding:22px;display:flex;flex-direction:column;min-height:220px}
+.sh746-mode-card.game{background:linear-gradient(145deg,#17181b,#202328)}
+.sh746-mode-icon{font-size:34px;margin-bottom:12px}
+.sh746-mode-body h3{margin:0 0 8px;font-size:24px}
+.sh746-mode-body p{color:var(--muted);margin:0 0 16px;line-height:1.4}
+.sh746-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.sh746-tags span{background:#25262a;border-radius:999px;padding:7px 12px;font-size:13px}
+.sh746-mode-card .btn{margin-top:auto;align-self:flex-start}
+@media(max-width:720px){.sh746-home-modes{grid-template-columns:1fr}.sh746-mode-card{min-height:190px}}

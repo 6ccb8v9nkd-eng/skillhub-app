@@ -739,12 +739,25 @@ editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.typ
 /* ===== SkillHub 7.2.3 — external game: Master Line ===== */
 const MASTER_LINE_URL='https://masterlinii-game.website.yandexcloud.net/';
 trainingCards=function(){
-  return `<div class="grid4">
-    <div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div>
-    <div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div>
-    <div class="card train-card"><div class="icon">🎯</div><h3>Развитие навыков</h3><p>Практика слабых зон через Soft и Hard тренировки.</p><button class="btn primary" onclick="openSection('soft')">Тренировать</button></div>
-    <div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div>
-    <div class="card train-card"><div class="icon">🎮</div><h3>Мастер линии</h3><p>Игровой тренажёр · практика навыков в игровом формате.</p><a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить</a></div>
+  return `<div class="sh746-home-modes">
+    <div class="sh746-mode-card">
+      <div class="sh746-mode-icon">🎯</div>
+      <div class="sh746-mode-body">
+        <h3>Потренироваться</h3>
+        <p>Развивайте навыки через реальные ситуации</p>
+        <div class="sh746-tags"><span>Soft Skills</span><span>Hard Skills</span><span>Потребность</span></div>
+      </div>
+      <button class="btn primary" onclick="openSoftHub()">К тренировкам</button>
+    </div>
+    <div class="sh746-mode-card game">
+      <div class="sh746-mode-icon">🎮</div>
+      <div class="sh746-mode-body">
+        <h3>Поиграть</h3>
+        <p>Игровой формат для прокачки навыков</p>
+        <div class="sh746-tags"><span>Мастер линии</span><span>Игры</span><span>Ранги</span></div>
+      </div>
+      <a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру</a>
+    </div>
   </div>`;
 };
 /* ===== end 7.2.3 ===== */
