@@ -739,25 +739,12 @@ editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.typ
 /* ===== SkillHub 7.2.3 — external game: Master Line ===== */
 const MASTER_LINE_URL='https://masterlinii-game.website.yandexcloud.net/';
 trainingCards=function(){
-  return `<div class="sh746-home-modes">
-    <div class="sh746-mode-card">
-      <div class="sh746-mode-icon">🎯</div>
-      <div class="sh746-mode-body">
-        <h3>Потренироваться</h3>
-        <p>Развивайте навыки через реальные ситуации</p>
-        <div class="sh746-tags"><span>Soft Skills</span><span>Hard Skills</span><span>Потребность</span></div>
-      </div>
-      <button class="btn primary" onclick="openSoftHub()">К тренировкам</button>
-    </div>
-    <div class="sh746-mode-card game">
-      <div class="sh746-mode-icon">🎮</div>
-      <div class="sh746-mode-body">
-        <h3>Поиграть</h3>
-        <p>Игровой формат для прокачки навыков</p>
-        <div class="sh746-tags"><span>Мастер линии</span><span>Игры</span><span>Ранги</span></div>
-      </div>
-      <a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру</a>
-    </div>
+  return `<div class="grid4">
+    <div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🎯</div><h3>Развитие навыков</h3><p>Практика слабых зон через Soft и Hard тренировки.</p><button class="btn primary" onclick="openSection('soft')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div>
+    <div class="card train-card"><div class="icon">🎮</div><h3>Мастер линии</h3><p>Игровой тренажёр · практика навыков в игровом формате.</p><a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить</a></div>
   </div>`;
 };
 /* ===== end 7.2.3 ===== */
@@ -1092,36 +1079,19 @@ renderNotifications=function(){
 };
 /* ===== end SkillHub 7.4.5 ===== */
 
-/* ===== SkillHub 7.4.6 — Master Line quick promo ===== */
-function sh746MasterLinePromoHtml(compact=false){
-  return `<div class="sh746-master-promo ${compact?'compact':''}">
-    <div class="sh746-master-copy">
-      <div class="sh746-master-kicker">Мастер линии</div>
-      <h3>Стань настоящим мастером линии</h3>
-      <p>Практика навыков в игровом формате</p>
-      <a class="sh746-master-btn" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a>
-    </div>
-    <img class="sh746-master-icon" src="./master-line-icon.png" alt="Мастер линии">
-  </div>`;
+/* ===== SkillHub 7.4.8 — Home dual cards refined ===== */
+function sh748HomeCardsHtml(){
+  return `<div class="sh748-hero-shell"><div class="sh748-hero-head"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh748-hero-subtitle">Что выбираете сегодня?</div><p class="sh748-hero-text">Тренируйте навыки или попробуйте себя в игре.</p></div><div class="sh748-home-grid"><section class="sh748-card sh748-card-train"><div class="sh748-card-icon">${sh741SkillIcon('needs')}</div><div class="sh748-card-body"><h3>Потренироваться</h3><p><strong>Soft, Hard, Потребность</strong><br>Скорость печати и другие навыки.</p><button class="sh748-card-btn" onclick="go('training')">К тренировкам →</button></div><div class="sh748-card-note">Маленькие шаги — большие результаты!</div></section><section class="sh748-card sh748-card-game"><div class="sh748-card-icon sh748-card-icon-game"><img class="sh748-game-icon" src="./master-line-icon.png" alt="Мастер линии"></div><div class="sh748-card-body"><h3>Поиграть</h3><p><strong>Мастер линии</strong><br>Стань настоящим мастером линии.<br>Практика навыков в игровом формате.</p><a class="sh748-card-btn sh748-card-btn-dark" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a></div><div class="sh748-card-side">Учись.<br>Играй.<br>Расти!</div></section></div></div>`;
 }
-function sh746InjectHeroPromo(pageId){
+function sh748ApplyEmployeeHome(pageId){
   const page=$(pageId),hero=page?.querySelector('.sh74-hero');
-  if(!hero||hero.querySelector('.sh746-master-promo'))return;
-  hero.insertAdjacentHTML('beforeend',sh746MasterLinePromoHtml(false));
-  hero.classList.add('sh746-has-promo');
+  if(!hero)return;
+  hero.classList.add('sh748-home-hero');
+  hero.innerHTML=sh748HomeCardsHtml();
 }
-const sh746RenderHomeBase=renderHome;
+const sh748RenderHomeBase=renderHome;
 renderHome=function(){
-  sh746RenderHomeBase();
-  if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh746InjectHeroPromo('page-home');
+  sh748RenderHomeBase();
+  if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh748ApplyEmployeeHome('page-home');
 };
-const sh746RenderManagerMentorBase=renderManagerMentor;
-renderManagerMentor=function(){
-  sh746RenderManagerMentorBase();
-  const page=$('page-mentor'),top=page?.querySelector('.sh74-manager-top');
-  if(page&&!page.querySelector('.sh746-master-strip')){
-    const holder=document.createElement('div');holder.className='sh746-master-strip';holder.innerHTML=sh746MasterLinePromoHtml(true);
-    if(top)top.insertAdjacentElement('afterend',holder);else page.prepend(holder);
-  }
-};
-/* ===== end SkillHub 7.4.6 ===== */
+/* ===== end SkillHub 7.4.8 ===== */
