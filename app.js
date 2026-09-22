@@ -107,7 +107,25 @@ function answerQuiz(i){const r=S.currentRun,x=r.items[r.i],correct=Number(x.corr
 function finishQuiz(){const r=S.currentRun,p=Math.round(r.score/r.items.length*100);recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Тренировка завершена</h2><p class="muted">${r.score} из ${r.items.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 function startDialogue(x){S.currentRun={type:'dialogue',x,i:0,score:0,details:[]};goRun();renderDialogue()}
 function renderDialogue(){const r=S.currentRun,x=r.x;if(r.i>=(x.steps||[]).length){finishDialogue();return}const s=x.steps[r.i];$('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${x.steps.length}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(s.client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${s.options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`}
-function answerDialogue(i){const r=S.currentRun,s=r.x.steps[r.i],correct=Number(s.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'dialogue',content_id:r.x.id||null,title:r.x.title||'',step:r.i+1,question:s.client||'',options:[...(s.options||[])],selected:i,correct,is_correct:ok,next_client:s.next_client||'',explanation:s.explanation||''});if(ok)r.score++;$('runFeedback').innerHTML=`<div class="explain">${esc(s.explanation||'')}</div>${s.next_client?`<div class="bubble client"><b>Клиент</b><br>${esc(s.next_client)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
+
+function renderCaseReview(s,selected){
+ const p=s.review||s.explanation_blocks||null;
+ if(!p)return `<div class="explain">${esc(s.explanation||'')}</div>`;
+ return `<div class="review-box correct-review">
+ <h3>✅ Почему выбранный ответ правильный</h3>
+ ${(p.correct?.blocks||[]).map(b=>`<div class="review-card"><b>${esc(b.title)}</b><p>${esc(b.text)}</p></div>`).join('')}
+ </div>
+ <div class="review-box wrong-review">
+ <h3>❌ Почему другие варианты не подходят</h3>
+ ${(p.wrong||[]).map((w)=>`<div class="wrong-card"><h4>🔴 Вариант ${w.answer_id}</h4>
+ <div><b>✅ Что хорошо:</b><br>${esc(w.good)}</div>
+ <div><b>⚠️ Где ошибка:</b><br>${esc(w.mistake)}</div>
+ <div><b>🎯 Риск:</b><br>${esc(w.risk)}</div>
+ </div>`).join('')}
+ </div>
+ <div class="skill-card"><b>🎯 Главный навык</b><p>${esc(p.skill||'')}</p></div>`;
+}
+function answerDialogue(i){const r=S.currentRun,s=r.x.steps[r.i],correct=Number(s.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'dialogue',content_id:r.x.id||null,title:r.x.title||'',step:r.i+1,question:s.client||'',options:[...(s.options||[])],selected:i,correct,is_correct:ok,next_client:s.next_client||'',explanation:s.explanation||''});if(ok)r.score++;$('runFeedback').innerHTML=renderCaseReview(s,i)+`${s.next_client?`<div class="bubble client"><b>Клиент</b><br>${esc(s.next_client)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
 function finishDialogue(){const r=S.currentRun,p=Math.round(r.score/r.x.steps.length*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${r.x.steps.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 const TYPING_TEXTS=[
   "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
