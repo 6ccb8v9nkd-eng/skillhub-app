@@ -115,6 +115,20 @@ const data=isNew?x.payload:{step:x.steps[r.i]};
 const client=isNew?data.scenario.client:data.step.client;
 const options=isNew?data.answers.map(a=>a.text):data.step.options;
 $('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${total}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`}
+function parseDialogueExplanation(text){
+  const src=String(text||'').replace(/\r/g,'').trim();
+  if(!src)return null;
+  const skill=(src.match(/🎯\s*КЛЮЧЕВОЙ НАВЫК:\s*([^\n]+)/i)||[])[1]?.trim()||'';
+  const correctPart=(src.split(/⚠️\s*ПОЧЕМУ ОСТАЛЬНЫЕ ВАРИАНТЫ СЛАБЕЕ/i)[0]||'')
+    .replace(/✅\s*ПОЧЕМУ ЭТО ЛУЧШИЙ ВАРИАНТ/i,'').trim();
+  const blocks=[...correctPart.matchAll(/^\s*(\d+)\.\s*(.+)$/gm)].map(m=>({title:`${m[1]}. ${m[2].trim()}`,text:''}));
+  const wrong=[];
+  const wrongPart=(src.split(/⚠️\s*ПОЧЕМУ ОСТАЛЬНЫЕ ВАРИАНТЫ СЛАБЕЕ/i)[1]||'').split(/🎯\s*КЛЮЧЕВОЙ НАВЫК/i)[0]||'';
+  const re=/Вариант\s+(\d+)\s*\nЧто хорошо:\s*([^\n]+)\s*\nГде (?:слабое место|ошибка):\s*([^\n]+)\s*\nРиск:\s*([^\n]+)/gi;
+  let m;
+  while((m=re.exec(wrongPart))){wrong.push({answer:Number(m[1]),good:m[2].trim(),mistake:m[3].trim(),risk:m[4].trim()})}
+  return {correct:{blocks},wrong,skill,raw:src};
+}
 function answerDialogue(i){
 const r=S.currentRun,x=r.x,isNew=!!x.payload?.scenario;
 const data=isNew?x.payload:{step:x.steps[r.i]};
@@ -122,13 +136,15 @@ const options=isNew?data.answers.map(a=>a.text):data.step.options;
 const correct=isNew?data.answers.findIndex(a=>a.correct):Number(data.step.correct);
 const ok=i===correct;
 document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});
-r.details.push({kind:'dialogue',content_id:x.id||null,title:x.title||'',selected:i,correct,is_correct:ok,options:[...options]});if(ok)r.score++;
-const e=isNew?(data.review||{}):(data.step.review||{});
+const legacyExplanation=!isNew?(data.step.explanation||''):'';
+r.details.push({kind:'dialogue',content_id:x.id||null,title:x.title||'',step:r.i+1,question:isNew?(data.scenario?.client||''):(data.step.client||''),selected:i,correct,is_correct:ok,options:[...options],explanation:legacyExplanation});if(ok)r.score++;
+const e=isNew?(data.review||{}):(data.step.review||parseDialogueExplanation(legacyExplanation)||{});
 const blocks=e.correct?.blocks||[];
 const wrong=e.wrong||[];
-const correctBlocks=blocks.map(x=>`<div class="review-card"><b>${esc(x.title)}</b><div>${esc(x.text)}</div></div>`).join('');
+const correctBlocks=blocks.map(x=>`<div class="review-card"><b>${esc(x.title)}</b>${x.text?`<div>${esc(x.text)}</div>`:''}</div>`).join('');
 const wrongBlocks=wrong.map(x=>`<div class="wrong-card"><h4>🔴 Вариант ${esc(x.answer??x.variant)}</h4><div class="mini"><b>✅ Что хорошо</b><br>${esc(x.good)}</div><div class="mini"><b>⚠️ Где ошибка</b><br>${esc(x.mistake||x.error)}</div><div class="mini"><b>🎯 Риск</b><br>${esc(x.risk)}</div></div>`).join('');
-$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
+const fallback=(!correctBlocks&&!wrongBlocks&&!e.skill&&legacyExplanation)?`<div class="explain">${esc(legacyExplanation).replace(/\n/g,'<br>')}</div>`:'';
+$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
 function finishDialogue(){const r=S.currentRun,p=Math.round(r.score/r.x.steps.length*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${r.x.steps.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 const TYPING_TEXTS=[
   "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
