@@ -1,3 +1,4 @@
+console.info('SkillHub build 20260922_1605_exp');
 const S={
   sb:null,user:null,profile:null,content:[],assignments:[],attempts:[],notifications:[],allowed:[],profiles:[],
   queue:JSON.parse(localStorage.getItem('sh7_queue')||'[]'),deferredInstall:null,currentRun:null,
@@ -1132,3 +1133,86 @@ renderHome=function(){
   if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh748ApplyEmployeeHome('page-home');
 };
 /* ===== end SkillHub 7.4.8 ===== */
+
+/* ===== SkillHub 7.4.9 — Reference home: yellow choice stage ===== */
+function sh749TrainingArt(){
+  return `<svg class="sh749-art-svg" viewBox="0 0 220 170" aria-hidden="true">
+    <defs>
+      <linearGradient id="sh749TargetOuter" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffe978"/><stop offset="1" stop-color="#ffc928"/></linearGradient>
+      <linearGradient id="sh749TargetInner" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff5bb"/><stop offset="1" stop-color="#ffe36e"/></linearGradient>
+      <linearGradient id="sh749Arrow" x1="0" x2="1"><stop stop-color="#6d42ff"/><stop offset="1" stop-color="#3a1bc5"/></linearGradient>
+      <filter id="sh749Shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#9b7210" flood-opacity=".28"/></filter>
+    </defs>
+    <g filter="url(#sh749Shadow)">
+      <circle cx="103" cy="91" r="60" fill="url(#sh749TargetOuter)"/>
+      <circle cx="103" cy="91" r="44" fill="url(#sh749TargetInner)"/>
+      <circle cx="103" cy="91" r="28" fill="#ffd92f"/>
+      <circle cx="103" cy="91" r="13" fill="#fff4ab"/>
+      <path d="M102 91 158 41" stroke="url(#sh749Arrow)" stroke-width="10" stroke-linecap="round"/>
+      <path d="m154 28 28-10-10 28-10 1-1 10-18 17 4-26-19-1 18-17 8 4z" fill="url(#sh749Arrow)"/>
+      <circle cx="103" cy="91" r="4.5" fill="#4625db"/>
+    </g>
+  </svg>`;
+}
+function sh749GameArt(){
+  return `<svg class="sh749-art-svg sh749-game-svg" viewBox="0 0 230 170" aria-hidden="true">
+    <defs>
+      <linearGradient id="sh749Pad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2c3038"/><stop offset=".55" stop-color="#111317"/><stop offset="1" stop-color="#050607"/></linearGradient>
+      <linearGradient id="sh749Gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff06c"/><stop offset="1" stop-color="#ffbd00"/></linearGradient>
+      <filter id="sh749PadShadow" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dx="0" dy="11" stdDeviation="9" flood-color="#000" flood-opacity=".45"/></filter>
+    </defs>
+    <g filter="url(#sh749PadShadow)">
+      <path d="M48 57c21-17 41-12 66-10 27-3 49-8 70 11 18 16 25 61 11 75-12 12-29-5-41-22-10-14-18-18-39-18s-31 5-42 21c-12 18-28 31-40 19-14-14-5-59 15-76z" fill="url(#sh749Pad)" stroke="#363a43" stroke-width="2"/>
+      <rect x="64" y="77" width="38" height="12" rx="6" fill="url(#sh749Gold)"/><rect x="77" y="64" width="12" height="38" rx="6" fill="url(#sh749Gold)"/>
+      <circle cx="158" cy="76" r="8" fill="#ffe24b"/><circle cx="178" cy="91" r="8" fill="#ffca1e"/><circle cx="155" cy="103" r="8" fill="#ffca1e"/><circle cx="180" cy="68" r="7" fill="#ffef76"/>
+      <circle cx="113" cy="103" r="10" fill="#2f3339" stroke="#555b66"/><circle cx="137" cy="103" r="10" fill="#2f3339" stroke="#555b66"/>
+      <path d="m175 28 11 18h-9l-7 15 2-19h-9z" fill="url(#sh749Gold)"/>
+      <path d="m47 35 7 8 10-3-4 10 7 8-11 1-5 9-3-10-10-3 9-6z" fill="#7a49ff"/>
+      <path d="m199 46 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" fill="#7a49ff"/>
+    </g>
+  </svg>`;
+}
+function sh749ReferenceHomeHtml(){
+  const rework = S.profile?.role==='employee' ? (sh745ReworkBannerHtml?.(true)||'') : '';
+  return `<div class="sh749-home-wrap">
+    <section class="sh749-choice-stage">
+      <div class="sh749-orb sh749-orb-a"></div><div class="sh749-orb sh749-orb-b"></div>
+      <header class="sh749-choice-head">
+        <div class="sh749-kicker">SKILLHUB</div>
+        <h1>Привет, ${esc(sh74Name())}! <span aria-hidden="true">👋</span></h1>
+        <h2>Что выбираете сегодня?</h2>
+        <p>Тренируйте навыки или попробуйте себя в игре.</p>
+      </header>
+      <div class="sh749-choice-grid">
+        <article class="sh749-choice-card sh749-training-card">
+          <div class="sh749-copy">
+            <h3>Потренироваться</h3>
+            <p>Отрабатывай навыки, чтобы<br>увереннее применять их в деле.</p>
+            <button class="sh749-cta sh749-cta-train" onclick="go('training')">Начать тренировку <span>→</span></button>
+          </div>
+          <div class="sh749-visual sh749-target-art">${sh749TrainingArt()}</div>
+        </article>
+        <article class="sh749-choice-card sh749-game-card">
+          <div class="sh749-copy">
+            <h3>Поиграть</h3>
+            <p>Решай игровые задачи<br>и оттачивай навыки в деле.</p>
+            <a class="sh749-cta sh749-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Начать игру <span>→</span></a>
+          </div>
+          <div class="sh749-visual sh749-game-art">${sh749GameArt()}</div>
+        </article>
+      </div>
+    </section>
+    ${rework ? `<div class="sh749-under-stage">${rework}</div>` : ''}
+  </div>`;
+}
+function sh749ApplyReferenceHome(){
+  const page=$('page-home'); if(!page)return;
+  page.classList.add('sh749-reference-home');
+  page.innerHTML=sh749ReferenceHomeHtml();
+}
+const sh749RenderHomeBase=renderHome;
+renderHome=function(){
+  sh749RenderHomeBase();
+  if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh749ApplyReferenceHome();
+};
+/* ===== end SkillHub 7.4.9 ===== */
