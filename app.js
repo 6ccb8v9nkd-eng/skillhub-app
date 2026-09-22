@@ -1143,100 +1143,10 @@ renderHome=function(){
 
 /* ===== SkillHub 7.4.9 — Reference home: yellow choice stage ===== */
 function sh749TrainingArt(){
-  return `<svg class="sh749-art-svg" viewBox="0 0 220 170" aria-hidden="true">
-    <defs>
-      <linearGradient id="sh749TargetOuter" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffe978"/><stop offset="1" stop-color="#ffc928"/></linearGradient>
-      <linearGradient id="sh749TargetInner" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff5bb"/><stop offset="1" stop-color="#ffe36e"/></linearGradient>
-      <linearGradient id="sh749Arrow" x1="0" x2="1"><stop stop-color="#6d42ff"/><stop offset="1" stop-color="#3a1bc5"/></linearGradient>
-      <filter id="sh749Shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#9b7210" flood-opacity=".28"/></filter>
-    </defs>
-    <g filter="url(#sh749Shadow)">
-      <circle cx="103" cy="91" r="60" fill="url(#sh749TargetOuter)"/>
-      <circle cx="103" cy="91" r="44" fill="url(#sh749TargetInner)"/>
-      <circle cx="103" cy="91" r="28" fill="#ffd92f"/>
-      <circle cx="103" cy="91" r="13" fill="#fff4ab"/>
-      <path d="M102 91 158 41" stroke="url(#sh749Arrow)" stroke-width="10" stroke-linecap="round"/>
-      <path d="m154 28 28-10-10 28-10 1-1 10-18 17 4-26-19-1 18-17 8 4z" fill="url(#sh749Arrow)"/>
-      <circle cx="103" cy="91" r="4.5" fill="#4625db"/>
-    </g>
-  </svg>`;
+  return `<img class="sh749-art-img sh749-target-img" src="./home-target-3d.svg?v=20260922_3dref" alt="" aria-hidden="true">`;
 }
 function sh749GameArt(){
-  return `<svg class="sh749-art-svg sh749-game-svg" viewBox="0 0 260 180" aria-hidden="true">
-    <defs>
-      <linearGradient id="sh749PadBody" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#353942"/>
-        <stop offset=".48" stop-color="#181b21"/>
-        <stop offset="1" stop-color="#08090c"/>
-      </linearGradient>
-      <linearGradient id="sh749PadEdge" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#4d535f"/>
-        <stop offset="1" stop-color="#15181d"/>
-      </linearGradient>
-      <linearGradient id="sh749Gold" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#fff27a"/>
-        <stop offset=".55" stop-color="#ffda21"/>
-        <stop offset="1" stop-color="#f0a700"/>
-      </linearGradient>
-      <linearGradient id="sh749Purple" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#a16dff"/>
-        <stop offset="1" stop-color="#5b28e8"/>
-      </linearGradient>
-      <filter id="sh749GameShadow" x="-40%" y="-45%" width="190%" height="220%">
-        <feDropShadow dx="0" dy="16" stdDeviation="11" flood-color="#000" flood-opacity=".55"/>
-      </filter>
-      <filter id="sh749GoldGlow" x="-100%" y="-100%" width="300%" height="300%">
-        <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#ffd829" flood-opacity=".55"/>
-      </filter>
-    </defs>
-
-    <!-- floating lightning like the reference -->
-    <g filter="url(#sh749GoldGlow)" transform="translate(185 12) rotate(8)">
-      <path d="M24 0 4 34h16l-7 30 30-40H27L35 0z" fill="url(#sh749Gold)"/>
-    </g>
-    <!-- purple confetti -->
-    <g fill="url(#sh749Purple)">
-      <rect x="183" y="69" width="18" height="6" rx="3" transform="rotate(-24 183 69)"/>
-      <rect x="218" y="84" width="15" height="5" rx="2.5" transform="rotate(28 218 84)"/>
-      <path d="M220 54 231 48 230 61z"/>
-      <path d="m166 54 8-10 5 13z"/>
-    </g>
-
-    <g filter="url(#sh749GameShadow)" transform="translate(2 9)">
-      <!-- controller shell -->
-      <path d="M45 64c14-17 32-23 55-20 16 2 28 5 40 5 13 0 28-4 43-5 25-2 43 5 56 23 15 21 22 62 10 82-6 10-18 13-28 7-9-6-18-18-27-31-9-13-17-21-29-23-9-2-22-2-33-2-12 0-23 0-32 3-12 3-21 12-29 25-8 13-17 24-26 29-11 6-22 3-28-7-12-20-5-63 14-86z" fill="url(#sh749PadBody)" stroke="url(#sh749PadEdge)" stroke-width="3"/>
-      <!-- soft highlights -->
-      <path d="M53 68c15-14 31-18 49-16 18 2 29 7 41 7 12 0 25-4 40-6 21-2 36 4 47 18" fill="none" stroke="#5c6471" stroke-opacity=".36" stroke-width="3" stroke-linecap="round"/>
-
-      <!-- yellow d-pad -->
-      <g filter="url(#sh749GoldGlow)">
-        <rect x="69" y="83" width="44" height="14" rx="7" fill="url(#sh749Gold)"/>
-        <rect x="84" y="68" width="14" height="44" rx="7" fill="url(#sh749Gold)"/>
-      </g>
-
-      <!-- right buttons, like reference -->
-      <g>
-        <circle cx="181" cy="78" r="10" fill="url(#sh749Gold)"/>
-        <circle cx="203" cy="95" r="10" fill="#f8c313"/>
-        <circle cx="180" cy="111" r="10" fill="#ffc91a"/>
-        <circle cx="207" cy="70" r="9" fill="#ffe76e"/>
-        <circle cx="181" cy="78" r="3" fill="#fff7bd" opacity=".7"/>
-        <circle cx="207" cy="70" r="3" fill="#fff9c9" opacity=".7"/>
-      </g>
-
-      <!-- center small buttons -->
-      <rect x="126" y="76" width="11" height="4" rx="2" fill="#777f8b"/>
-      <rect x="145" y="76" width="11" height="4" rx="2" fill="#777f8b"/>
-
-      <!-- sticks -->
-      <g>
-        <circle cx="126" cy="112" r="13" fill="#0e1014" stroke="#4d535d" stroke-width="2"/>
-        <circle cx="126" cy="112" r="8" fill="#252a31"/>
-        <circle cx="154" cy="112" r="13" fill="#0e1014" stroke="#4d535d" stroke-width="2"/>
-        <circle cx="154" cy="112" r="8" fill="#252a31"/>
-      </g>
-    </g>
-  </svg>`;
+  return `<img class="sh749-art-img sh749-game-img" src="./home-gamepad-3d.svg?v=20260922_3dref" alt="" aria-hidden="true">`;
 }
 function sh749ReferenceHomeHtml(){
   const rework = S.profile?.role==='employee' ? (sh745ReworkBannerHtml?.(true)||'') : '';

@@ -1,0 +1,81 @@
+<svg width="420" height="320" viewBox="0 0 420 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="outer" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(166 109) rotate(54) scale(146 141)">
+      <stop stop-color="#FFF7B8"/>
+      <stop offset="0.38" stop-color="#FFE769"/>
+      <stop offset="0.73" stop-color="#FFD32A"/>
+      <stop offset="1" stop-color="#E9A900"/>
+    </radialGradient>
+    <radialGradient id="ring1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180 118) rotate(47) scale(112 108)">
+      <stop stop-color="#FFF8C9"/>
+      <stop offset="0.58" stop-color="#FFE993"/>
+      <stop offset="1" stop-color="#F3C53E"/>
+    </radialGradient>
+    <radialGradient id="ring2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(187 126) rotate(52) scale(79 76)">
+      <stop stop-color="#FFF2A4"/>
+      <stop offset="0.55" stop-color="#FFD92F"/>
+      <stop offset="1" stop-color="#E7AA04"/>
+    </radialGradient>
+    <radialGradient id="center" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(194 132) rotate(42) scale(42 40)">
+      <stop stop-color="#FFF7C1"/>
+      <stop offset="0.7" stop-color="#FFE67A"/>
+      <stop offset="1" stop-color="#E9BC32"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="115" y1="246" x2="248" y2="85" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D18A00"/>
+      <stop offset="0.6" stop-color="#F6C21E"/>
+      <stop offset="1" stop-color="#FFE46E"/>
+    </linearGradient>
+    <linearGradient id="dartShaft" x1="237" y1="134" x2="337" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4C20C9"/>
+      <stop offset="0.48" stop-color="#6B38EA"/>
+      <stop offset="1" stop-color="#8F61FF"/>
+    </linearGradient>
+    <linearGradient id="dartDark" x1="296" y1="75" x2="369" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#36139E"/>
+      <stop offset="1" stop-color="#6A2BE8"/>
+    </linearGradient>
+    <filter id="shadow" x="22" y="33" width="309" height="269" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="19" stdDeviation="15" flood-color="#9A6A00" flood-opacity="0.28"/>
+    </filter>
+    <filter id="dartShadow" x="191" y="9" width="207" height="176" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#3B1897" flood-opacity="0.38"/>
+    </filter>
+    <filter id="softGlow" x="84" y="55" width="229" height="221" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <ellipse cx="190" cy="270" rx="120" ry="22" fill="#B47A00" fill-opacity="0.14"/>
+
+  <g filter="url(#shadow)" transform="rotate(-5 183 159)">
+    <!-- extruded lower rim -->
+    <circle cx="183" cy="168" r="114" fill="#C88100"/>
+    <circle cx="183" cy="162" r="114" fill="url(#rim)"/>
+    <circle cx="183" cy="153" r="114" fill="url(#outer)"/>
+    <circle cx="183" cy="153" r="84" fill="url(#ring1)"/>
+    <circle cx="183" cy="153" r="56" fill="url(#ring2)"/>
+    <circle cx="183" cy="153" r="28" fill="url(#center)"/>
+    <circle cx="183" cy="153" r="9" fill="#6038E8"/>
+
+    <!-- bevels -->
+    <circle cx="183" cy="153" r="113" stroke="#FFF3A0" stroke-opacity="0.64" stroke-width="3"/>
+    <circle cx="183" cy="153" r="84" stroke="#F1BF1F" stroke-opacity="0.45" stroke-width="3"/>
+    <circle cx="183" cy="153" r="56" stroke="#FFF0A1" stroke-opacity="0.45" stroke-width="3"/>
+
+    <!-- glossy highlights -->
+    <path d="M100 88C126 57 169 42 209 48" stroke="white" stroke-opacity="0.46" stroke-width="11" stroke-linecap="round"/>
+    <path d="M119 111C137 90 160 79 182 77" stroke="white" stroke-opacity="0.30" stroke-width="7" stroke-linecap="round"/>
+    <path d="M219 242C246 230 268 207 280 181" stroke="#A96B00" stroke-opacity="0.22" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- dart -->
+  <g filter="url(#dartShadow)">
+    <path d="M198 151L316 57" stroke="#2A135F" stroke-width="13" stroke-linecap="round" opacity="0.28"/>
+    <path d="M198 145L316 51" stroke="url(#dartShaft)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M322 45L353 22L343 57L330 57L327 70L296 95L303 58L270 57L302 34L314 38L317 25L322 45Z" fill="url(#dartDark)"/>
+    <path d="M316 50L345 29L337 50L325 51L322 61L302 78L308 54L286 54L307 39L316 42V50Z" fill="#7D47F2" fill-opacity="0.72"/>
+    <path d="M199 146L182 153" stroke="#5A2EDC" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="182" cy="153" r="7" fill="#4B22C8"/>
+  </g>
+</svg>

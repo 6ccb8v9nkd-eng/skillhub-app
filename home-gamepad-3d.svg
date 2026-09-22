@@ -1,0 +1,100 @@
+<svg width="500" height="340" viewBox="0 0 500 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="body" x1="115" y1="67" x2="365" y2="288" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4A515D"/>
+      <stop offset="0.20" stop-color="#2B3039"/>
+      <stop offset="0.58" stop-color="#171A20"/>
+      <stop offset="1" stop-color="#090B0E"/>
+    </linearGradient>
+    <linearGradient id="bodyEdge" x1="166" y1="87" x2="342" y2="271" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65707D"/>
+      <stop offset="0.45" stop-color="#2E343D"/>
+      <stop offset="1" stop-color="#101318"/>
+    </linearGradient>
+    <radialGradient id="yellow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(326 139) rotate(68) scale(31)">
+      <stop stop-color="#FFF8B3"/>
+      <stop offset="0.48" stop-color="#FFE135"/>
+      <stop offset="1" stop-color="#E8A400"/>
+    </radialGradient>
+    <radialGradient id="yellow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(185 148) rotate(72) scale(34)">
+      <stop stop-color="#FFF48A"/>
+      <stop offset="0.5" stop-color="#FFD51F"/>
+      <stop offset="1" stop-color="#DD9200"/>
+    </radialGradient>
+    <linearGradient id="purple" x1="356" y1="79" x2="406" y2="131" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#AE7BFF"/>
+      <stop offset="1" stop-color="#5A24E4"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="389" y1="27" x2="443" y2="95" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF699"/>
+      <stop offset="0.48" stop-color="#FFE02B"/>
+      <stop offset="1" stop-color="#E9A600"/>
+    </linearGradient>
+    <filter id="padShadow" x="22" y="52" width="439" height="268" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="16" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="glow" x="143" y="104" width="230" height="102" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FFD21F" flood-opacity="0.50"/>
+    </filter>
+    <filter id="boltGlow" x="360" y="0" width="117" height="130" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FFD41E" flood-opacity="0.62"/>
+    </filter>
+  </defs>
+
+  <ellipse cx="252" cy="286" rx="177" ry="24" fill="#000" fill-opacity="0.28"/>
+
+  <!-- lightning and confetti -->
+  <g filter="url(#boltGlow)">
+    <path d="M412 17L375 75H400L389 117L449 52H421L438 17H412Z" fill="url(#bolt)"/>
+    <path d="M403 26L388 59H405L399 85L430 50H414L423 26H403Z" fill="#FFF37F" fill-opacity="0.6"/>
+  </g>
+  <g fill="url(#purple)">
+    <path d="M371 89L395 75L391 101L383 96L376 107L371 89Z"/>
+    <rect x="403" y="116" width="24" height="7" rx="3.5" transform="rotate(24 403 116)"/>
+    <rect x="351" y="72" width="18" height="6" rx="3" transform="rotate(-28 351 72)"/>
+  </g>
+
+  <g filter="url(#padShadow)" transform="rotate(-4 250 185)">
+    <!-- lower/extruded shell -->
+    <path d="M88 122C109 87 147 73 187 78C213 81 226 88 248 88C270 88 284 81 311 78C351 73 389 87 410 122C437 167 439 240 418 263C402 280 382 276 363 254L329 214C313 195 294 187 250 187C206 187 187 195 171 214L137 254C118 276 98 280 82 263C61 240 63 167 88 122Z" fill="#07090C"/>
+    <!-- top shell -->
+    <path d="M89 113C109 82 146 70 186 75C211 78 226 84 248 84C271 84 285 78 313 75C352 71 389 83 410 115C436 155 437 222 419 246C405 265 383 263 364 242L330 204C314 186 294 178 250 178C206 178 186 186 170 204L136 242C117 263 96 265 82 246C64 222 65 154 89 113Z" fill="url(#body)" stroke="url(#bodyEdge)" stroke-width="4"/>
+
+    <!-- glossy body highlights -->
+    <path d="M111 112C137 88 162 84 191 89C216 93 227 97 248 97C268 97 282 92 307 88C339 83 368 89 390 112" stroke="#76808E" stroke-opacity="0.34" stroke-width="5" stroke-linecap="round"/>
+    <path d="M98 130C82 159 81 206 91 226" stroke="#8A929C" stroke-opacity="0.12" stroke-width="8" stroke-linecap="round"/>
+    <path d="M406 133C420 164 421 204 412 227" stroke="#000" stroke-opacity="0.4" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- d-pad -->
+    <g filter="url(#glow)">
+      <rect x="145" y="137" width="75" height="23" rx="11.5" fill="url(#yellow2)"/>
+      <rect x="171" y="111" width="23" height="75" rx="11.5" fill="url(#yellow2)"/>
+      <path d="M154 143H210" stroke="white" stroke-opacity="0.38" stroke-width="3" stroke-linecap="round"/>
+      <path d="M177 119V151" stroke="white" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- right buttons -->
+    <g filter="url(#glow)">
+      <circle cx="335" cy="124" r="17" fill="url(#yellow)"/>
+      <circle cx="368" cy="144" r="17" fill="url(#yellow)"/>
+      <circle cx="338" cy="169" r="17" fill="url(#yellow)"/>
+      <circle cx="302" cy="148" r="17" fill="url(#yellow)"/>
+      <circle cx="329" cy="117" r="5" fill="#FFFCE0" fill-opacity="0.8"/>
+      <circle cx="362" cy="137" r="5" fill="#FFFCE0" fill-opacity="0.72"/>
+    </g>
+
+    <!-- center bars -->
+    <rect x="229" y="123" width="17" height="7" rx="3.5" fill="#7B8490"/>
+    <rect x="255" y="123" width="17" height="7" rx="3.5" fill="#7B8490"/>
+
+    <!-- sticks -->
+    <g>
+      <circle cx="225" cy="180" r="24" fill="#090B0F" stroke="#404752" stroke-width="5"/>
+      <circle cx="225" cy="180" r="15" fill="#171B21" stroke="#7861A9" stroke-opacity="0.48" stroke-width="3"/>
+      <circle cx="277" cy="180" r="24" fill="#090B0F" stroke="#404752" stroke-width="5"/>
+      <circle cx="277" cy="180" r="15" fill="#171B21" stroke="#7861A9" stroke-opacity="0.48" stroke-width="3"/>
+      <ellipse cx="220" cy="174" rx="7" ry="4" fill="white" fill-opacity="0.10"/>
+      <ellipse cx="272" cy="174" rx="7" ry="4" fill="white" fill-opacity="0.10"/>
+    </g>
+  </g>
+</svg>
