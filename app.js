@@ -1578,3 +1578,113 @@ renderHardSort=function(){
   if(result&&!shell.querySelector('.sh-hard-flow-meta'))result.insertAdjacentHTML('afterend',shHardFlowCompletionMeta());
 };
 /* ===== end HARD topic flow + mixed flow ===== */
+
+/* ===== SkillHub 7.5.1 — premium conversion home CTA ===== */
+function sh751TrainVisual(){
+  return `<svg class="sh751-visual-svg sh751-target-svg" viewBox="0 0 300 230" role="img" aria-label="Мишень со стрелой">
+    <defs>
+      <filter id="sh751Shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#684b00" flood-opacity=".24"/></filter>
+      <filter id="sh751Glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="sh751Gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff06a"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#e6a700"/></linearGradient>
+      <linearGradient id="sh751Blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f83ff"/><stop offset="1" stop-color="#244eea"/></linearGradient>
+      <linearGradient id="sh751Dark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3b414b"/><stop offset="1" stop-color="#15181e"/></linearGradient>
+      <radialGradient id="sh751TargetBase" cx="38%" cy="30%" r="75%"><stop stop-color="#fffef5"/><stop offset="1" stop-color="#ede7d3"/></radialGradient>
+    </defs>
+    <ellipse cx="151" cy="201" rx="92" ry="18" fill="#a17800" opacity=".12"/>
+    <g class="sh751-target-float" filter="url(#sh751Shadow)">
+      <circle cx="145" cy="119" r="79" fill="url(#sh751TargetBase)" stroke="#fff" stroke-width="5"/>
+      <circle cx="145" cy="119" r="66" fill="url(#sh751Gold)"/>
+      <circle cx="145" cy="119" r="47" fill="#fff8d8"/>
+      <circle cx="145" cy="119" r="31" fill="url(#sh751Blue)"/>
+      <circle cx="145" cy="119" r="14" fill="url(#sh751Gold)"/>
+      <circle cx="132" cy="98" r="21" fill="#fff" opacity=".22"/>
+    </g>
+    <g class="sh751-arrow" filter="url(#sh751Shadow)">
+      <path d="M235 50 L157 116" stroke="url(#sh751Dark)" stroke-width="10" stroke-linecap="round"/>
+      <path d="M232 52 L158 115" stroke="#707985" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+      <path d="M237 48 L272 36 L260 70 Z" fill="url(#sh751Blue)"/>
+      <path d="M244 45 L271 36 L260 55 Z" fill="#8da0ff" opacity=".75"/>
+      <path d="M157 116 L169 109 L164 124 Z" fill="#252a31"/>
+    </g>
+    <g class="sh751-spark sh751-spark-a" filter="url(#sh751Glow)"><path d="M242 99 l5 9 9 5-9 5-5 9-5-9-9-5 9-5z" fill="#ffd726"/></g>
+    <g class="sh751-spark sh751-spark-b"><circle cx="261" cy="132" r="5" fill="#4968ff"/><circle cx="277" cy="116" r="3" fill="#ffd726"/></g>
+  </svg>`;
+}
+function sh751GameVisual(){
+  return `<svg class="sh751-visual-svg sh751-game-svg" viewBox="0 0 320 230" role="img" aria-label="Игровой геймпад с молнией">
+    <defs>
+      <filter id="sh751GameShadow" x="-35%" y="-50%" width="190%" height="220%"><feDropShadow dx="0" dy="13" stdDeviation="10" flood-color="#000" flood-opacity=".48"/></filter>
+      <filter id="sh751BoltGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="sh751Pad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#424954"/><stop offset=".38" stop-color="#20252d"/><stop offset="1" stop-color="#0b0d10"/></linearGradient>
+      <linearGradient id="sh751PadEdge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#616a76"/><stop offset="1" stop-color="#15191f"/></linearGradient>
+      <linearGradient id="sh751Gold2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff176"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#f0a800"/></linearGradient>
+      <linearGradient id="sh751Purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9a7bff"/><stop offset="1" stop-color="#5d4cff"/></linearGradient>
+    </defs>
+    <ellipse cx="166" cy="200" rx="104" ry="18" fill="#000" opacity=".25"/>
+    <g class="sh751-bolt" filter="url(#sh751BoltGlow)">
+      <path d="M203 26 L183 70 L205 70 L184 113 L235 57 L211 57 L226 26 Z" fill="url(#sh751Gold2)"/>
+    </g>
+    <g class="sh751-pad-float" filter="url(#sh751GameShadow)">
+      <path d="M71 82 C84 65 106 60 132 66 C151 70 169 70 188 66 C215 60 237 66 248 84 C261 105 270 144 259 166 C251 183 236 186 221 172 L194 147 C183 137 173 132 160 132 C147 132 137 137 126 147 L98 173 C83 187 68 183 61 166 C51 144 58 103 71 82 Z" fill="url(#sh751Pad)" stroke="url(#sh751PadEdge)" stroke-width="4"/>
+      <path d="M85 82 C107 68 129 76 145 82" fill="none" stroke="#7b8490" stroke-width="4" stroke-linecap="round" opacity=".28"/>
+      <g>
+        <rect x="91" y="98" width="50" height="16" rx="8" fill="#101319"/>
+        <rect x="108" y="81" width="16" height="50" rx="8" fill="#101319"/>
+        <rect x="95" y="101" width="42" height="10" rx="5" fill="url(#sh751Gold2)"/>
+        <rect x="111" y="85" width="10" height="42" rx="5" fill="url(#sh751Gold2)"/>
+      </g>
+      <g>
+        <circle cx="218" cy="92" r="10" fill="url(#sh751Gold2)"/><circle cx="239" cy="109" r="10" fill="#f0b317"/>
+        <circle cx="216" cy="126" r="10" fill="#ffd831"/><circle cx="242" cy="83" r="9" fill="#ffea78"/>
+        <circle cx="215" cy="89" r="3" fill="#fff7bf" opacity=".78"/>
+      </g>
+      <g><circle cx="143" cy="126" r="15" fill="#101319" stroke="#59616c" stroke-width="3"/><circle cx="143" cy="126" r="9" fill="#303641"/><circle cx="178" cy="126" r="15" fill="#101319" stroke="#59616c" stroke-width="3"/><circle cx="178" cy="126" r="9" fill="#303641"/></g>
+      <rect x="149" y="91" width="14" height="5" rx="2.5" fill="#747d89"/><rect x="171" y="91" width="14" height="5" rx="2.5" fill="#747d89"/>
+    </g>
+    <g class="sh751-game-spark"><path d="M72 55 l4 8 8 4-8 4-4 8-4-8-8-4 8-4z" fill="url(#sh751Purple)"/><circle cx="270" cy="72" r="5" fill="#7b63ff"/><rect x="49" y="111" width="18" height="6" rx="3" fill="#725bff" transform="rotate(-12 49 111)"/></g>
+  </svg>`;
+}
+function sh751PremiumHomeHtml(){
+  const rework = S.profile?.role==='employee' ? (sh745ReworkBannerHtml?.(true)||'') : '';
+  return `<div class="sh751-home-wrap">
+    <section class="sh751-stage">
+      <div class="sh751-stage-glow"></div>
+      <header class="sh751-head">
+        <div class="sh751-kicker">SKILLHUB</div>
+        <h1>Привет, ${esc(sh74Name())}! <span aria-hidden="true">👋</span></h1>
+        <h2>Что выбираете сегодня?</h2>
+        <p>Выберите формат — практика или игра.</p>
+      </header>
+      <div class="sh751-grid">
+        <article class="sh751-card sh751-card-train">
+          <div class="sh751-copy">
+            <h3>Потренироваться</h3>
+            <p>Прокачай навыки на реальных рабочих кейсах.</p>
+            <button class="sh751-cta sh751-cta-train" onclick="go('training')">Прокачаться <span>→</span></button>
+          </div>
+          <div class="sh751-art">${sh751TrainVisual()}</div>
+        </article>
+        <article class="sh751-card sh751-card-game">
+          <div class="sh751-copy">
+            <h3>Поиграть</h3>
+            <p>Брось себе вызов и побей свой лучший результат.</p>
+            <a class="sh751-cta sh751-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Играть <span>→</span></a>
+          </div>
+          <div class="sh751-art sh751-art-game">${sh751GameVisual()}</div>
+        </article>
+      </div>
+    </section>
+    ${rework ? `<div class="sh751-under-stage">${rework}</div>` : ''}
+  </div>`;
+}
+function sh751ApplyPremiumHome(){
+  const page=$('page-home'); if(!page)return;
+  page.classList.add('sh751-premium-home');
+  page.innerHTML=sh751PremiumHomeHtml();
+}
+const sh751RenderHomeBase=renderHome;
+renderHome=function(){
+  sh751RenderHomeBase();
+  if(S.profile)sh751ApplyPremiumHome();
+};
+/* ===== end SkillHub 7.5.1 ===== */

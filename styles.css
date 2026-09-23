@@ -467,3 +467,36 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh-hard-flow-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px auto 4px;padding:10px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--line);max-width:460px}.sh-hard-flow-meta span{color:var(--muted)}
 .sh-hard-flow-actions{display:flex;justify-content:center!important;gap:10px;flex-wrap:wrap;margin-top:18px!important}
 @media(max-width:640px){.sh-hard-mode-row,.sh-hard-topic-hero{align-items:stretch;flex-direction:column}.sh-hard-mode-row .btn,.sh-hard-topic-hero .btn{width:100%}.sh-hard-flow-actions .btn{flex:1 1 100%}}
+
+/* ===== SkillHub 7.5.1 — premium conversion home CTA ===== */
+.sh751-premium-home{margin:0!important}
+.sh751-home-wrap{width:100%;max-width:1260px;margin:0 auto}
+.sh751-stage{position:relative;isolation:isolate;overflow:hidden;padding:34px;border-radius:0;background:linear-gradient(112deg,#ffdc22 0%,#ffe64a 55%,#ffd91b 100%);color:#111;box-shadow:0 22px 55px rgba(0,0,0,.16)}
+.sh751-stage:before{content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(circle at 86% 15%,rgba(255,255,255,.33),transparent 24%),linear-gradient(125deg,rgba(255,255,255,.13),transparent 36%,rgba(255,255,255,.08) 78%,transparent)}
+.sh751-stage-glow{position:absolute;z-index:-2;width:330px;height:330px;right:-92px;top:-125px;border-radius:50%;background:rgba(255,255,255,.19);filter:blur(.2px)}
+.sh751-head{max-width:680px;margin-bottom:23px}.sh751-kicker{font-size:12px;font-weight:950;letter-spacing:.07em;color:#655b25;margin-bottom:6px}.sh751-head h1{margin:0;font-size:38px;line-height:1.02;letter-spacing:-.045em;font-weight:950}.sh751-head h2{margin:5px 0 0;font-size:20px;line-height:1.1;font-weight:950}.sh751-head p{margin:6px 0 0;font-size:14px;line-height:1.35;font-weight:680;color:#5c5426}
+.sh751-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.sh751-card{position:relative;overflow:hidden;min-height:222px;border-radius:24px;padding:29px 28px 26px;display:flex;align-items:stretch;transform:translateZ(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease}
+.sh751-card:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.13),transparent 32%,transparent 70%,rgba(255,255,255,.07));opacity:.65}
+.sh751-card:hover{transform:translateY(-5px)}
+.sh751-card-train{background:linear-gradient(145deg,#fffef7 0%,#fff9df 100%);border:1px solid rgba(101,82,5,.09);box-shadow:0 13px 28px rgba(111,80,0,.13)}
+.sh751-card-train:hover{box-shadow:0 20px 38px rgba(111,80,0,.19);border-color:rgba(157,119,0,.16)}
+.sh751-card-game{background:radial-gradient(circle at 77% 17%,rgba(115,84,255,.21),transparent 29%),linear-gradient(145deg,#1c2028 0%,#0b0d11 100%);color:#fff;border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 38px rgba(0,0,0,.34)}
+.sh751-card-game:hover{box-shadow:0 26px 48px rgba(0,0,0,.44),0 0 0 1px rgba(255,221,34,.07)}
+.sh751-copy{position:relative;z-index:3;width:54%;display:flex;flex-direction:column;align-items:flex-start}.sh751-copy h3{margin:0 0 12px;font-size:34px;line-height:1;font-weight:950;letter-spacing:-.043em}.sh751-copy p{margin:0;max-width:325px;font-size:15px;line-height:1.42;font-weight:700;color:#57534a}.sh751-card-game .sh751-copy p{color:#c5cad2}
+.sh751-cta{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 18px;border:0;border-radius:15px;background:#ffdc22;color:#111;text-decoration:none;font:inherit;font-size:14px;font-weight:950;cursor:pointer;white-space:nowrap;box-shadow:0 9px 20px rgba(178,131,0,.2);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
+.sh751-cta span{font-size:19px;line-height:1;transition:transform .18s ease}.sh751-cta:hover{transform:translateY(-2px);filter:brightness(1.015);box-shadow:0 13px 25px rgba(178,131,0,.27)}.sh751-cta:hover span{transform:translateX(3px)}
+.sh751-cta-game{box-shadow:0 9px 24px rgba(255,220,34,.20)}.sh751-cta-game:hover{box-shadow:0 13px 30px rgba(255,220,34,.30)}
+.sh751-art{position:absolute;right:0;top:50%;transform:translateY(-50%);width:48%;height:100%;display:grid;place-items:center;z-index:2;pointer-events:none}.sh751-art-game{width:52%;right:-3px}.sh751-visual-svg{width:100%;height:100%;overflow:visible;display:block}
+.sh751-target-float,.sh751-pad-float{transform-box:fill-box;transform-origin:center;animation:sh751Float 4.6s ease-in-out infinite}.sh751-arrow{transform-box:fill-box;transform-origin:20% 80%;animation:sh751Arrow 3.7s ease-in-out infinite}.sh751-bolt{transform-box:fill-box;transform-origin:center;animation:sh751Bolt 2.8s ease-in-out infinite}.sh751-spark{transform-box:fill-box;transform-origin:center;animation:sh751Spark 2.5s ease-in-out infinite}.sh751-spark-b,.sh751-game-spark{animation-delay:.65s}.sh751-game-spark{transform-box:fill-box;transform-origin:center;animation:sh751Spark 3.2s ease-in-out infinite}
+.sh751-card:hover .sh751-target-float{transform:translateY(-4px) scale(1.025)}.sh751-card:hover .sh751-arrow{transform:translate(-5px,4px) rotate(-1deg)}.sh751-card:hover .sh751-pad-float{transform:translateY(-5px) rotate(-1.5deg) scale(1.02)}.sh751-card:hover .sh751-bolt{transform:translateY(-4px) scale(1.08)}
+@keyframes sh751Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes sh751Arrow{0%,100%{transform:translate(0,0)}50%{transform:translate(-3px,3px)}}
+@keyframes sh751Bolt{0%,100%{opacity:.92;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-4px) scale(1.05)}}
+@keyframes sh751Spark{0%,100%{opacity:.55;transform:scale(.82) rotate(0deg)}50%{opacity:1;transform:scale(1.08) rotate(8deg)}}
+.sh751-under-stage{margin-top:16px}
+@media(max-width:900px){.sh751-stage{padding:28px 24px}.sh751-head h1{font-size:34px}.sh751-copy h3{font-size:30px}.sh751-copy{width:58%}.sh751-art{width:45%}.sh751-art-game{width:49%}}
+@media(max-width:720px){.sh751-home-wrap{width:auto;margin-left:-12px;margin-right:-12px;max-width:none}.sh751-stage{padding:19px 18px 18px}.sh751-head{margin-bottom:14px}.sh751-kicker{font-size:9px}.sh751-head h1{font-size:22px}.sh751-head h2{font-size:15px;margin-top:4px}.sh751-head p{font-size:10.5px;margin-top:4px}.sh751-grid{grid-template-columns:1fr 1fr;gap:9px}.sh751-card{min-height:156px;border-radius:17px;padding:17px 13px 14px}.sh751-copy{width:62%}.sh751-copy h3{font-size:17px;margin-bottom:7px}.sh751-copy p{font-size:9.5px;line-height:1.32}.sh751-cta{min-height:31px;padding:0 10px;border-radius:11px;font-size:9px;gap:5px}.sh751-cta span{font-size:12px}.sh751-art{width:48%;right:-4px}.sh751-art-game{width:52%;right:-8px}.sh751-under-stage{margin:12px 12px 0}}
+@media(max-width:390px){.sh751-stage{padding-left:13px;padding-right:13px}.sh751-card{min-height:150px;padding:15px 10px 12px}.sh751-copy{width:64%}.sh751-copy h3{font-size:16px}.sh751-copy p{font-size:8.8px}.sh751-art{width:47%;right:-7px}.sh751-art-game{width:51%;right:-10px}}
+@media(prefers-reduced-motion:reduce){.sh751-target-float,.sh751-pad-float,.sh751-arrow,.sh751-bolt,.sh751-spark,.sh751-game-spark{animation:none!important}.sh751-card,.sh751-cta,.sh751-cta span{transition:none!important}}
+/* ===== end SkillHub 7.5.1 ===== */
