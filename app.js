@@ -1583,65 +1583,83 @@ renderHardSort=function(){
 function sh751TrainVisual(){
   return `<svg class="sh751-visual-svg sh751-target-svg" viewBox="0 0 300 230" role="img" aria-label="Мишень со стрелой">
     <defs>
-      <filter id="sh751Shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#684b00" flood-opacity=".24"/></filter>
-      <filter id="sh751Glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <linearGradient id="sh751Gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff06a"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#e6a700"/></linearGradient>
-      <linearGradient id="sh751Blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f83ff"/><stop offset="1" stop-color="#244eea"/></linearGradient>
-      <linearGradient id="sh751Dark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3b414b"/><stop offset="1" stop-color="#15181e"/></linearGradient>
-      <radialGradient id="sh751TargetBase" cx="38%" cy="30%" r="75%"><stop stop-color="#fffef5"/><stop offset="1" stop-color="#ede7d3"/></radialGradient>
+      <filter id="sh752TargetShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#7a5a00" flood-opacity=".20"/></filter>
+      <filter id="sh752SoftGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="sh752Gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff178"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#e7a600"/></linearGradient>
+      <linearGradient id="sh752Blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7f91ff"/><stop offset="1" stop-color="#3357f4"/></linearGradient>
+      <linearGradient id="sh752Arrow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5a626e"/><stop offset="1" stop-color="#171b21"/></linearGradient>
+      <radialGradient id="sh752TargetBase" cx="35%" cy="27%" r="78%"><stop stop-color="#fffef7"/><stop offset="1" stop-color="#ece5d0"/></radialGradient>
     </defs>
-    <ellipse cx="151" cy="201" rx="92" ry="18" fill="#a17800" opacity=".12"/>
-    <g class="sh751-target-float" filter="url(#sh751Shadow)">
-      <circle cx="145" cy="119" r="79" fill="url(#sh751TargetBase)" stroke="#fff" stroke-width="5"/>
-      <circle cx="145" cy="119" r="66" fill="url(#sh751Gold)"/>
-      <circle cx="145" cy="119" r="47" fill="#fff8d8"/>
-      <circle cx="145" cy="119" r="31" fill="url(#sh751Blue)"/>
-      <circle cx="145" cy="119" r="14" fill="url(#sh751Gold)"/>
-      <circle cx="132" cy="98" r="21" fill="#fff" opacity=".22"/>
+    <ellipse cx="146" cy="204" rx="88" ry="16" fill="#947100" opacity=".11"/>
+    <g class="sh752-target-float">
+      <circle cx="145" cy="120" r="78" fill="url(#sh752TargetBase)" stroke="#fff" stroke-width="5"/>
+      <circle cx="145" cy="120" r="64" fill="url(#sh752Gold)"/>
+      <circle cx="145" cy="120" r="46" fill="#fff8dc"/>
+      <circle cx="145" cy="120" r="29" fill="url(#sh752Blue)"/>
+      <circle class="sh752-center-pulse" cx="145" cy="120" r="12" fill="url(#sh752Gold)"/>
+      <path d="M99 78 A65 65 0 0 1 133 58" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".22"/>
     </g>
-    <g class="sh751-arrow" filter="url(#sh751Shadow)">
-      <path d="M235 50 L157 116" stroke="url(#sh751Dark)" stroke-width="10" stroke-linecap="round"/>
-      <path d="M232 52 L158 115" stroke="#707985" stroke-width="3" stroke-linecap="round" opacity=".75"/>
-      <path d="M237 48 L272 36 L260 70 Z" fill="url(#sh751Blue)"/>
-      <path d="M244 45 L271 36 L260 55 Z" fill="#8da0ff" opacity=".75"/>
-      <path d="M157 116 L169 109 L164 124 Z" fill="#252a31"/>
+    <g class="sh752-arrow-clean">
+      <line x1="244" y1="47" x2="160" y2="110" stroke="url(#sh752Arrow)" stroke-width="8" stroke-linecap="round"/>
+      <line x1="240" y1="49" x2="162" y2="108" stroke="#8a929d" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+      <path d="M145 120 L166 104 L171 113 L158 129 Z" fill="url(#sh752Blue)"/>
+      <path d="M236 41 L255 31 L250 49 Z" fill="#6d7eff"/>
+      <path d="M243 51 L261 48 L250 61 Z" fill="#405ef4"/>
     </g>
-    <g class="sh751-spark sh751-spark-a" filter="url(#sh751Glow)"><path d="M242 99 l5 9 9 5-9 5-5 9-5-9-9-5 9-5z" fill="#ffd726"/></g>
-    <g class="sh751-spark sh751-spark-b"><circle cx="261" cy="132" r="5" fill="#4968ff"/><circle cx="277" cy="116" r="3" fill="#ffd726"/></g>
+    <g class="sh752-spark"><path d="M246 101 l4 7 7 4-7 4-4 7-4-7-7-4 7-4z" fill="#ffd522"/></g>
+    <g class="sh752-dot"><circle cx="265" cy="134" r="4.5" fill="#4b68ff"/><circle cx="278" cy="118" r="2.8" fill="#ffd522"/></g>
   </svg>`;
 }
 function sh751GameVisual(){
-  return `<svg class="sh751-visual-svg sh751-game-svg" viewBox="0 0 320 230" role="img" aria-label="Игровой геймпад с молнией">
+  return `<svg class="sh751-visual-svg sh751-game-svg" viewBox="0 0 320 230" role="img" aria-label="Современный игровой геймпад">
     <defs>
-      <filter id="sh751GameShadow" x="-35%" y="-50%" width="190%" height="220%"><feDropShadow dx="0" dy="13" stdDeviation="10" flood-color="#000" flood-opacity=".48"/></filter>
-      <filter id="sh751BoltGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <linearGradient id="sh751Pad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#424954"/><stop offset=".38" stop-color="#20252d"/><stop offset="1" stop-color="#0b0d10"/></linearGradient>
-      <linearGradient id="sh751PadEdge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#616a76"/><stop offset="1" stop-color="#15191f"/></linearGradient>
-      <linearGradient id="sh751Gold2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff176"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#f0a800"/></linearGradient>
-      <linearGradient id="sh751Purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9a7bff"/><stop offset="1" stop-color="#5d4cff"/></linearGradient>
+      <filter id="sh752PadShadow" x="-40%" y="-55%" width="190%" height="230%"><feDropShadow dx="0" dy="14" stdDeviation="11" flood-color="#000" flood-opacity=".48"/></filter>
+      <filter id="sh752Glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="sh752Pad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#49515e"/><stop offset=".34" stop-color="#252b34"/><stop offset="1" stop-color="#090b0f"/></linearGradient>
+      <linearGradient id="sh752PadEdge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#737d8a"/><stop offset="1" stop-color="#14181e"/></linearGradient>
+      <linearGradient id="sh752Gold2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff17b"/><stop offset=".42" stop-color="#ffd522"/><stop offset="1" stop-color="#eea600"/></linearGradient>
+      <linearGradient id="sh752Violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9c83ff"/><stop offset="1" stop-color="#5d55ff"/></linearGradient>
+      <linearGradient id="sh752BlueGlow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6ba0ff"/><stop offset="1" stop-color="#5864ff"/></linearGradient>
     </defs>
-    <ellipse cx="166" cy="200" rx="104" ry="18" fill="#000" opacity=".25"/>
-    <g class="sh751-bolt" filter="url(#sh751BoltGlow)">
-      <path d="M203 26 L183 70 L205 70 L184 113 L235 57 L211 57 L226 26 Z" fill="url(#sh751Gold2)"/>
+    <ellipse cx="165" cy="201" rx="103" ry="17" fill="#000" opacity=".27"/>
+    <g class="sh752-game-halo" opacity=".7">
+      <circle cx="172" cy="111" r="81" fill="none" stroke="url(#sh752Violet)" stroke-width="3" stroke-dasharray="7 11" opacity=".33"/>
+      <circle cx="172" cy="111" r="67" fill="none" stroke="#ffd522" stroke-width="2" opacity=".12"/>
     </g>
-    <g class="sh751-pad-float" filter="url(#sh751GameShadow)">
-      <path d="M71 82 C84 65 106 60 132 66 C151 70 169 70 188 66 C215 60 237 66 248 84 C261 105 270 144 259 166 C251 183 236 186 221 172 L194 147 C183 137 173 132 160 132 C147 132 137 137 126 147 L98 173 C83 187 68 183 61 166 C51 144 58 103 71 82 Z" fill="url(#sh751Pad)" stroke="url(#sh751PadEdge)" stroke-width="4"/>
-      <path d="M85 82 C107 68 129 76 145 82" fill="none" stroke="#7b8490" stroke-width="4" stroke-linecap="round" opacity=".28"/>
+    <g class="sh752-game-lines" opacity=".72">
+      <path d="M59 66 h23" stroke="#7464ff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M261 67 h16" stroke="#ffd522" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="277" cy="120" r="4.5" fill="#6f62ff"/>
+      <path d="M71 142 l6 10 10 6-10 6-6 10-6-10-10-6 10-6z" fill="#ffd522"/>
+    </g>
+    <g class="sh752-pad-float">
+      <path d="M70 83 C83 64 107 59 134 66 C151 70 169 70 188 66 C216 59 240 65 252 84 C266 107 273 145 262 168 C254 185 237 188 221 173 L194 148 C183 138 173 133 160 133 C147 133 137 138 126 148 L98 174 C82 189 65 184 58 166 C48 143 56 104 70 83 Z" fill="url(#sh752Pad)" stroke="url(#sh752PadEdge)" stroke-width="4"/>
+      <path d="M84 83 C105 69 128 75 146 82" fill="none" stroke="#a0a8b4" stroke-width="4" stroke-linecap="round" opacity=".20"/>
+      <path d="M193 79 C214 71 233 76 244 88" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".09"/>
       <g>
-        <rect x="91" y="98" width="50" height="16" rx="8" fill="#101319"/>
-        <rect x="108" y="81" width="16" height="50" rx="8" fill="#101319"/>
-        <rect x="95" y="101" width="42" height="10" rx="5" fill="url(#sh751Gold2)"/>
-        <rect x="111" y="85" width="10" height="42" rx="5" fill="url(#sh751Gold2)"/>
+        <rect x="91" y="99" width="50" height="16" rx="8" fill="#0d1117"/>
+        <rect x="108" y="82" width="16" height="50" rx="8" fill="#0d1117"/>
+        <rect x="95" y="102" width="42" height="10" rx="5" fill="url(#sh752Gold2)"/>
+        <rect x="111" y="86" width="10" height="42" rx="5" fill="url(#sh752Gold2)"/>
       </g>
       <g>
-        <circle cx="218" cy="92" r="10" fill="url(#sh751Gold2)"/><circle cx="239" cy="109" r="10" fill="#f0b317"/>
-        <circle cx="216" cy="126" r="10" fill="#ffd831"/><circle cx="242" cy="83" r="9" fill="#ffea78"/>
-        <circle cx="215" cy="89" r="3" fill="#fff7bf" opacity=".78"/>
+        <circle cx="218" cy="92" r="10" fill="url(#sh752Gold2)"/>
+        <circle cx="240" cy="109" r="10" fill="#f2b317"/>
+        <circle cx="217" cy="127" r="10" fill="#ffd938"/>
+        <circle cx="242" cy="82" r="9" fill="#fff08a"/>
+        <circle cx="215" cy="89" r="3" fill="#fffbd0" opacity=".8"/>
       </g>
-      <g><circle cx="143" cy="126" r="15" fill="#101319" stroke="#59616c" stroke-width="3"/><circle cx="143" cy="126" r="9" fill="#303641"/><circle cx="178" cy="126" r="15" fill="#101319" stroke="#59616c" stroke-width="3"/><circle cx="178" cy="126" r="9" fill="#303641"/></g>
-      <rect x="149" y="91" width="14" height="5" rx="2.5" fill="#747d89"/><rect x="171" y="91" width="14" height="5" rx="2.5" fill="#747d89"/>
+      <g>
+        <circle cx="143" cy="127" r="15" fill="#0d1117" stroke="#65707d" stroke-width="3"/>
+        <circle cx="143" cy="127" r="8.5" fill="#343b45"/>
+        <circle cx="178" cy="127" r="15" fill="#0d1117" stroke="#65707d" stroke-width="3"/>
+        <circle cx="178" cy="127" r="8.5" fill="#343b45"/>
+      </g>
+      <rect x="150" y="92" width="14" height="5" rx="2.5" fill="#8a94a1"/>
+      <rect x="172" y="92" width="14" height="5" rx="2.5" fill="#8a94a1"/>
+      <path d="M84 155 C99 174 113 169 128 153" fill="none" stroke="#313843" stroke-width="4" opacity=".45"/>
+      <path d="M193 153 C210 169 226 176 240 156" fill="none" stroke="#313843" stroke-width="4" opacity=".45"/>
     </g>
-    <g class="sh751-game-spark"><path d="M72 55 l4 8 8 4-8 4-4 8-4-8-8-4 8-4z" fill="url(#sh751Purple)"/><circle cx="270" cy="72" r="5" fill="#7b63ff"/><rect x="49" y="111" width="18" height="6" rx="3" fill="#725bff" transform="rotate(-12 49 111)"/></g>
   </svg>`;
 }
 function sh751PremiumHomeHtml(){
@@ -1656,19 +1674,19 @@ function sh751PremiumHomeHtml(){
         <p>Выберите формат — практика или игра.</p>
       </header>
       <div class="sh751-grid">
-        <article class="sh751-card sh751-card-train">
+        <article class="sh751-card sh751-card-train" role="button" tabindex="0" onclick="go('training')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('training')}">
           <div class="sh751-copy">
             <h3>Потренироваться</h3>
             <p>Прокачай навыки на реальных рабочих кейсах.</p>
-            <button class="sh751-cta sh751-cta-train" onclick="go('training')">Прокачаться <span>→</span></button>
+            <button class="sh751-cta sh751-cta-train" onclick="event.stopPropagation();go('training')">Прокачаться <span>→</span></button>
           </div>
           <div class="sh751-art">${sh751TrainVisual()}</div>
         </article>
-        <article class="sh751-card sh751-card-game">
+        <article class="sh751-card sh751-card-game" role="button" tabindex="0" onclick="window.open(MASTER_LINE_URL,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.open(MASTER_LINE_URL,'_blank','noopener,noreferrer')}">
           <div class="sh751-copy">
             <h3>Поиграть</h3>
             <p>Брось себе вызов и побей свой лучший результат.</p>
-            <a class="sh751-cta sh751-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Играть <span>→</span></a>
+            <a class="sh751-cta sh751-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Играть <span>→</span></a>
           </div>
           <div class="sh751-art sh751-art-game">${sh751GameVisual()}</div>
         </article>

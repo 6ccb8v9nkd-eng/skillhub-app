@@ -1,5 +1,5 @@
-const CACHE='skillhub-20260923-premium-home-cta';
-const SHELL=['./','./index.html','./styles.css?v=20260923_1502_premium_home','./app.js?v=20260923_1502_premium_home','./manifest.webmanifest?v=20260923_0745_hard_procedure_source','./icon-192-v718.png','./icon-512-v718.png','./master-line-icon.png','./home-target-reference.png','./home-gamepad-reference.png'];
+const CACHE='skillhub-20260923-clean-premium-cta-v2';
+const SHELL=['./','./index.html','./styles.css?v=20260923_1520_clean_cta','./app.js?v=20260923_1520_clean_cta','./manifest.webmanifest?v=20260923_0745_hard_procedure_source','./icon-192-v718.png','./icon-512-v718.png','./master-line-icon.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.hostname.includes('supabase.co'))return;const fresh=u.pathname.endsWith('/app.js')||u.pathname.endsWith('/styles.css')||u.pathname.endsWith('/index.html')||u.pathname.endsWith('/');e.respondWith(fetch(e.request,{cache:fresh?'reload':'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(c=>c||caches.match('./index.html'))));});

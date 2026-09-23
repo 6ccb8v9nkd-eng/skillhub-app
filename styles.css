@@ -500,3 +500,29 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 @media(max-width:390px){.sh751-stage{padding-left:13px;padding-right:13px}.sh751-card{min-height:150px;padding:15px 10px 12px}.sh751-copy{width:64%}.sh751-copy h3{font-size:16px}.sh751-copy p{font-size:8.8px}.sh751-art{width:47%;right:-7px}.sh751-art-game{width:51%;right:-10px}}
 @media(prefers-reduced-motion:reduce){.sh751-target-float,.sh751-pad-float,.sh751-arrow,.sh751-bolt,.sh751-spark,.sh751-game-spark{animation:none!important}.sh751-card,.sh751-cta,.sh751-cta span{transition:none!important}}
 /* ===== end SkillHub 7.5.1 ===== */
+/* ===== SkillHub 7.5.2 — clean premium CTA visuals ===== */
+.sh752-target-float,.sh752-pad-float{transform-box:fill-box;transform-origin:center;animation:sh752Float 4.8s ease-in-out infinite}
+.sh752-arrow-clean{transform-box:fill-box;transform-origin:center;animation:sh752ArrowGlide 3.8s cubic-bezier(.45,0,.55,1) infinite}
+.sh752-center-pulse{transform-box:fill-box;transform-origin:center;animation:sh752Pulse 2.6s ease-in-out infinite}
+.sh752-spark{transform-box:fill-box;transform-origin:center;animation:sh752Spark 2.8s ease-in-out infinite}
+.sh752-dot{animation:sh752Dots 3.4s ease-in-out infinite}
+.sh752-game-halo{transform-box:fill-box;transform-origin:center;animation:sh752Halo 5.4s linear infinite}
+.sh752-game-lines{transform-box:fill-box;transform-origin:center;animation:sh752GameAccent 3.6s ease-in-out infinite}
+.sh751-card{cursor:pointer}
+.sh751-card:hover .sh752-target-float,.sh751-card:hover .sh752-pad-float{animation-play-state:paused;transform:translateY(-6px) scale(1.025)}
+.sh751-card:hover .sh752-arrow-clean{animation-play-state:paused;transform:translate(-4px,3px)}
+.sh751-card:hover .sh752-game-halo{opacity:.95;filter:drop-shadow(0 0 10px rgba(104,87,255,.28))}
+.sh751-card:hover .sh752-center-pulse{filter:drop-shadow(0 0 8px rgba(255,213,34,.65))}
+@keyframes sh752Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes sh752ArrowGlide{0%,100%{transform:translate(0,0)}50%{transform:translate(-2.5px,2px)}}
+@keyframes sh752Pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.10)}}
+@keyframes sh752Spark{0%,100%{opacity:.55;transform:scale(.9)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes sh752Dots{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes sh752Halo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sh752GameAccent{0%,100%{opacity:.62;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+@media(prefers-reduced-motion:reduce){.sh752-target-float,.sh752-pad-float,.sh752-arrow-clean,.sh752-center-pulse,.sh752-spark,.sh752-dot,.sh752-game-halo,.sh752-game-lines{animation:none!important}}
+/* ===== end SkillHub 7.5.2 ===== */
+.sh752-target-float{filter:drop-shadow(0 12px 10px rgba(104,75,0,.22))}
+.sh752-arrow-clean{filter:drop-shadow(0 8px 7px rgba(30,33,40,.22))}
+.sh752-pad-float{filter:drop-shadow(0 14px 11px rgba(0,0,0,.46))}
+.sh752-spark{filter:drop-shadow(0 0 7px rgba(255,213,34,.55))}
