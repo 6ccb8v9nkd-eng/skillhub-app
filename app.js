@@ -120,6 +120,12 @@ function parseDialogueExplanation(text){
   const src=String(text||'').replace(/\r/g,'').trim();
   if(!src)return null;
   const skill=(src.match(/🎯\s*КЛЮЧЕВОЙ НАВЫК:\s*([^\n]+)/i)||[])[1]?.trim()||'';
+  const procedurePath=(src.match(/📍\s*ГДЕ ПРОВЕРИТЬ\s*\n([^\n]+)/i)||[])[1]?.trim()||'';
+  let procedureName='';
+  if(procedurePath){
+    const quoted=procedurePath.match(/Процедура\s*[«"]([^»"]+)[»"]/i);
+    procedureName=quoted?quoted[1].trim():(procedurePath.split('→')[0]||procedurePath).replace(/^Процедура\s*/i,'').trim();
+  }
   const correctPart=(src.split(/⚠️\s*ПОЧЕМУ ОСТАЛЬНЫЕ ВАРИАНТЫ СЛАБЕЕ/i)[0]||'')
     .replace(/✅\s*ПОЧЕМУ ЭТО ЛУЧШИЙ ВАРИАНТ/i,'').trim();
   const blocks=[...correctPart.matchAll(/^\s*(\d+)\.\s*(.+)$/gm)].map(m=>({title:`${m[1]}. ${m[2].trim()}`,text:''}));
@@ -128,7 +134,7 @@ function parseDialogueExplanation(text){
   const re=/Вариант\s+(\d+)\s*\nЧто хорошо:\s*([^\n]+)\s*\nГде (?:слабое место|ошибка):\s*([^\n]+)\s*\nРиск:\s*([^\n]+)/gi;
   let m;
   while((m=re.exec(wrongPart))){wrong.push({answer:Number(m[1]),good:m[2].trim(),mistake:m[3].trim(),risk:m[4].trim()})}
-  return {correct:{blocks},wrong,skill,raw:src};
+  return {correct:{blocks},wrong,skill,procedurePath,procedureName,raw:src};
 }
 function answerDialogue(i){
 const r=S.currentRun,x=r.x,isNew=!!x.payload?.scenario;
@@ -144,8 +150,12 @@ const blocks=e.correct?.blocks||[];
 const wrong=e.wrong||[];
 const correctBlocks=blocks.map(x=>`<div class="review-card"><b>${esc(x.title)}</b>${x.text?`<div>${esc(x.text)}</div>`:''}</div>`).join('');
 const wrongBlocks=wrong.map(x=>`<div class="wrong-card"><h4>🔴 Вариант ${esc(x.answer??x.variant)}</h4><div class="mini"><b>✅ Что хорошо</b><br>${esc(x.good)}</div><div class="mini"><b>⚠️ Где ошибка</b><br>${esc(x.mistake||x.error)}</div><div class="mini"><b>🎯 Риск</b><br>${esc(x.risk)}</div></div>`).join('');
-const fallback=(!correctBlocks&&!wrongBlocks&&!e.skill&&legacyExplanation)?`<div class="explain">${esc(legacyExplanation).replace(/\n/g,'<br>')}</div>`:'';
-$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
+const isHard=String(x.section||'').toLowerCase()==='hard';
+const procedurePath=e.procedurePath||e.source?.path||'';
+const procedureName=e.procedureName||e.source?.name||'';
+const sourceCard=isHard&&procedurePath?`<div class="skill-card procedure-card"><b>📚 Взято из процедуры</b><br><strong>${esc(procedureName||'Процедура')}</strong><div class="small" style="margin-top:6px">${esc(procedurePath)}</div></div>`:(!isHard&&e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:'');
+const fallback=(!correctBlocks&&!wrongBlocks&&!sourceCard&&legacyExplanation)?`<div class="explain">${esc(legacyExplanation).replace(/\n/g,'<br>')}</div>`:'';
+$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${sourceCard}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="S.currentRun.i++;renderDialogue()">Продолжить</button></div>`}
 function finishDialogue(){const r=S.currentRun,p=Math.round(r.score/r.x.steps.length*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${r.x.steps.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 const TYPING_TEXTS=[
   "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
