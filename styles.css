@@ -429,6 +429,22 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh-hard-sort-result.perfect>strong{color:#68e2ad}
 .sh-hard-sort-result b{font-size:15px}.sh-hard-sort-result p{margin:4px 0 0;color:var(--muted);font-size:12px}
 .sh-hard-sort-source{margin-top:16px}
+
+.sh-hard-sort-answer{margin-top:16px;padding:16px;border:1px solid rgba(96,211,157,.35);background:linear-gradient(180deg,rgba(22,67,52,.42),rgba(13,27,23,.5));border-radius:20px}
+.sh-hard-sort-answer-title{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.sh-hard-sort-answer-title>span{font-size:22px;line-height:1}
+.sh-hard-sort-answer-title b{font-size:17px;color:#7be4b6}
+.sh-hard-sort-answer-title p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.sh-hard-sort-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sh-hard-sort-answer-col{border:1px solid var(--line);background:rgba(9,14,19,.7);border-radius:16px;overflow:hidden}
+.sh-hard-sort-answer-head{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line)}
+.sh-hard-sort-answer-head>span{font-size:19px}
+.sh-hard-sort-answer-head b{font-size:14px}
+.sh-hard-sort-answer-head small{display:grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:rgba(255,217,35,.1);color:#ffd923}
+.sh-hard-sort-answer-list{display:flex;flex-direction:column;padding:9px}
+.sh-hard-sort-answer-item{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;line-height:1.35}
+.sh-hard-sort-answer-item:last-child{border-bottom:0}
+.sh-hard-sort-answer-item>span{color:#68e2ad;font-weight:800}
 @media(max-width:720px){
   .sh-hard-sort-shell{border-radius:20px;padding:14px}
   .sh-hard-sort-top>b{font-size:14px;text-align:left}
@@ -440,4 +456,6 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
   .sh-hard-sort-pool-body{display:grid;grid-template-columns:1fr}
   .sh-hard-sort-pool-head{align-items:flex-start;flex-direction:column}
   .sh-hard-sort-pool-head>span{max-width:100%;text-align:left}
+  .sh-hard-sort-answer-grid{grid-template-columns:1fr}
+  .sh-hard-sort-answer{padding:13px}
 }

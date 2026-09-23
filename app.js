@@ -1393,6 +1393,14 @@ function shHardSortCardHtml(c,placedIn=null){
   const click=checked?'':(placedIn?`onclick="shHardSortReturn('${jsq(c.id)}')"`:`onclick="shHardSortSelect('${jsq(c.id)}')"`);
   return `<button class="sh-hard-sort-card${isSelected?' is-selected':''}${state}" draggable="${checked?'false':'true'}" ondragstart="shHardSortDragStart(event,'${jsq(c.id)}')" ${click}><span>${esc(c.text)}</span>${result}</button>`;
 }
+function shHardSortCorrectAnswerHtml(x,cards){
+  const cats=x?.payload?.categories||[];
+  const groups=cats.map(cat=>{
+    const items=cards.filter(c=>c.category===cat.id);
+    return `<div class="sh-hard-sort-answer-col"><div class="sh-hard-sort-answer-head"><span>${esc(cat.icon||'')}</span><b>${esc(cat.title)}</b><small>${items.length}</small></div><div class="sh-hard-sort-answer-list">${items.map(c=>`<div class="sh-hard-sort-answer-item"><span>✓</span><div>${esc(c.text)}</div></div>`).join('')}</div></div>`;
+  }).join('');
+  return `<div class="sh-hard-sort-answer"><div class="sh-hard-sort-answer-title"><span>✅</span><div><b>Правильное распределение карточек</b><p>Так операции должны быть распределены по процедуре.</p></div></div><div class="sh-hard-sort-answer-grid">${groups}</div></div>`;
+}
 function renderHardSort(){
   const r=S.currentRun;if(!r||r.type!=='hard-sort')return;
   const x=r.x,cats=x.payload.categories||[],cards=r.cards||[];
@@ -1411,8 +1419,9 @@ function renderHardSort(){
     const pct=Math.round(correct/Math.max(1,total)*100);
     result=`<div class="sh-hard-sort-result ${pct===100?'perfect':''}"><strong>${pct}%</strong><div><b>${correct} из ${total} карточек распределены верно</b><p>${pct===100?'Отлично: все операции классифицированы правильно.':'Карточки с ошибками отмечены красным — под ними показана правильная категория.'}</p></div></div>`;
   }
+  const correctAnswer=r.checked?shHardSortCorrectAnswerHtml(x,cards):'';
   const sourceCard=r.checked&&source.path?`<div class="skill-card procedure-card sh-hard-sort-source"><b>📚 Взято из процедуры</b><br><strong>${esc(source.name)}</strong><div class="small" style="margin-top:6px">${esc(source.path)}</div></div>`:'';
-  $('page-run').innerHTML=`<div class="sh-hard-sort-wrap"><div class="card sh-hard-sort-shell"><div class="actions sh-hard-sort-top"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${placedCount}/${total}</span></div><div class="progress"><span style="width:${(r.checked?100:placedCount/Math.max(1,total)*100)}%"></span></div><div class="sh-hard-sort-intro"><span class="pill">Карточки</span><h2>${esc(x.payload.question||x.title)}</h2><p>${esc(instruction)}</p>${!r.checked?`<div class="sh-hard-sort-tip">На компьютере — перетащите карточку. На телефоне — нажмите на карточку, затем на нужную колонку.</div>`:''}</div>${result}<div class="sh-hard-sort-pool"><div class="sh-hard-sort-pool-head"><b>${r.checked?'Результат':'Карточки для распределения'}</b>${!r.checked&&selectedCard?`<span>Выбрано: ${esc(selectedCard.text)}</span>`:''}</div><div class="sh-hard-sort-pool-body">${pool.length?pool.map(c=>shHardSortCardHtml(c)).join(''):(r.checked?'':'<div class="sh-hard-sort-empty">Все карточки распределены</div>')}</div></div><div class="sh-hard-sort-grid">${zones}</div>${sourceCard}<div class="actions" style="justify-content:flex-end;margin-top:16px">${r.checked?`<button class="btn primary" onclick="go('training')">Готово</button>`:`<button class="btn primary" ${placedCount<total?'disabled':''} onclick="checkHardSort()">Проверить</button>`}</div></div></div>`;
+  $('page-run').innerHTML=`<div class="sh-hard-sort-wrap"><div class="card sh-hard-sort-shell"><div class="actions sh-hard-sort-top"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${placedCount}/${total}</span></div><div class="progress"><span style="width:${(r.checked?100:placedCount/Math.max(1,total)*100)}%"></span></div><div class="sh-hard-sort-intro"><span class="pill">Карточки</span><h2>${esc(x.payload.question||x.title)}</h2><p>${esc(instruction)}</p>${!r.checked?`<div class="sh-hard-sort-tip">На компьютере — перетащите карточку. На телефоне — нажмите на карточку, затем на нужную колонку.</div>`:''}</div>${result}<div class="sh-hard-sort-pool"><div class="sh-hard-sort-pool-head"><b>${r.checked?'Результат':'Карточки для распределения'}</b>${!r.checked&&selectedCard?`<span>Выбрано: ${esc(selectedCard.text)}</span>`:''}</div><div class="sh-hard-sort-pool-body">${pool.length?pool.map(c=>shHardSortCardHtml(c)).join(''):(r.checked?'':'<div class="sh-hard-sort-empty">Все карточки распределены</div>')}</div></div><div class="sh-hard-sort-grid">${zones}</div>${correctAnswer}${sourceCard}<div class="actions" style="justify-content:flex-end;margin-top:16px">${r.checked?`<button class="btn primary" onclick="go('training')">Готово</button>`:`<button class="btn primary" ${placedCount<total?'disabled':''} onclick="checkHardSort()">Проверить</button>`}</div></div></div>`;
 }
 function checkHardSort(){
   const r=S.currentRun;if(!r||r.type!=='hard-sort'||r.checked)return;
