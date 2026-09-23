@@ -1444,8 +1444,8 @@ startContent=function(id){const x=S.content.find(c=>c.id===id);if(shHardSortIsCa
 
 // Friendly label in the Hard Skills material list.
 const shHardSortOpenSectionBase=openSection;
-openSection=function(sec){
-  if(sec!=='hard')return shHardSortOpenSectionBase(sec);
+openSection=function(sec,...args){
+  if(sec!=='hard')return shHardSortOpenSectionBase(sec,...args);
   const arr=S.content.filter(x=>x.section===sec&&x.status==='published'),topics=[...new Set(arr.map(x=>x.topic))];
   showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
 };
@@ -1543,8 +1543,8 @@ startTopic=function(sec,topic){
 };
 
 const shHardFlowOpenSectionBase=openSection;
-openSection=function(sec){
-  if(sec!=='hard')return shHardFlowOpenSectionBase(sec);
+openSection=function(sec,...args){
+  if(sec!=='hard')return shHardFlowOpenSectionBase(sec,...args);
   const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))];
   showModal(`<div class="modal-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите отдельный блок или тренировку вразброс</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
   <div class="sh-hard-mode-row"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>SkillHub будет выдавать непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>

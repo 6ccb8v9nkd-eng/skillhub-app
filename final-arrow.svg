@@ -1,0 +1,40 @@
+<svg class="sh751-visual-svg sh751-target-svg" viewBox="0 0 300 230" role="img" aria-label="Мишень со стрелой">
+    <defs>
+      <filter id="sh752TargetShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#7a5a00" flood-opacity=".20"/></filter>
+      <filter id="sh753ArrowShadow" x="-40%" y="-50%" width="190%" height="210%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#111827" flood-opacity=".28"/></filter>
+      <linearGradient id="sh752Gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff178"/><stop offset=".45" stop-color="#ffd522"/><stop offset="1" stop-color="#e7a600"/></linearGradient>
+      <linearGradient id="sh752Blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7f91ff"/><stop offset="1" stop-color="#3357f4"/></linearGradient>
+      <linearGradient id="sh753ArrowMetal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#151922"/><stop offset=".48" stop-color="#444c59"/><stop offset="1" stop-color="#171b21"/></linearGradient>
+      <linearGradient id="sh753FeatherBlue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7890ff"/><stop offset="1" stop-color="#3658f5"/></linearGradient>
+      <radialGradient id="sh752TargetBase" cx="35%" cy="27%" r="78%"><stop stop-color="#fffef7"/><stop offset="1" stop-color="#ece5d0"/></radialGradient>
+    </defs>
+    <ellipse cx="146" cy="204" rx="88" ry="16" fill="#947100" opacity=".11"/>
+    <g class="sh752-target-float">
+      <circle cx="145" cy="120" r="78" fill="url(#sh752TargetBase)" stroke="#fff" stroke-width="5"/>
+      <circle cx="145" cy="120" r="64" fill="url(#sh752Gold)"/>
+      <circle cx="145" cy="120" r="46" fill="#fff8dc"/>
+      <circle cx="145" cy="120" r="29" fill="url(#sh752Blue)"/>
+      <circle class="sh752-center-pulse" cx="145" cy="120" r="12" fill="url(#sh752Gold)"/>
+      <path d="M99 78 A65 65 0 0 1 133 58" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".22"/>
+
+      <!-- Arrow: tip is exactly at the target center (145,120). The full arrow is a single rigid group,
+           so the shaft stays perfectly straight and both tail feathers remain symmetric. -->
+      <g transform="rotate(-36.6 145 120)" filter="url(#sh753ArrowShadow)">
+        <!-- straight shaft -->
+        <line x1="160" y1="120" x2="250" y2="120" stroke="url(#sh753ArrowMetal)" stroke-width="8" stroke-linecap="round"/>
+        <line x1="164" y1="117.8" x2="247" y2="117.8" stroke="#8f98a5" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+
+        <!-- arrowhead: the point is exactly the centre of the bullseye -->
+        <path d="M145 120 L166 107 L166 133 Z" fill="url(#sh752Blue)"/>
+        <path d="M148 120 L164 111 L164 117 Z" fill="#a7b5ff" opacity=".55"/>
+
+        <!-- symmetric fletching, mirrored around the shaft -->
+        <path d="M231 116 L252 101 L260 104 L247 120 L231 120 Z" fill="url(#sh753FeatherBlue)"/>
+        <path d="M231 124 L252 139 L260 136 L247 120 L231 120 Z" fill="url(#sh753FeatherBlue)"/>
+        <path d="M235 116.5 L252 105 L256 106.5 L246 117.8 Z" fill="#9aabff" opacity=".35"/>
+        <path d="M235 123.5 L252 135 L256 133.5 L246 122.2 Z" fill="#2446d9" opacity=".35"/>
+      </g>
+    </g>
+    <g class="sh752-spark"><path d="M246 101 l4 7 7 4-7 4-4 7-4-7-7-4 7-4z" fill="#ffd522"/></g>
+    <g class="sh752-dot"><circle cx="265" cy="134" r="4.5" fill="#4b68ff"/><circle cx="278" cy="118" r="2.8" fill="#ffd522"/></g>
+  </svg>
