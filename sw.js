@@ -1,4 +1,4 @@
-const CACHE='skillhub-20260923_0848_hard_sort_answer';
+const CACHE='skillhub-20260923-hard-flow-next';
 const SHELL=['./','./index.html','./styles.css?v=20260923_0805_hard_sort_cards','./app.js?v=20260923_0805_hard_sort_cards','./manifest.webmanifest?v=20260923_0745_hard_procedure_source','./icon-192-v718.png','./icon-512-v718.png','./master-line-icon.png','./home-target-reference.png','./home-gamepad-reference.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

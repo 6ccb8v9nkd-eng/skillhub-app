@@ -1449,3 +1449,132 @@ openSection=function(sec){
   const arr=S.content.filter(x=>x.section===sec&&x.status==='published'),topics=[...new Set(arr.map(x=>x.topic))];
   showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
 };
+
+/* ===== SkillHub HARD topic flow + mixed flow ===== */
+let shHardFlow=null;
+let shHardFlowLaunching=false;
+
+function shHardFlowItems(topic=''){
+  return S.content.filter(x=>x.status==='published'&&x.section==='hard'&&x.type!=='manual'&&(!topic||x.topic===topic));
+}
+function shHardFlowShuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function shHardFlowQueue(topic='',mixed=false){
+  const arr=shHardFlowItems(topic),seen=seenContentMap();
+  const unseen=arr.filter(x=>!seen.has(x.id));
+  const base=unseen.length?unseen:arr;
+  return (mixed?shHardFlowShuffle(base):base).map(x=>x.id);
+}
+function shHardFlowLaunch(id){
+  if(!id)return;
+  shHardFlowLaunching=true;
+  try{startContent(id)}finally{shHardFlowLaunching=false}
+}
+function shHardFlowStartTopic(topic){
+  const queue=shHardFlowQueue(topic,false);
+  if(!queue.length){toast('В этом блоке пока нет опубликованных материалов');return}
+  shHardFlow={mode:'topic',section:'hard',topic,queue,index:0};
+  closeModal();shHardFlowLaunch(queue[0]);
+}
+function shHardFlowStartMix(){
+  const queue=shHardFlowQueue('',true);
+  if(!queue.length){toast('В Hard Skills пока нет опубликованных материалов');return}
+  shHardFlow={mode:'mix',section:'hard',topic:'',queue,index:0};
+  closeModal();shHardFlowLaunch(queue[0]);
+}
+function shHardFlowStartSingle(id){
+  shHardFlow=null;closeModal();shHardFlowLaunch(id);
+}
+function shHardFlowNext(){
+  if(!shHardFlow)return shHardFlowBack();
+  let i=shHardFlow.index+1;
+  while(i<shHardFlow.queue.length){
+    const id=shHardFlow.queue[i],x=S.content.find(c=>c.id===id&&c.status==='published');
+    if(x){shHardFlow.index=i;shHardFlowLaunch(id);return}
+    i++;
+  }
+  shHardFlowBack();
+}
+function shHardFlowBack(){
+  shHardFlow=null;go('training');setTimeout(()=>openSection('hard'),0);
+}
+function shHardFlowOpenTopic(topic){
+  const arr=shHardFlowItems(topic),p=topicProgress('hard',topic),seen=seenContentMap();
+  const label=p.done===0?'Начать блок':p.done<p.total?'Продолжить блок':'Пройти блок заново';
+  showModal(`<div class="modal-head"><div><h2>${esc(topic)}</h2><div class="muted small">Hard Skills · пройдено ${p.done} из ${p.total}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
+  <div class="sh-hard-topic-hero"><div><b>Проходите блок последовательно</b><p>После каждого кейса появится кнопка «Следующий кейс», поэтому возвращаться в меню не придётся.</p></div><button class="btn primary" onclick="shHardFlowStartTopic('${jsq(topic)}')">${label} →</button></div>
+  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+}
+function shHardFlowCompletionMeta(){
+  const f=shHardFlow;if(!f)return '';
+  if(f.mode==='topic'){
+    const p=topicProgress('hard',f.topic);
+    return `<div class="sh-hard-flow-meta"><b>${esc(f.topic)}</b><span>Пройдено ${p.done} из ${p.total}</span></div>`;
+  }
+  return `<div class="sh-hard-flow-meta"><b>Микс Hard Skills</b><span>${Math.min(f.index+1,f.queue.length)} из ${f.queue.length}</span></div>`;
+}
+function shHardFlowCompletionButtons(){
+  const f=shHardFlow;
+  if(!f)return `<button class="btn primary" onclick="shHardFlowBack()">К Hard Skills</button>`;
+  const hasNext=f.index<f.queue.length-1;
+  if(f.mode==='topic'){
+    return hasNext
+      ? `<button class="btn primary" onclick="shHardFlowNext()">Следующий кейс →</button><button class="btn secondary" onclick="shHardFlowOpenTopic('${jsq(f.topic)}')">К блоку</button>`
+      : `<button class="btn primary" onclick="shHardFlowBack()">Блок пройден ✓</button><button class="btn secondary" onclick="shHardFlowStartMix()">Продолжить вразброс</button>`;
+  }
+  return hasNext
+    ? `<button class="btn primary" onclick="shHardFlowNext()">Следующий случайный кейс →</button><button class="btn secondary" onclick="shHardFlowBack()">К Hard Skills</button>`
+    : `<button class="btn primary" onclick="shHardFlowBack()">Микс завершён ✓</button>`;
+}
+
+const shHardFlowStartContentBase=startContent;
+startContent=function(id){
+  if(!shHardFlowLaunching)shHardFlow=null;
+  return shHardFlowStartContentBase(id);
+};
+
+const shHardFlowStartTopicBase=startTopic;
+startTopic=function(sec,topic){
+  if(sec==='hard')return shHardFlowStartTopic(topic);
+  return shHardFlowStartTopicBase(sec,topic);
+};
+
+const shHardFlowOpenSectionBase=openSection;
+openSection=function(sec){
+  if(sec!=='hard')return shHardFlowOpenSectionBase(sec);
+  const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))];
+  showModal(`<div class="modal-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите отдельный блок или тренировку вразброс</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
+  <div class="sh-hard-mode-row"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>SkillHub будет выдавать непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>
+  <div class="section-title"><h2>По отдельным блокам</h2><span class="muted small">Нажмите на блок, чтобы пройти его последовательно</span></div>
+  <div class="topic-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="topic" onclick="shHardFlowOpenTopic('${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · открыть блок</small></button>`}).join('')}</div>
+  <div class="section-title"><h2>Все материалы</h2><span class="muted small">Можно запустить один конкретный кейс</span></div>
+  ${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+};
+
+finishDialogue=function(){
+  const r=S.currentRun,x=r.x,isNew=!!x.payload?.scenario,total=isNew?1:(x.steps||[]).length;
+  const p=Math.round(r.score/Math.max(1,total)*100);
+  recordAttempt({section:x.section,topic:x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});
+  $('page-run').innerHTML=`<div class="card sh-hard-flow-finish" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${total} правильных решений</p>${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div></div>`;
+};
+
+finishQuiz=function(){
+  const r=S.currentRun,p=Math.round(r.score/Math.max(1,r.items.length)*100);
+  recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]});
+  $('page-run').innerHTML=`<div class="card sh-hard-flow-finish" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Тренировка завершена</h2><p class="muted">${r.score} из ${r.items.length} правильных решений</p>${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div></div>`;
+};
+
+const shHardFlowRenderSortBase=renderHardSort;
+renderHardSort=function(){
+  shHardFlowRenderSortBase();
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||!r.checked)return;
+  const shell=document.querySelector('#page-run .sh-hard-sort-shell');if(!shell)return;
+  const actions=[...shell.querySelectorAll(':scope > .actions')].pop();
+  if(actions){actions.classList.add('sh-hard-flow-actions');actions.innerHTML=shHardFlowCompletionButtons()}
+  const result=shell.querySelector('.sh-hard-sort-result');
+  if(result&&!shell.querySelector('.sh-hard-flow-meta'))result.insertAdjacentHTML('afterend',shHardFlowCompletionMeta());
+};
+/* ===== end HARD topic flow + mixed flow ===== */
