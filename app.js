@@ -777,11 +777,12 @@ editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.typ
 /* ===== SkillHub 7.2.3 — external game: Master Line ===== */
 const MASTER_LINE_URL='https://masterlinii-game.website.yandexcloud.net/';
 trainingCards=function(){
-  return `<div class="sh750-training-grid">
-    <article class="sh750-training-card sh750-soft"><div class="sh750-card-icon">${sh750TrainingIcon('soft')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">КОММУНИКАЦИЯ</span><h3>Soft Skills</h3><p>Диалоги, клиентский сервис и работа с формулировками.</p><button class="sh750-card-btn" onclick="openSoftHub()">Открыть →</button></div></article>
-    <article class="sh750-training-card sh750-hard"><div class="sh750-card-icon">${sh750TrainingIcon('hard')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ЗНАНИЯ</span><h3>Hard Skills</h3><p>Продукты, процессы, процедуры и реальные клиентские ситуации.</p><button class="sh750-card-btn" onclick="openSection('hard')">Открыть →</button></div></article>
-    <article class="sh750-training-card sh750-typing"><div class="sh750-card-icon">${sh750TrainingIcon('typing')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">СКОРОСТЬ</span><h3>Печать</h3><p>Тренировка скорости и точности набора на рабочих текстах.</p><button class="sh750-card-btn" onclick="startTyping()">Начать →</button></div></article>
-    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИГРОВОЙ ФОРМАТ</span><h3>Мастер линии</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить →</a></div></article>
+  return `<div class="grid4">
+    <div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">🎯</div><h3>Развитие навыков</h3><p>Практика слабых зон через Soft и Hard тренировки.</p><button class="btn primary" onclick="openSection('soft')">Тренировать</button></div>
+    <div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div>
+    <div class="card train-card"><div class="icon">🎮</div><h3>Мастер линии</h3><p>Игровой тренажёр · практика навыков в игровом формате.</p><a class="btn primary" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить</a></div>
   </div>`;
 };
 /* ===== end 7.2.3 ===== */
@@ -893,16 +894,6 @@ function sh741SkillIcon(sec){
   };return icons[sec]||''
 }
 
-function sh750TrainingIcon(kind){
-  const icons={
-    soft:`<svg class="sh750-icon-svg" viewBox="0 0 150 150" aria-hidden="true"><defs><linearGradient id="s750softA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a5"/><stop offset="1" stop-color="#ffd52e"/></linearGradient><linearGradient id="s750softB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#323946"/><stop offset="1" stop-color="#11151c"/></linearGradient><filter id="s750softShadow" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".26"/></filter></defs><g filter="url(#s750softShadow)"><path d="M23 35c0-10 8-18 18-18h58c10 0 18 8 18 18v35c0 10-8 18-18 18H70L44 105l5-17h-8c-10 0-18-8-18-18V35Z" fill="url(#s750softA)"/><path d="M65 77c0-9 7-16 16-16h43c9 0 16 7 16 16v27c0 9-7 16-16 16h-18l-20 14 4-14h-9c-9 0-16-7-16-16V77Z" fill="url(#s750softB)"/><circle cx="50" cy="53" r="5" fill="#1a1d22"/><circle cx="70" cy="53" r="5" fill="#1a1d22"/><circle cx="90" cy="53" r="5" fill="#1a1d22"/><path d="m118 79 3.5 7 7.5 1-5.5 5.2 1.4 7.4-6.9-3.6-6.8 3.6 1.3-7.4-5.4-5.2 7.5-1z" fill="#ffdd2d"/></g></svg>`,
-    hard:`<svg class="sh750-icon-svg" viewBox="0 0 150 150" aria-hidden="true"><defs><linearGradient id="s750hardBook" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe77b"/><stop offset="1" stop-color="#ffc61f"/></linearGradient><linearGradient id="s750hardDark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#343b47"/><stop offset="1" stop-color="#10141a"/></linearGradient><linearGradient id="s750hardPurple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8d6cff"/><stop offset="1" stop-color="#5a36df"/></linearGradient><filter id="s750hardShadow" x="-35%" y="-35%" width="180%" height="190%"><feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".28"/></filter></defs><g filter="url(#s750hardShadow)"><path d="M24 37c0-9 7-16 16-16h42c13 0 23 5 29 13v74c-7-6-16-9-28-9H40c-9 0-16-7-16-16V37Z" fill="url(#s750hardBook)"/><path d="M126 37c0-9-7-16-16-16H82c13 0 23 5 29 13v74c4-5 10-9 15-11V37Z" fill="url(#s750hardDark)"/><path d="M47 45h43M47 59h43M47 73h31" stroke="#292c32" stroke-width="6" stroke-linecap="round" opacity=".72"/><g transform="translate(91 77)"><circle cx="24" cy="24" r="22" fill="url(#s750hardPurple)"/><circle cx="24" cy="24" r="8" fill="#fff0a8"/><path d="M24 0v8M24 40v8M0 24h8M40 24h8M7 7l6 6M35 35l6 6M41 7l-6 6M13 35l-6 6" stroke="#fff0a8" stroke-width="5" stroke-linecap="round"/></g></g></svg>`,
-    typing:`<svg class="sh750-icon-svg" viewBox="0 0 150 150" aria-hidden="true"><defs><linearGradient id="s750typeBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#333b47"/><stop offset="1" stop-color="#11151c"/></linearGradient><linearGradient id="s750typeKey" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a0"/><stop offset="1" stop-color="#ffd22e"/></linearGradient><linearGradient id="s750typePurple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9a7cff"/><stop offset="1" stop-color="#633be5"/></linearGradient><filter id="s750typeShadow" x="-30%" y="-40%" width="170%" height="200%"><feDropShadow dx="0" dy="11" stdDeviation="8" flood-color="#000" flood-opacity=".3"/></filter></defs><g filter="url(#s750typeShadow)" transform="rotate(-5 75 75)"><rect x="15" y="42" width="120" height="72" rx="18" fill="url(#s750typeBody)"/><g fill="#5f6874"><rect x="27" y="55" width="16" height="13" rx="4"/><rect x="48" y="55" width="16" height="13" rx="4"/><rect x="69" y="55" width="16" height="13" rx="4"/><rect x="90" y="55" width="16" height="13" rx="4"/><rect x="111" y="55" width="12" height="13" rx="4"/><rect x="27" y="73" width="16" height="13" rx="4"/><rect x="48" y="73" width="16" height="13" rx="4"/><rect x="90" y="73" width="16" height="13" rx="4"/><rect x="111" y="73" width="12" height="13" rx="4"/></g><rect x="69" y="73" width="16" height="13" rx="4" fill="url(#s750typeKey)"/><rect x="41" y="92" width="70" height="11" rx="5.5" fill="url(#s750typePurple)"/><path d="m119 29 8 15h-8l5 12-20-20h9l-4-7z" fill="url(#s750typeKey)"/></g></svg>`,
-    game:`<svg class="sh750-icon-svg" viewBox="0 0 150 150" aria-hidden="true"><defs><linearGradient id="s750gameBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#353d49"/><stop offset=".55" stop-color="#161b23"/><stop offset="1" stop-color="#0a0d12"/></linearGradient><linearGradient id="s750gameGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff080"/><stop offset="1" stop-color="#ffc61e"/></linearGradient><linearGradient id="s750gamePurple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9677ff"/><stop offset="1" stop-color="#5c35dc"/></linearGradient><filter id="s750gameShadow" x="-40%" y="-45%" width="190%" height="220%"><feDropShadow dx="0" dy="12" stdDeviation="9" flood-color="#000" flood-opacity=".35"/></filter></defs><g filter="url(#s750gameShadow)" transform="rotate(-6 75 78)"><path d="M26 66c7-17 21-26 39-25 9 1 16 5 22 5 7 0 14-4 23-5 19-1 33 8 40 26 8 19 9 47 1 57-6 8-16 7-24-2l-17-20c-5-6-12-9-23-9s-18 3-23 9l-17 20c-8 9-18 10-24 2-8-10-6-39 3-58Z" fill="url(#s750gameBody)" stroke="#4d5663" stroke-width="2"/><rect x="43" y="68" width="35" height="12" rx="6" fill="url(#s750gameGold)"/><rect x="55" y="56" width="12" height="35" rx="6" fill="url(#s750gameGold)"/><circle cx="108" cy="67" r="7" fill="url(#s750gamePurple)"/><circle cx="124" cy="77" r="7" fill="url(#s750gameGold)"/><circle cx="107" cy="86" r="7" fill="url(#s750gameGold)"/><circle cx="91" cy="76" r="7" fill="url(#s750gamePurple)"/><path d="m113 24 8 15h-8l5 12-20-20h9l-4-7z" fill="url(#s750gameGold)"/><circle cx="70" cy="104" r="7" fill="#11161d" stroke="#616b78" stroke-width="2"/><circle cx="94" cy="104" r="7" fill="#11161d" stroke="#616b78" stroke-width="2"/></g></svg>`
-  };
-  return icons[kind]||'';
-}
-
 function renderHome(){
   if(S.profile?.role!=='employee'){$('page-home').innerHTML='<div class="sh74-manager"><div class="sh74-light-card"><b>Для руководителя основная панель находится в разделе управления.</b><div class="meta">Откройте «'+(S.profile.role==='mentor'?'Моя группа':S.profile.role==='rs'?'Сектор':'Управление')+'».</div></div></div>';return}
   $('pageTitle').textContent='Главная';$('pageSub').textContent='Ваш прогресс и актуальные тренировки';
@@ -918,16 +909,18 @@ let sh74TrainingFilter='all';
 function sh74SetTrainingFilter(v){sh74TrainingFilter=v;renderTraining()}
 function sh74TrainingProgress(sec){if(S.profile?.role!=='employee'){const total=sec==='typing'?50:S.content.filter(x=>x.status==='published'&&x.section===sec).length;return{done:0,total,pct:0}}const p=sh74SectionProgress(sec);return p}
 function renderTraining(){
-  $('pageTitle').textContent='Тренировки';$('pageSub').textContent='Выберите формат и продолжайте в своём темпе';
-  const soft=sh74TrainingProgress('soft'),hard=sh74TrainingProgress('hard'),typing=sh74TrainingProgress('typing');
-  const progressHtml=p=>p.total?`<div class="sh750-progress"><div class="progress"><span style="width:${Math.round((p.done||0)/p.total*100)}%"></span></div><small>${p.done||0}/${p.total}</small></div>`:'';
-  $('page-training').innerHTML=`<div class="sh750-training-head"><div><span>SKILLHUB</span><h2>Что потренируем сегодня?</h2><p>Только четыре основных направления — без лишних карточек.</p></div></div>
-  <div class="sh750-training-grid">
-    <article class="sh750-training-card sh750-soft"><div class="sh750-card-icon">${sh750TrainingIcon('soft')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">КОММУНИКАЦИЯ</span><h3>Soft Skills</h3><p>Диалоги, клиентский сервис и работа с формулировками.</p>${progressHtml(soft)}<button class="sh750-card-btn" onclick="openSoftHub()">Открыть →</button></div></article>
-    <article class="sh750-training-card sh750-hard"><div class="sh750-card-icon">${sh750TrainingIcon('hard')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ЗНАНИЯ</span><h3>Hard Skills</h3><p>Продукты, процессы, процедуры и реальные клиентские ситуации.</p>${progressHtml(hard)}<button class="sh750-card-btn" onclick="openSection('hard')">Открыть →</button></div></article>
-    <article class="sh750-training-card sh750-typing"><div class="sh750-card-icon">${sh750TrainingIcon('typing')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">СКОРОСТЬ</span><h3>Печать</h3><p>Тренировка скорости и точности набора на рабочих текстах.</p>${progressHtml(typing)}<button class="sh750-card-btn" onclick="startTyping()">Начать →</button></div></article>
-    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИГРОВОЙ ФОРМАТ</span><h3>Мастер линии</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" target="_blank" rel="noopener noreferrer" href="${MASTER_LINE_URL}">Запустить →</a></div></article>
-  </div>`;
+  $('pageTitle').textContent='Тренировки';$('pageSub').textContent='Выберите направление и продолжайте с нужного места';
+  const manualTotal=manualSoftContent().length,manualStarted=S.profile?.role==='employee'?(S.manualAnswers||[]).filter(x=>x.login===S.profile?.login).map(x=>x.content_id).filter((v,i,a)=>a.indexOf(v)===i).length:0;
+  const rows=[
+    {group:'soft',icon:'✎',title:'Ручной тренажёр',sub:'Пиши ответы на реальные кейсы · проверка РГ',done:manualStarted,total:manualTotal,act:"openManualSoft()",label:'Открыть'},
+    {group:'game',icon:'🎮',title:'Мастер линии',sub:'Игровой тренажёр',done:0,total:0,url:MASTER_LINE_URL,label:'Запустить'},
+    {group:'soft',icon:sh741SkillIcon('soft'),title:'Soft Skills',sub:'Коммуникация, клиенты, команда',...sh74TrainingProgress('soft'),act:"openSection('soft','auto')",label:'Открыть'},
+    {group:'hard',icon:sh741SkillIcon('hard'),title:'Hard Skills',sub:'Продукты, процессы, регламенты',...sh74TrainingProgress('hard'),act:"openSection('hard')",label:'Открыть'},
+    {group:'needs',icon:sh741SkillIcon('needs'),title:'Потребность',sub:'Выявление потребности и живые диалоги',...sh74TrainingProgress('needs'),act:"openSection('needs')",label:'Открыть'},
+    {group:'typing',icon:sh741SkillIcon('typing'),title:'Скорость печати',sub:'Точность и скорость набора · 50 текстов',...sh74TrainingProgress('typing'),act:"startTyping()",label:'Начать'}
+  ];
+  const visible=rows.filter(x=>sh74TrainingFilter==='all'||x.group===sh74TrainingFilter);
+  $('page-training').innerHTML=`<div class="sh74-training"><div class="sh74-filterbar">${[['all','Все'],['soft','Soft'],['hard','Hard'],['needs','Потребность'],['typing','Скорость печати']].map(([v,n])=>`<button class="sh74-filter ${sh74TrainingFilter===v?'active':''}" onclick="sh74SetTrainingFilter('${v}')">${n}</button>`).join('')}</div><div class="sh74-training-list">${visible.map(x=>`<div class="sh74-training-row"><div class="sh74-training-icon">${x.icon}</div><div class="sh74-training-copy"><b>${x.title}</b><p>${x.sub}</p>${x.total?`<div class="sh74-training-progress"><div class="progress"><span style="width:${Math.round((x.done||0)/x.total*100)}%"></span></div><small>${x.done||0}/${x.total}</small></div>`:''}</div><div class="sh74-training-action">${x.url?`<a class="btn primary" target="_blank" rel="noopener noreferrer" href="${x.url}">${x.label}</a>`:`<button class="btn ${x.title==='Мастер линии'?'primary':'secondary'}" onclick="${x.act}">${x.label} ›</button>`}</div></div>`).join('')}</div></div>`
 }
 
 function sh74TeamAssignmentProgress(users){let total=0,done=0;for(const a of S.assignments.filter(x=>x.status==='active'))for(const u of users){if(!sh74AssignedTo(a,u.login))continue;total++;if(assignmentCompletedForUser(a,u.login,S.attempts))done++}return{total,done,pct:total?Math.round(done/total*100):0}}
@@ -1126,7 +1119,7 @@ renderNotifications=function(){
 
 /* ===== SkillHub 7.4.8 — Home dual cards refined ===== */
 function sh748HomeCardsHtml(){
-  return `<div class="sh748-hero-shell"><div class="sh748-hero-head"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh748-hero-subtitle">Что выбираете сегодня?</div><p class="sh748-hero-text">Тренируйте навыки или попробуйте себя в игре.</p></div><div class="sh748-home-grid"><section class="sh748-card sh748-card-train"><div class="sh748-card-icon">${sh741SkillIcon('needs')}</div><div class="sh748-card-body"><h3>Потренироваться</h3><p><strong>Soft, Hard и Печать</strong><br>Три направления для регулярной практики.</p><button class="sh748-card-btn" onclick="go('training')">К тренировкам →</button></div><div class="sh748-card-note">Маленькие шаги — большие результаты!</div></section><section class="sh748-card sh748-card-game"><div class="sh748-card-icon sh748-card-icon-game"><img class="sh748-game-icon" src="./master-line-icon.png" alt="Мастер линии"></div><div class="sh748-card-body"><h3>Поиграть</h3><p><strong>Мастер линии</strong><br>Стань настоящим мастером линии.<br>Практика навыков в игровом формате.</p><a class="sh748-card-btn sh748-card-btn-dark" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a></div><div class="sh748-card-side">Учись.<br>Играй.<br>Расти!</div></section></div></div>`;
+  return `<div class="sh748-hero-shell"><div class="sh748-hero-head"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh748-hero-subtitle">Что выбираете сегодня?</div><p class="sh748-hero-text">Тренируйте навыки или попробуйте себя в игре.</p></div><div class="sh748-home-grid"><section class="sh748-card sh748-card-train"><div class="sh748-card-icon">${sh741SkillIcon('needs')}</div><div class="sh748-card-body"><h3>Потренироваться</h3><p><strong>Soft, Hard, Потребность</strong><br>Скорость печати и другие навыки.</p><button class="sh748-card-btn" onclick="go('training')">К тренировкам →</button></div><div class="sh748-card-note">Маленькие шаги — большие результаты!</div></section><section class="sh748-card sh748-card-game"><div class="sh748-card-icon sh748-card-icon-game"><img class="sh748-game-icon" src="./master-line-icon.png" alt="Мастер линии"></div><div class="sh748-card-body"><h3>Поиграть</h3><p><strong>Мастер линии</strong><br>Стань настоящим мастером линии.<br>Практика навыков в игровом формате.</p><a class="sh748-card-btn sh748-card-btn-dark" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a></div><div class="sh748-card-side">Учись.<br>Играй.<br>Расти!</div></section></div></div>`;
 }
 function sh748ApplyEmployeeHome(pageId){
   const page=$(pageId),hero=page?.querySelector('.sh74-hero');
@@ -1141,54 +1134,48 @@ renderHome=function(){
 };
 /* ===== end SkillHub 7.4.8 ===== */
 
-/* ===== SkillHub 7.4.9 — Reference home: yellow choice stage ===== */
-function sh749TrainingArt(){
-  return `<img class="sh749-art-img sh749-target-img" src="./home-target-3d.svg?v=20260922_3dref" alt="" aria-hidden="true">`;
-}
-function sh749GameArt(){
-  return `<img class="sh749-art-img sh749-game-img" src="./home-gamepad-3d.svg?v=20260922_3dref" alt="" aria-hidden="true">`;
-}
-function sh749ReferenceHomeHtml(){
+/* ===== SkillHub 7.5.0 — strict reference home ===== */
+function sh750ReferenceHomeHtml(){
   const rework = S.profile?.role==='employee' ? (sh745ReworkBannerHtml?.(true)||'') : '';
-  return `<div class="sh749-home-wrap">
-    <section class="sh749-choice-stage">
-      <div class="sh749-orb sh749-orb-a"></div><div class="sh749-orb sh749-orb-b"></div>
-      <header class="sh749-choice-head">
-        <div class="sh749-kicker">SKILLHUB</div>
+  return `<div class="sh750-home-wrap">
+    <section class="sh750-choice-stage">
+      <div class="sh750-orb"></div>
+      <header class="sh750-choice-head">
+        <div class="sh750-kicker">SKILLHUB</div>
         <h1>Привет, ${esc(sh74Name())}! <span aria-hidden="true">👋</span></h1>
         <h2>Что выбираете сегодня?</h2>
         <p>Тренируйте навыки или попробуйте себя в игре.</p>
       </header>
-      <div class="sh749-choice-grid">
-        <article class="sh749-choice-card sh749-training-card">
-          <div class="sh749-copy">
+      <div class="sh750-choice-grid">
+        <article class="sh750-choice-card sh750-training-card">
+          <div class="sh750-copy">
             <h3>Потренироваться</h3>
             <p>Отрабатывай навыки, чтобы<br>увереннее применять их в деле.</p>
-            <button class="sh749-cta sh749-cta-train" onclick="go('training')">Начать тренировку <span>→</span></button>
+            <button class="sh750-cta" onclick="go('training')">Начать тренировку <span>→</span></button>
           </div>
-          <div class="sh749-visual sh749-target-art">${sh749TrainingArt()}</div>
+          <div class="sh750-art sh750-target-art" aria-hidden="true"></div>
         </article>
-        <article class="sh749-choice-card sh749-game-card">
-          <div class="sh749-copy">
+        <article class="sh750-choice-card sh750-game-card">
+          <div class="sh750-copy">
             <h3>Поиграть</h3>
             <p>Решай игровые задачи<br>и оттачивай навыки в деле.</p>
-            <a class="sh749-cta sh749-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Начать игру <span>→</span></a>
+            <a class="sh750-cta" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Начать игру <span>→</span></a>
           </div>
-          <div class="sh749-visual sh749-game-art">${sh749GameArt()}</div>
+          <div class="sh750-art sh750-game-art" aria-hidden="true"></div>
         </article>
       </div>
     </section>
-    ${rework ? `<div class="sh749-under-stage">${rework}</div>` : ''}
+    ${rework ? `<div class="sh750-under-stage">${rework}</div>` : ''}
   </div>`;
 }
-function sh749ApplyReferenceHome(){
+function sh750ApplyReferenceHome(){
   const page=$('page-home'); if(!page)return;
-  page.classList.add('sh749-reference-home');
-  page.innerHTML=sh749ReferenceHomeHtml();
+  page.classList.add('sh750-reference-home');
+  page.innerHTML=sh750ReferenceHomeHtml();
 }
-const sh749RenderHomeBase=renderHome;
+const sh750RenderHomeBase=renderHome;
 renderHome=function(){
-  sh749RenderHomeBase();
-  if(S.profile?.role==='employee'||S.profile?.role==='tech_admin')sh749ApplyReferenceHome();
+  sh750RenderHomeBase();
+  if(S.profile)sh750ApplyReferenceHome();
 };
-/* ===== end SkillHub 7.4.9 ===== */
+/* ===== end SkillHub 7.5.0 ===== */
