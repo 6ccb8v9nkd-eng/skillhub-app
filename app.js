@@ -1338,3 +1338,105 @@ renderHome=function(){
   if(S.profile)sh750ApplyReferenceHome();
 };
 /* ===== end SkillHub 7.5.0 ===== */
+
+
+/* === SkillHub HARD card sorting case =======================================
+   One Hard Skills material can use payload.mode = "sort_cards".
+   It stays inside the normal Hard Skills library; only its exercise UI differs.
+============================================================================ */
+function shHardSortIsCase(x){
+  return !!(x && x.type==='hardcase' && x.payload && x.payload.mode==='sort_cards' && Array.isArray(x.payload.cards));
+}
+function shHardSortSource(x){
+  const src=x?.payload?.source||{};
+  return {name:src.name||'Механизм работы тарифа',path:src.path||''};
+}
+function startHardSort(x){
+  const cards=(x.payload.cards||[]).map(c=>({...c}));
+  S.currentRun={type:'hard-sort',x,placements:{},selected:null,checked:false,recorded:false,cards};
+  goRun();
+  renderHardSort();
+}
+function shHardSortCategory(x,id){return (x.payload.categories||[]).find(c=>c.id===id)||null}
+function shHardSortCard(id){return S.currentRun?.cards?.find(c=>c.id===id)||null}
+function shHardSortSelect(id){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||r.checked)return;
+  r.selected=r.selected===id?null:id;renderHardSort();
+}
+function shHardSortPlace(cardId,categoryId){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||r.checked)return;
+  if(!shHardSortCard(cardId)||!shHardSortCategory(r.x,categoryId))return;
+  r.placements[cardId]=categoryId;r.selected=null;renderHardSort();
+}
+function shHardSortPlaceSelected(categoryId){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||!r.selected||r.checked)return;
+  shHardSortPlace(r.selected,categoryId);
+}
+function shHardSortReturn(cardId){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||r.checked)return;
+  delete r.placements[cardId];r.selected=null;renderHardSort();
+}
+function shHardSortDragStart(ev,id){
+  if(S.currentRun?.checked){ev.preventDefault();return}
+  ev.dataTransfer.setData('text/plain',id);ev.dataTransfer.effectAllowed='move';
+}
+function shHardSortDrop(ev,categoryId){
+  ev.preventDefault();const id=ev.dataTransfer.getData('text/plain');if(id)shHardSortPlace(id,categoryId);
+}
+function shHardSortCardHtml(c,placedIn=null){
+  const r=S.currentRun,checked=!!r.checked;
+  const isSelected=r.selected===c.id;
+  let state='';
+  if(checked&&placedIn)state=placedIn===c.category?' is-correct':' is-wrong';
+  const cat=checked?shHardSortCategory(r.x,c.category):null;
+  const result=checked&&placedIn&&placedIn!==c.category?`<small>Правильно: ${esc(cat?.title||'')}</small>`:'';
+  const click=checked?'':(placedIn?`onclick="shHardSortReturn('${jsq(c.id)}')"`:`onclick="shHardSortSelect('${jsq(c.id)}')"`);
+  return `<button class="sh-hard-sort-card${isSelected?' is-selected':''}${state}" draggable="${checked?'false':'true'}" ondragstart="shHardSortDragStart(event,'${jsq(c.id)}')" ${click}><span>${esc(c.text)}</span>${result}</button>`;
+}
+function renderHardSort(){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort')return;
+  const x=r.x,cats=x.payload.categories||[],cards=r.cards||[];
+  const placedCount=Object.keys(r.placements).length,total=cards.length;
+  const pool=cards.filter(c=>!r.placements[c.id]);
+  const selectedCard=r.selected?shHardSortCard(r.selected):null;
+  const instruction=x.payload.instruction||'Распределите карточки по двум категориям.';
+  const zones=cats.map(cat=>{
+    const inside=cards.filter(c=>r.placements[c.id]===cat.id);
+    return `<section class="sh-hard-sort-zone" ondragover="event.preventDefault()" ondrop="shHardSortDrop(event,'${jsq(cat.id)}')" onclick="shHardSortPlaceSelected('${jsq(cat.id)}')"><div class="sh-hard-sort-zone-head"><span>${esc(cat.icon||'')}</span><div><h3>${esc(cat.title)}</h3>${cat.hint?`<p>${esc(cat.hint)}</p>`:''}</div><b>${inside.length}</b></div><div class="sh-hard-sort-zone-body">${inside.length?inside.map(c=>shHardSortCardHtml(c,cat.id)).join(''):`<div class="sh-hard-sort-empty">Перетащите карточку сюда${selectedCard?' или нажмите на область':''}</div>`}</div></section>`;
+  }).join('');
+  const source=shHardSortSource(x);
+  let result='';
+  if(r.checked){
+    const correct=cards.filter(c=>r.placements[c.id]===c.category).length;
+    const pct=Math.round(correct/Math.max(1,total)*100);
+    result=`<div class="sh-hard-sort-result ${pct===100?'perfect':''}"><strong>${pct}%</strong><div><b>${correct} из ${total} карточек распределены верно</b><p>${pct===100?'Отлично: все операции классифицированы правильно.':'Карточки с ошибками отмечены красным — под ними показана правильная категория.'}</p></div></div>`;
+  }
+  const sourceCard=r.checked&&source.path?`<div class="skill-card procedure-card sh-hard-sort-source"><b>📚 Взято из процедуры</b><br><strong>${esc(source.name)}</strong><div class="small" style="margin-top:6px">${esc(source.path)}</div></div>`:'';
+  $('page-run').innerHTML=`<div class="sh-hard-sort-wrap"><div class="card sh-hard-sort-shell"><div class="actions sh-hard-sort-top"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${placedCount}/${total}</span></div><div class="progress"><span style="width:${(r.checked?100:placedCount/Math.max(1,total)*100)}%"></span></div><div class="sh-hard-sort-intro"><span class="pill">Карточки</span><h2>${esc(x.payload.question||x.title)}</h2><p>${esc(instruction)}</p>${!r.checked?`<div class="sh-hard-sort-tip">На компьютере — перетащите карточку. На телефоне — нажмите на карточку, затем на нужную колонку.</div>`:''}</div>${result}<div class="sh-hard-sort-pool"><div class="sh-hard-sort-pool-head"><b>${r.checked?'Результат':'Карточки для распределения'}</b>${!r.checked&&selectedCard?`<span>Выбрано: ${esc(selectedCard.text)}</span>`:''}</div><div class="sh-hard-sort-pool-body">${pool.length?pool.map(c=>shHardSortCardHtml(c)).join(''):(r.checked?'':'<div class="sh-hard-sort-empty">Все карточки распределены</div>')}</div></div><div class="sh-hard-sort-grid">${zones}</div>${sourceCard}<div class="actions" style="justify-content:flex-end;margin-top:16px">${r.checked?`<button class="btn primary" onclick="go('training')">Готово</button>`:`<button class="btn primary" ${placedCount<total?'disabled':''} onclick="checkHardSort()">Проверить</button>`}</div></div></div>`;
+}
+function checkHardSort(){
+  const r=S.currentRun;if(!r||r.type!=='hard-sort'||r.checked)return;
+  const cards=r.cards||[],total=cards.length,placed=Object.keys(r.placements).length;
+  if(placed<total){toast(`Распределите все карточки: осталось ${total-placed}`);return}
+  r.checked=true;
+  const cats=r.x.payload.categories||[];
+  const correct=cards.filter(c=>r.placements[c.id]===c.category).length;
+  const pct=Math.round(correct/Math.max(1,total)*100);
+  if(!r.recorded){
+    const details=cards.map((c,idx)=>{const selected=r.placements[c.id],right=c.category;return {kind:'hard-sort',content_id:r.x.id||null,title:r.x.title||'',step:idx+1,question:c.text,options:cats.map(k=>k.title),selected:Math.max(0,cats.findIndex(k=>k.id===selected)),correct:Math.max(0,cats.findIndex(k=>k.id===right)),is_correct:selected===right,explanation:`Правильная категория: ${shHardSortCategory(r.x,right)?.title||''}`}});
+    recordAttempt({section:r.x.section,topic:r.x.topic,score:pct,type:'hardcase',cpm:0,details});r.recorded=true;
+  }
+  renderHardSort();
+}
+
+// Keep the material in Hard Skills, but render this one case as a card-sort exercise.
+const shHardSortStartContentBase=startContent;
+startContent=function(id){const x=S.content.find(c=>c.id===id);if(shHardSortIsCase(x)){startHardSort(x);return}return shHardSortStartContentBase(id)};
+
+// Friendly label in the Hard Skills material list.
+const shHardSortOpenSectionBase=openSection;
+openSection=function(sec){
+  if(sec!=='hard')return shHardSortOpenSectionBase(sec);
+  const arr=S.content.filter(x=>x.section===sec&&x.status==='published'),topics=[...new Set(arr.map(x=>x.topic))];
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
+};
