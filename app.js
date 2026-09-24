@@ -1575,14 +1575,14 @@ function shHardFlowCompletionButtons(){
   if(!f)return `<button class="btn primary" onclick="shHardFlowBack()">К Hard Skills</button>`;
   const hasNext=f.index<f.queue.length-1;
   if(f.mode==='topic'){
-    if(hasNext)return `<button class="btn primary" onclick="shHardFlowNext()">Следующий кейс →</button><button class="btn secondary" onclick="shHardFlowOpenTopic('${jsq(f.topic)}')">К блоку</button>`;
+    if(hasNext)return `<button class="btn primary" onclick="shHardFlowNext()">Следующий кейс →</button><button class="btn secondary" onclick="shHardFlowBack()">К Hard Skills</button>`;
     const nextTopic=shHardFlowNextIncompleteTopic(f.topic);
-    if(nextTopic)return `<button class="btn primary" onclick="shHardFlowGoNextTopic()">Следующий блок: ${esc(nextTopic)} →</button><button class="btn secondary" onclick="shHardFlowFinishTraining()">Завершить</button>`;
-    return `<button class="btn primary" onclick="shHardFlowFinishTraining()">Все Hard Skills пройдены ✓</button><button class="btn secondary" onclick="shHardFlowStartMix()">Повторить вразброс</button>`;
+    if(nextTopic)return `<button class="btn primary" onclick="shHardFlowGoNextTopic()">Следующий блок: ${esc(nextTopic)} →</button><button class="btn secondary" onclick="shHardFlowBack()">К Hard Skills</button>`;
+    return `<button class="btn primary" onclick="shHardFlowBack()">К Hard Skills</button><button class="btn secondary" onclick="shHardFlowStartMix()">Повторить вразброс</button>`;
   }
   return hasNext
-    ? `<button class="btn primary" onclick="shHardFlowNext()">Следующий случайный кейс →</button><button class="btn secondary" onclick="shHardFlowFinishTraining()">Завершить</button>`
-    : `<button class="btn primary" onclick="shHardFlowFinishTraining()">Микс завершён ✓</button>`;
+    ? `<button class="btn primary" onclick="shHardFlowNext()">Следующий случайный кейс →</button><button class="btn secondary" onclick="shHardFlowBack()">К Hard Skills</button>`
+    : `<button class="btn primary" onclick="shHardFlowBack()">К Hard Skills</button>`;
 }
 
 const shHardFlowStartContentBase=startContent;
@@ -1597,16 +1597,31 @@ startTopic=function(sec,topic){
   return shHardFlowStartTopicBase(sec,topic);
 };
 
+function shHardFlowTopicIcon(topic){
+  const t=String(topic||'').toLowerCase();
+  if(t.includes('гос'))return '🏛️';
+  if(t.includes('бух'))return '🧾';
+  if(t.includes('усн')||t.includes('аусн')||t.includes('налог'))return '📄';
+  if(t.includes('закры')||t.includes('прекращ')||t.includes('банкрот'))return '📦';
+  if(t.includes('тариф'))return '🧮';
+  if(t.includes('кредит'))return '💳';
+  if(t.includes('зарплат'))return '👥';
+  return '📘';
+}
+
 const shHardFlowOpenSectionBase=openSection;
 openSection=function(sec,...args){
   if(sec!=='hard')return shHardFlowOpenSectionBase(sec,...args);
-  const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))];
-  showModal(`<div class="modal-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите отдельный блок или тренировку вразброс</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
-  <div class="sh-hard-mode-row"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>SkillHub будет выдавать непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>
-  <div class="section-title"><h2>По отдельным блокам</h2><span class="muted small">Нажмите на блок, чтобы пройти его последовательно</span></div>
-  <div class="topic-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="topic" onclick="shHardFlowOpenTopic('${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · открыть блок</small></button>`}).join('')}</div>
-  <div class="section-title"><h2>Все материалы</h2><span class="muted small">Можно запустить один конкретный кейс</span></div>
-  ${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))],seen=seenContentMap();
+  const doneTopics=topics.filter(t=>{const p=topicProgress('hard',t);return p.total>0&&p.done>=p.total}).length;
+  const doneMaterials=arr.filter(x=>seen.has(x.id)).length;
+  showModal(`<div class="modal-head sh-hard-root-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите блок или продолжите тренировку</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
+  <div class="sh-hard-root-hero"><div><span>HARD SKILLS</span><h3>Прокачивайте знания по рабочим блокам</h3><p>Можно выбрать конкретный блок или пройти непройденные кейсы вразброс.</p></div><div class="sh-hard-root-stats"><b>${doneTopics} / ${topics.length}</b><small>блоков пройдено</small><b>${doneMaterials} / ${arr.length}</b><small>материалов пройдено</small></div></div>
+  <div class="sh-hard-mode-row sh-hard-mode-row-left"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>Непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>
+  <div class="section-title sh-hard-section-title"><h2>Все блоки</h2><span class="muted small">Выберите нужный блок</span></div>
+  <div class="sh-hard-block-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="sh-hard-block-card" onclick="shHardFlowOpenTopic('${jsq(t)}')"><span class="sh-hard-block-icon">${shHardFlowTopicIcon(t)}</span><span class="sh-hard-block-copy"><b>${esc(t)}</b><small>Пройдено ${p.done} из ${p.total} · открыть блок</small></span><span class="sh-hard-block-arrow">→</span></button>`}).join('')}</div>
+  <div class="section-title sh-hard-section-title"><h2>Все материалы</h2><span class="muted small">Можно открыть конкретный кейс</span></div>
+  <div class="sh-hard-materials">${arr.map(x=>`<div class="content-row sh-hard-material-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seen.has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}</div>`);
 };
 
 finishDialogue=function(){

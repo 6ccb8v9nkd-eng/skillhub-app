@@ -537,3 +537,22 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh-run-advance{position:relative;z-index:5;pointer-events:auto!important;cursor:pointer;touch-action:manipulation;user-select:none}
 .sh-run-advance:disabled{opacity:.72;cursor:wait}
 /* ===== end SkillHub 7.5.4 ===== */
+
+/* ===== SkillHub 7.5.5 — Hard Skills root: left-aligned navigation ===== */
+.sh-hard-root-head{align-items:flex-start}
+.sh-hard-root-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;margin:4px 0 16px;padding:20px 22px;border-radius:20px;background:linear-gradient(135deg,#ffdf2d,#f2c51f);color:#111317}
+.sh-hard-root-hero>div:first-child{text-align:left;min-width:0}.sh-hard-root-hero>div:first-child>span{display:block;font-size:10px;font-weight:950;letter-spacing:.13em;opacity:.62;margin-bottom:7px}.sh-hard-root-hero h3{margin:0;font-size:24px;line-height:1.12;letter-spacing:-.025em}.sh-hard-root-hero p{margin:7px 0 0;max-width:510px;font-size:13px;line-height:1.42;font-weight:650;opacity:.72}
+.sh-hard-root-stats{display:grid;grid-template-columns:auto auto;gap:2px 8px;align-items:baseline;min-width:165px;text-align:left}.sh-hard-root-stats b{font-size:21px;line-height:1.15}.sh-hard-root-stats small{font-size:10px;font-weight:800;opacity:.62}.sh-hard-root-stats b:nth-of-type(2){margin-top:8px}
+.sh-hard-mode-row-left{justify-content:flex-start!important;align-items:center!important}.sh-hard-mode-row-left .sh-hard-mode-copy{flex:0 1 auto}.sh-hard-mode-row-left>.btn{margin-left:10px}
+.sh-hard-section-title{justify-content:flex-start!important;align-items:baseline!important}.sh-hard-section-title>span{margin-left:8px}
+.sh-hard-block-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sh-hard-block-card{appearance:none;width:100%;min-height:92px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;padding:15px 16px;border:1px solid #303034;border-radius:17px;background:#151517;color:var(--ink);cursor:pointer;transition:border-color .15s ease,transform .15s ease,background .15s ease}
+.sh-hard-block-card:hover{border-color:#ffdd2d;background:#191919;transform:translateY(-1px)}
+.sh-hard-block-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;justify-self:start;background:rgba(255,221,45,.12);font-size:23px;line-height:1}
+.sh-hard-block-copy{min-width:0;display:block;text-align:left}.sh-hard-block-copy b{display:block;font-size:15px;line-height:1.25}.sh-hard-block-copy small{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.3;font-weight:600}
+.sh-hard-block-arrow{justify-self:end;color:#ffdd2d;font-size:20px;font-weight:900}
+.sh-hard-materials{text-align:left}.sh-hard-material-row>div{text-align:left}
+@media(max-width:720px){.sh-hard-root-hero{grid-template-columns:1fr;gap:14px;padding:17px}.sh-hard-root-hero h3{font-size:21px}.sh-hard-root-stats{grid-template-columns:auto 1fr;min-width:0}.sh-hard-mode-row-left{align-items:stretch!important;flex-direction:column}.sh-hard-mode-row-left>.btn{margin-left:0;width:100%}.sh-hard-block-grid{grid-template-columns:1fr}.sh-hard-section-title{display:block}.sh-hard-section-title>span{display:block;margin:4px 0 0}.sh-hard-block-card{min-height:84px}}
+/* ===== end SkillHub 7.5.5 ===== */
+
+
