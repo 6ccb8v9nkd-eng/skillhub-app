@@ -1513,6 +1513,14 @@ function shHardFlowStartMix(){
 function shHardFlowStartSingle(id){
   shHardFlow=null;closeModal();shHardFlowLaunch(id);
 }
+function shHardFlowStartFromTopic(topic,id){
+  const arr=shHardFlowItems(topic),seen=seenContentMap();
+  const selected=arr.find(x=>x.id===id);
+  if(!selected){toast('Материал не найден');return}
+  const remaining=arr.filter(x=>x.id!==id&&!seen.has(x.id)).map(x=>x.id);
+  shHardFlow={mode:'topic',section:'hard',topic,queue:[id,...remaining],index:0};
+  closeModal();shHardFlowLaunch(id);
+}
 function shHardFlowNext(){
   if(!shHardFlow)return shHardFlowBack();
   let i=shHardFlow.index+1;
@@ -1550,10 +1558,9 @@ function shHardFlowGoNextTopic(){
 }
 function shHardFlowOpenTopic(topic){
   const arr=shHardFlowItems(topic),p=topicProgress('hard',topic),seen=seenContentMap();
-  const label=p.done===0?'Начать блок':p.done<p.total?'Продолжить блок':'Пройти блок заново';
   showModal(`<div class="modal-head"><div><h2>${esc(topic)}</h2><div class="muted small">Hard Skills · пройдено ${p.done} из ${p.total}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
-  <div class="sh-hard-topic-hero"><div><b>Проходите блок последовательно</b><p>После каждого кейса появится кнопка «Следующий кейс», поэтому возвращаться в меню не придётся.</p></div><button class="btn primary" onclick="shHardFlowStartTopic('${jsq(topic)}')">${label} →</button></div>
-  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  <div class="sh-hard-topic-hero"><div><b>Выберите материал ниже</b><p>После завершения кейса SkillHub предложит следующий непройденный материал, а в конце блока — переход к следующему блоку.</p></div></div>
+  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartFromTopic('${jsq(topic)}','${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
 }
 function shHardFlowCompletionMeta(){
   const f=shHardFlow;if(!f)return '';
