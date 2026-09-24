@@ -526,3 +526,9 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh752-arrow-clean{filter:drop-shadow(0 8px 7px rgba(30,33,40,.22))}
 .sh752-pad-float{filter:drop-shadow(0 14px 11px rgba(0,0,0,.46))}
 .sh752-spark{filter:drop-shadow(0 0 7px rgba(255,213,34,.55))}
+
+/* HARD flow completion — clear end-of-block state */
+.sh-hard-flow-meta.is-complete{background:linear-gradient(135deg,rgba(255,213,34,.16),rgba(255,213,34,.05));border-color:rgba(255,213,34,.48)}
+.sh-hard-flow-meta.is-complete b{color:var(--yellow,#ffd522)}
+.sh-hard-flow-finish h2{margin-bottom:8px}
+@media(max-width:640px){.sh-hard-flow-actions .btn{min-height:48px}}
