@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SkillHub">
-<link rel="manifest" href="./manifest.webmanifest?v=20260924_1218_light_bell_fix">
+<link rel="manifest" href="./manifest.webmanifest?v=20260924_1700_rg_demo">
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192-v718.png">
-<link rel="stylesheet" href="./styles-20260924-soft-psych-theme-v8.4.css">
+<link rel="stylesheet" href="./styles-20260924-soft-psych-theme-v8.7.css">
 <title>SkillHub</title>
 </head>
 <body>
@@ -51,6 +51,7 @@
       <button class="nav-btn" data-page="progress" onclick="go('progress')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/></svg></span><span class="nav-text">Прогресс</span></button>
       <button class="nav-btn" data-page="notifications" onclick="go('notifications')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="nav-text">Уведомления</span><i id="bellBadge" class="badge hidden">0</i></button>
       <button class="nav-btn mentor-only hidden" data-page="mentor" onclick="go('mentor')"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 2.5-6 6-6s6 2 6 6M14 15c.9-.7 2-1 3.2-1 3 0 4.8 1.7 4.8 5"/></svg></span><span class="nav-text" id="mentorNavLabel">Раздел</span></button>
+      <button class="nav-btn rg-only hidden" data-page="rgpractice" onclick="go('rgpractice')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><span class="nav-text">Демо РГ</span></button>
       <button class="nav-btn mentor-only hidden" data-page="content" onclick="go('content')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="nav-text">Контент</span></button>
       <button class="nav-btn mentor-only hidden" data-page="assignments" onclick="go('assignments')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 3h8l-1 6 3 3v2H6v-2l3-3zM12 14v8"/></svg></span><span class="nav-text">Назначения</span></button>
       <button class="nav-btn mentor-only hidden" data-page="employees" onclick="go('employees')"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 2.5-6 6-6s6 2 6 6M14 15c.9-.7 2-1 3.2-1 3 0 4.8 1.7 4.8 5"/></svg></span><span class="nav-text">Сотрудники</span></button>
@@ -72,6 +73,7 @@
     <section id="page-progress" class="page hidden"></section>
     <section id="page-notifications" class="page hidden"></section>
     <section id="page-mentor" class="page hidden"></section>
+    <section id="page-rgpractice" class="page hidden"></section>
     <section id="page-content" class="page hidden"></section>
     <section id="page-assignments" class="page hidden"></section>
     <section id="page-employees" class="page hidden"></section>
@@ -93,6 +95,6 @@
 <div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="./app-20260924-soft-psych-theme-v8.6.js"></script>
+<script src="./app-20260924-soft-psych-theme-v8.7.js"></script>
 </body>
 </html>
