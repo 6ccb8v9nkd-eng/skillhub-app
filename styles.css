@@ -556,3 +556,53 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 /* ===== end SkillHub 7.5.5 ===== */
 
 
+
+/* ===== SkillHub 7.5.6 — game training card typography parity ===== */
+/* Игровой формат выглядит как Soft / Hard / Печать: тот же шрифт и иерархия. */
+.sh750-training-card.sh750-game{
+  background:#fffdf2;
+  color:#1b2430;
+  border:1px solid rgba(94,80,17,.08);
+}
+.sh750-training-card.sh750-game .sh750-card-kicker{
+  color:#e8b800;
+  opacity:1;
+  font-family:inherit;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.12em;
+}
+.sh750-training-card.sh750-game .sh750-card-copy h3{
+  color:#e8b800;
+  font-family:inherit;
+  font-size:31px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.04em;
+  margin:0 0 11px;
+}
+.sh750-training-card.sh750-game .sh750-card-copy p{
+  color:#1b2430;
+  opacity:.86;
+  font-family:inherit;
+  font-size:14px;
+  line-height:1.42;
+  font-weight:620;
+}
+.sh750-training-card.sh750-game .sh750-card-btn{
+  background:#ffdd2d;
+  color:#101317;
+}
+@media(max-width:950px){
+  .sh750-training-card.sh750-game .sh750-card-copy h3{font-size:27px}
+}
+@media(max-width:720px){
+  .sh750-training-card.sh750-game .sh750-card-copy h3{font-size:25px}
+  .sh750-training-card.sh750-game .sh750-card-copy p{font-size:13px}
+}
+@media(max-width:430px){
+  .sh750-training-card.sh750-game .sh750-card-copy h3{font-size:23px}
+  .sh750-training-card.sh750-game .sh750-card-copy p{font-size:12px;line-height:1.35}
+  .sh750-training-card.sh750-game .sh750-card-kicker{font-size:9px}
+}
+/* ===== end SkillHub 7.5.6 ===== */
