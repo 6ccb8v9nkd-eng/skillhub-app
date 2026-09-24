@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0c">
+<script>(function(){try{var t=localStorage.getItem('sh_theme')||'dark';document.documentElement.dataset.theme=t}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SkillHub">
 <link rel="manifest" href="./manifest.webmanifest?v=20260923_0745_hard_procedure_source">
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192-v718.png">
-<link rel="stylesheet" href="./styles-20260924-tariff-savings-v6.css">
+<link rel="stylesheet" href="./styles-20260924-soft-psych-theme-v8.css">
 <title>SkillHub</title>
 </head>
 <body>
@@ -84,6 +85,7 @@
   <button onclick="enableNotifications()">🔔 Включить уведомления</button>
   <button onclick="showInstallHelp()">📲 Установить на телефон</button>
   <button class="mentor-only hidden" onclick="showShareLink()">🔗 Ссылка для сотрудников</button>
+  <button id="themeToggleBtn" onclick="toggleTheme()">☀️ Светлая тема</button>
   <button onclick="syncAll(true)">↻ Обновить данные</button>
   <button onclick="logout()">Выйти</button>
 </div>
@@ -91,6 +93,6 @@
 <div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="./app-20260924-soft-employee-clean-v7.js"></script>
+<script src="./app-20260924-soft-psych-theme-v8.js"></script>
 </body>
 </html>
