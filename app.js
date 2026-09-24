@@ -1,4 +1,4 @@
-console.info('SkillHub build 20260922_1605_exp');
+console.info('SkillHub build 20260924_0730_finish_click_fix');
 const S={
   sb:null,user:null,profile:null,content:[],assignments:[],attempts:[],notifications:[],allowed:[],profiles:[],
   queue:JSON.parse(localStorage.getItem('sh7_queue')||'[]'),deferredInstall:null,currentRun:null,
@@ -89,7 +89,18 @@ async function syncAll(manual=false){updateNetwork();if(!S.user)return;if(naviga
 function subscribeRealtime(){if(S.subscription)S.sb.removeChannel(S.subscription);S.subscription=S.sb.channel('skillhub-live').on('postgres_changes',{event:'*',schema:'public',table:'content'},()=>onCloudChange('Обновлены материалы')).on('postgres_changes',{event:'*',schema:'public',table:'assignments'},()=>onCloudChange('Обновлены задания')).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications'},p=>onCloudChange(p.new?.title||'Новое уведомление')).subscribe()}
 let refreshTimer=null;function onCloudChange(text){clearTimeout(refreshTimer);refreshTimer=setTimeout(async()=>{await syncAll();if('Notification'in window&&Notification.permission==='granted')new Notification('SkillHub',{body:text,icon:'./icon-192-v718.png'});toast(text)},500)}
 function renderUnread(){const n=S.notifications.filter(x=>!x.read).length;$('bellBadge').textContent=n;$('bellBadge').classList.toggle('hidden',!n);if(navigator.setAppBadge){if(n)navigator.setAppBadge(n).catch(()=>{});else navigator.clearAppBadge?.().catch(()=>{})}}
-function recordAttempt(a){const row={id:crypto.randomUUID(),user_id:S.user.id,login:S.profile.login,created_at:new Date().toISOString(),...a};S.attempts.push(row);S.queue.push(row);localStorage.setItem('sh7_queue',JSON.stringify(S.queue));updateNetwork();if(navigator.onLine)flushQueue()}
+function shCreateAttemptId(){
+  try{if(globalThis.crypto&&typeof globalThis.crypto.randomUUID==='function')return globalThis.crypto.randomUUID()}catch(e){console.warn('randomUUID unavailable',e)}
+  return `sh-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
+}
+function recordAttempt(a){
+  const row={id:shCreateAttemptId(),user_id:S.user.id,login:S.profile.login,created_at:new Date().toISOString(),...a};
+  S.attempts.push(row);S.queue.push(row);
+  try{localStorage.setItem('sh7_queue',JSON.stringify(S.queue))}catch(e){console.warn('SkillHub queue save failed',e)}
+  updateNetwork();
+  if(navigator.onLine)Promise.resolve(flushQueue()).catch(e=>console.warn('SkillHub attempt sync failed',e));
+  return row;
+}
 async function flushQueue(){if(!S.queue.length||!navigator.onLine)return;const copy=[...S.queue];const {error}=await S.sb.from('attempts').insert(copy);if(!error){S.queue=[];localStorage.setItem('sh7_queue','[]');updateNetwork()}}
 
 function assignmentHtml(x){const due=x.due?new Date(x.due+'T12:00:00'):null,days=due?Math.ceil((due-new Date())/86400000):null;return `<div class="assignment"><div><b>${esc(x.title)}</b><div class="meta">${x.section?secName(x.section):''}${x.topic?' · '+esc(x.topic):''}${x.due?' · до '+esc(x.due):''}${days!==null&&days<=1?' · ⏰ скоро':''}</div></div><div class="actions"><span class="pill">${x.target}%+</span><button class="btn secondary" onclick="startAssignment('${x.id}')">Начать</button></div></div>`}
@@ -104,8 +115,13 @@ function startAssignment(id){const a=S.assignments.find(x=>x.id===id);if(!a)retu
 function goRun(){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$('page-run').classList.remove('hidden');$('pageTitle').textContent='Тренировка';$('pageSub').textContent='Практика'}
 function startQuiz(items,sec,topic){S.currentRun={type:'quiz',items:[...items].sort(()=>Math.random()-.5),i:0,score:0,sec,topic,details:[]};goRun();renderQuiz()}
 function renderQuiz(){const r=S.currentRun;if(r.i>=r.items.length){finishQuiz();return}const x=r.items[r.i];$('page-run').innerHTML=`<div class="card" style="max-width:850px;margin:auto"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.topic)}</b><span class="muted small">${r.i+1}/${r.items.length}</span></div><div class="progress"><span style="width:${r.i/r.items.length*100}%"></span></div><div class="question">${esc(x.question)}</div><div class="options">${(x.answers||[]).map((a,i)=>`<button class="option" onclick="answerQuiz(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div>`}
-function answerQuiz(i){const r=S.currentRun,x=r.items[r.i],correct=Number(x.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'quiz',content_id:x.id||null,title:x.title||'',question:x.question||'',options:[...(x.answers||[])],selected:i,correct,is_correct:ok,explanation:x.explanation||''});if(ok)r.score++;const isLast=r.i>=r.items.length-1;$('runFeedback').innerHTML=`<div class="explain">${esc(x.explanation||'')}</div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="advanceQuiz()">${isLast?'Завершить кейс →':'Дальше'}</button></div>`}
-function advanceQuiz(){const r=S.currentRun;if(!r||r.type!=='quiz')return;if(r.i+1>=r.items.length){finishQuiz();return}r.i++;renderQuiz()}
+function answerQuiz(i){const r=S.currentRun,x=r.items[r.i],correct=Number(x.correct),ok=i===correct;document.querySelectorAll('.option').forEach((b,k)=>{b.disabled=true;if(k===correct)b.classList.add('correct');if(k===i&&k!==correct)b.classList.add('wrong')});r.details.push({kind:'quiz',content_id:x.id||null,title:x.title||'',question:x.question||'',options:[...(x.answers||[])],selected:i,correct,is_correct:ok,explanation:x.explanation||''});if(ok)r.score++;const isLast=r.i>=r.items.length-1;$('runFeedback').innerHTML=`<div class="explain">${esc(x.explanation||'')}</div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button id="quizAdvanceBtn" type="button" class="btn primary sh-run-advance">${isLast?'Завершить кейс →':'Дальше'}</button></div>`;
+const nextBtn=$('quizAdvanceBtn');if(nextBtn)nextBtn.onclick=()=>advanceQuiz()}
+function advanceQuiz(){
+  const r=S.currentRun;if(!r||r.type!=='quiz')return;
+  const btn=$('quizAdvanceBtn');if(btn)btn.disabled=true;
+  try{if(r.i+1>=r.items.length){finishQuiz();return}r.i++;renderQuiz()}catch(e){console.error('advanceQuiz failed',e);if(btn)btn.disabled=false;toast('Не удалось перейти дальше. Попробуйте ещё раз.')}
+}
 function finishQuiz(){const r=S.currentRun;if(!r||r.finished)return;r.finished=true;const p=Math.round(r.score/Math.max(1,r.items.length)*100);recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Тренировка завершена</h2><p class="muted">${r.score} из ${r.items.length} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 function startDialogue(x){S.currentRun={type:'dialogue',x,i:0,score:0,details:[]};goRun();renderDialogue()}
 function renderDialogue(){
@@ -157,8 +173,14 @@ const procedureName=e.procedureName||e.source?.name||'';
 const sourceCard=isHard&&procedurePath?`<div class="skill-card procedure-card"><b>📚 Взято из процедуры</b><br><strong>${esc(procedureName||'Процедура')}</strong><div class="small" style="margin-top:6px">${esc(procedurePath)}</div></div>`:(!isHard&&e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:'');
 const fallback=(!correctBlocks&&!wrongBlocks&&!sourceCard&&legacyExplanation)?`<div class="explain">${esc(legacyExplanation).replace(/\n/g,'<br>')}</div>`:'';
 const total=isNew?1:(x.steps||[]).length,isLast=r.i>=total-1;
-$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${sourceCard}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="advanceDialogue()">${isLast?'Завершить кейс →':'Продолжить'}</button></div>`}
-function advanceDialogue(){const r=S.currentRun;if(!r||r.type!=='dialogue')return;const x=r.x,total=x?.payload?.scenario?1:(x?.steps||[]).length;if(r.i+1>=total){finishDialogue();return}r.i++;renderDialogue()}
+$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${sourceCard}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button id="dialogueAdvanceBtn" type="button" class="btn primary sh-run-advance">${isLast?'Завершить кейс →':'Продолжить'}</button></div>`;
+const nextBtn=$('dialogueAdvanceBtn');if(nextBtn)nextBtn.onclick=()=>advanceDialogue()}
+function advanceDialogue(){
+  const r=S.currentRun;if(!r||r.type!=='dialogue')return;
+  const btn=$('dialogueAdvanceBtn');if(btn)btn.disabled=true;
+  const x=r.x,total=x?.payload?.scenario?1:(x?.steps||[]).length;
+  try{if(r.i+1>=total){finishDialogue();return}r.i++;renderDialogue()}catch(e){console.error('advanceDialogue failed',e);if(btn)btn.disabled=false;toast('Не удалось перейти дальше. Попробуйте ещё раз.')}
+}
 function finishDialogue(){const r=S.currentRun;if(!r||r.finished)return;r.finished=true;const total=r.x?.payload?.scenario?1:(r.x?.steps||[]).length,p=Math.round(r.score/Math.max(1,total)*100);recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});$('page-run').innerHTML=`<div class="card" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>Диалог завершён</h2><p class="muted">${r.score} из ${total} правильных решений</p><button class="btn primary" onclick="go('training')">Готово</button></div>`}
 const TYPING_TEXTS=[
   "Понимаю, что ситуация для вас важна. Давайте проверю информацию и подскажу, какие варианты доступны сейчас.",
@@ -1583,7 +1605,7 @@ openSection=function(sec,...args){
 finishDialogue=function(){
   const r=S.currentRun;if(!r||r.finished)return;r.finished=true;const x=r.x,isNew=!!x.payload?.scenario,total=isNew?1:(x.steps||[]).length;
   const p=Math.round(r.score/Math.max(1,total)*100);
-  recordAttempt({section:x.section,topic:x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});
+  try{recordAttempt({section:x.section,topic:x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]})}catch(e){console.error('finishDialogue save failed',e);toast('Кейс завершён. Результат не удалось сохранить локально, но можно продолжать.')}
   const blockDone=!!(shHardFlow&&shHardFlow.mode==='topic'&&shHardFlow.index>=shHardFlow.queue.length-1);
   const title=blockDone?`Блок «${esc(shHardFlow.topic)}» пройден`:'Диалог завершён';
   $('page-run').innerHTML=`<div class="card sh-hard-flow-finish" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>${title}</h2><p class="muted">${r.score} из ${total} правильных решений</p>${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div></div>`;
@@ -1591,7 +1613,7 @@ finishDialogue=function(){
 
 finishQuiz=function(){
   const r=S.currentRun;if(!r||r.finished)return;r.finished=true;const p=Math.round(r.score/Math.max(1,r.items.length)*100);
-  recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]});
+  try{recordAttempt({section:r.sec,topic:r.topic,score:p,type:'quiz',cpm:0,details:r.details||[]})}catch(e){console.error('finishQuiz save failed',e);toast('Кейс завершён. Результат не удалось сохранить локально, но можно продолжать.')}
   const blockDone=!!(shHardFlow&&shHardFlow.mode==='topic'&&shHardFlow.index>=shHardFlow.queue.length-1);
   const title=blockDone?`Блок «${esc(shHardFlow.topic)}» пройден`:'Тренировка завершена';
   $('page-run').innerHTML=`<div class="card sh-hard-flow-finish" style="max-width:650px;margin:auto;text-align:center"><strong style="font-size:52px">${p}%</strong><h2>${title}</h2><p class="muted">${r.score} из ${r.items.length} правильных решений</p>${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div></div>`;

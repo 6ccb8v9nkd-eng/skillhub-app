@@ -532,3 +532,8 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh-hard-flow-meta.is-complete b{color:var(--yellow,#ffd522)}
 .sh-hard-flow-finish h2{margin-bottom:8px}
 @media(max-width:640px){.sh-hard-flow-actions .btn{min-height:48px}}
+
+/* ===== SkillHub 7.5.4 — reliable case-completion action ===== */
+.sh-run-advance{position:relative;z-index:5;pointer-events:auto!important;cursor:pointer;touch-action:manipulation;user-select:none}
+.sh-run-advance:disabled{opacity:.72;cursor:wait}
+/* ===== end SkillHub 7.5.4 ===== */
