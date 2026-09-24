@@ -348,19 +348,19 @@ function yn(x){return ['да','yes','true','1'].includes(String(x).trim().toLowe
 async function notifyRecipients(title,body,recipients,kind='content'){let logs=recipients.includes('ALL')?S.allowed.filter(x=>x.active&&x.role==='employee').map(x=>x.login):recipients;logs=[...new Set(logs)];if(!logs.length)return;const rows=logs.map(login=>({login,title,body,kind,read:false}));const {error}=await S.sb.from('notifications').insert(rows);if(error)console.warn(error)}
 async function commitExcel(){if(!S.importDraft)return;const {sheets,cases,dialogs,employees,assignments}=S.importDraft;const generated=[];try{
   for(const r of employees){const login=normalizeLogin(r['Логин']);if(!login)continue;const existing=S.allowed.find(x=>x.login===login),claimed=!!existing?.claimed_user_id;let code='';if(!claimed)code=randCode();const rr=String(r['Роль']||'').toLowerCase(),role=rr.includes('рс')?'rs':(rr.startsWith('настав')||rr.startsWith('руковод'))?'mentor':'employee';const {error}=await S.sb.rpc('mentor_upsert_allowed_user',{p_login:login,p_name:String(r['Имя']||login),p_role:role,p_group_name:String(r['Группа']||'Группа'),p_active:String(r['Статус']||'active').toLowerCase()!=='inactive',p_invite_code:code||null});if(error)throw error;if(code)generated.push([login,code])}
-  for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),audience)}
-  const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый диалог',row.title,audience)}
+  for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error)throw error}
+  const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
   for(const r of assignments){let rec=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);if(S.profile.role==='mentor'&&rec.includes('ALL'))rec=S.allowed.filter(x=>x.active&&x.role==='employee').map(x=>x.login);const row={title:String(r['Название']),content_id:String(r['ID материала']||'').match(/^[0-9a-f-]{36}$/i)?String(r['ID материала']):null,section:String(r['Раздел']||''),topic:String(r['Тема']||''),due:String(r['Дедлайн']||'')||null,target:Number(r['Минимум %']||90),recipients:rec,status:String(r['Статус']||'active'),created_by:S.user.id};const {error}=await S.sb.from('assignments').insert(row);if(error)throw error;if(yn(r['Уведомить']))await notifyRecipients('Новое задание',`${row.title}${row.due?' · до '+row.due:''}`,rec,'assignment')}
   await syncAll();toast('Импорт завершён');if(generated.length)showCodes(generated,'Коды для новых сотрудников');contentTab='library';renderContent();
 }catch(e){console.error(e);toast('Ошибка импорта: '+(e.message||e))}}
 function exportExcel(){const wb=XLSX.utils.book_new();const cases=[],dialogs=[],steps=[];for(const x of S.content){if(x.type==='dialogue'){dialogs.push({'ID диалога':x.id,'Статус':x.status,'Раздел':x.section,'Тема':x.topic,'Название':x.title,'Описание':x.description||'','Кому':(x.audience||['ALL']).join(', '),'Уведомить':'Нет'});(x.steps||[]).forEach((s,i)=>steps.push({'ID диалога':x.id,'Шаг':i+1,'Реплика клиента':s.client,'Ответ 1':s.options?.[0]||'','Ответ 2':s.options?.[1]||'','Ответ 3':s.options?.[2]||'','Правильный ответ':Number(s.correct)+1,'Следующая реплика клиента':s.next_client||'','Объяснение':s.explanation||''}))}else cases.push({'ID':x.id,'Статус':x.status,'Раздел':x.section,'Тема':x.topic,'Сложность':x.difficulty,'Тип':x.type,'Заголовок':x.title,'Вопрос':x.question,'Ответ 1':x.answers?.[0]||'','Ответ 2':x.answers?.[1]||'','Ответ 3':x.answers?.[2]||'','Ответ 4':x.answers?.[3]||'','Правильный ответ':Number(x.correct)+1,'Объяснение':x.explanation||'','Кому':(x.audience||['ALL']).join(', '),'Уведомить':'Нет'})}XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cases),'Кейсы');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dialogs),'Диалоги');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(steps),'Шаги диалогов');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.allowed.map(x=>({'Логин':x.login,'Имя':x.name,'Роль':roleName(x.role),'Группа':x.group_name,'Статус':x.active?'active':'inactive'}))),'Сотрудники');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.assignments.map(x=>({'ID':x.id,'Название':x.title,'Раздел':x.section,'Тема':x.topic,'ID материала':x.content_id||'','Кому':(x.recipients||['ALL']).join(', '),'Дедлайн':x.due||'','Минимум %':x.target,'Уведомить':'Нет','Статус':x.status}))),'Назначения');XLSX.writeFile(wb,'SkillHub_export.xlsx')}
 function openCaseEditor(type,x=null){S.editing=x?.id||null;showModal(`<div class="modal-head"><h2>${x?'Редактировать':type==='hardcase'?'Новый Hard-кейс':'Новый кейс'}</h2><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>Раздел</label><select id="ecSec"><option value="soft">Soft</option><option value="hard">Hard</option><option value="needs">Потребность</option></select></div><div class="field"><label>Тема для аналитики</label><input id="ecTopic" placeholder="Например, Кредиты / Тарифы / Госорганы"><div class="meta">Все кейсы одной темы объединяются в аналитику сотрудника.</div></div><div class="field"><label>Статус</label><select id="ecStatus"><option value="draft">Черновик</option><option value="published">Опубликовать</option></select></div><div class="field"><label>Сложность</label><select id="ecDiff"><option>Лёгкий</option><option>Средний</option><option>Сложный</option></select></div><div class="field full"><label>Заголовок</label><input id="ecTitle"></div><div class="field full"><label>Вопрос / ситуация</label><textarea id="ecQ"></textarea></div>${[1,2,3,4].map(i=>`<div class="field"><label>Ответ ${i}</label><textarea id="ecA${i}"></textarea></div>`).join('')}<div class="field"><label>Правильный ответ</label><select id="ecCorrect">${[1,2,3,4].map(i=>`<option value="${i-1}">${i}</option>`).join('')}</select></div><div class="field"><label>Кому</label><input id="ecAudience" value="ALL"></div><div class="field full"><label>Объяснение</label><textarea id="ecExpl"></textarea></div></div><div class="actions" style="justify-content:flex-end;margin-top:13px"><button class="btn primary" onclick="saveCaseEditor('${type}')">Сохранить</button></div>`);$('ecSec').value=x?.section|| (type==='hardcase'?'hard':'soft');$('ecTopic').value=x?.topic||'';$('ecStatus').value=x?.status||'draft';$('ecDiff').value=x?.difficulty||'Средний';$('ecTitle').value=x?.title||'';$('ecQ').value=x?.question||'';[1,2,3,4].forEach((i,k)=>$('ecA'+i).value=x?.answers?.[k]||'');$('ecCorrect').value=String(x?.correct??0);$('ecAudience').value=(x?.audience||['ALL']).join(', ');$('ecExpl').value=x?.explanation||''}
-async function saveCaseEditor(type){const answers=[1,2,3,4].map(i=>$('ecA'+i).value.trim());if(!$('ecTopic').value.trim()||!$('ecQ').value.trim()||answers.some(x=>!x)){toast('Заполните тему, вопрос и 4 ответа');return}const row={type,section:$('ecSec').value,topic:$('ecTopic').value.trim(),status:$('ecStatus').value,difficulty:$('ecDiff').value,title:$('ecTitle').value.trim(),payload:{question:$('ecQ').value.trim(),answers,correct:Number($('ecCorrect').value),explanation:$('ecExpl').value.trim()},audience:$('ecAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Материал сохранён')}
+async function saveCaseEditor(type){const answers=[1,2,3,4].map(i=>$('ecA'+i).value.trim());if(!$('ecTopic').value.trim()||!$('ecQ').value.trim()||answers.some(x=>!x)){toast('Заполните тему, вопрос и 4 ответа');return}const row={type,section:$('ecSec').value,topic:$('ecTopic').value.trim(),status:$('ecStatus').value,difficulty:$('ecDiff').value,title:$('ecTitle').value.trim(),payload:{question:$('ecQ').value.trim(),answers,correct:Number($('ecCorrect').value),explanation:$('ecExpl').value.trim()},audience:$('ecAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Материал сохранён')}
 function openDialogueEditor(x=null){S.editing=x?.id||null;S.dialogDraft=x?.steps?structuredClone(x.steps):[{client:'',options:['','',''],correct:0,next_client:'',explanation:''}];showModal(`<div class="modal-head"><h2>${x?'Редактировать диалог':'Новый живой диалог'}</h2><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>Раздел</label><select id="edSec"><option value="needs">Потребность</option><option value="soft">Soft</option><option value="hard">Hard</option></select></div><div class="field"><label>Тема для аналитики</label><input id="edTopic" placeholder="Например, Выявление потребности"><div class="meta">Используйте одинаковое название для материалов одной темы.</div></div><div class="field full"><label>Название</label><input id="edTitle"></div><div class="field"><label>Статус</label><select id="edStatus"><option value="draft">Черновик</option><option value="published">Опубликовать</option></select></div><div class="field"><label>Кому</label><input id="edAudience" value="ALL"></div></div><div id="dialogSteps"></div><div class="actions" style="justify-content:space-between;margin-top:13px"><button class="btn secondary" onclick="addDialogStep()">+ Шаг</button><button class="btn primary" onclick="saveDialogueEditor()">Сохранить</button></div>`);$('edSec').value=x?.section||'needs';$('edTopic').value=x?.topic||'';$('edTitle').value=x?.title||'';$('edStatus').value=x?.status||'draft';$('edAudience').value=(x?.audience||['ALL']).join(', ');renderDialogSteps()}
 function addDialogStep(){S.dialogDraft.push({client:'',options:['','',''],correct:0,next_client:'',explanation:''});renderDialogSteps()}
 function removeDialogStep(i){if(S.dialogDraft.length===1)return;S.dialogDraft.splice(i,1);renderDialogSteps()}
 function renderDialogSteps(){$('dialogSteps').innerHTML=S.dialogDraft.map((s,i)=>`<div class="card" style="margin-top:11px"><div class="toolbar"><b>Шаг ${i+1}</b><button class="btn danger" onclick="removeDialogStep(${i})">Удалить</button></div><div class="field"><label>Реплика клиента</label><textarea oninput="S.dialogDraft[${i}].client=this.value">${esc(s.client)}</textarea></div>${[0,1,2].map(j=>`<div class="field"><label>Ответ ${j+1}${j===Number(s.correct)?' ✓':''}</label><input value="${esc(s.options[j])}" oninput="S.dialogDraft[${i}].options[${j}]=this.value"><button class="btn secondary" style="margin-top:5px" onclick="S.dialogDraft[${i}].correct=${j};renderDialogSteps()">Сделать правильным</button></div>`).join('')}<div class="field"><label>Следующая реплика клиента</label><textarea oninput="S.dialogDraft[${i}].next_client=this.value">${esc(s.next_client||'')}</textarea></div><div class="field"><label>Объяснение</label><textarea oninput="S.dialogDraft[${i}].explanation=this.value">${esc(s.explanation||'')}</textarea></div></div>`).join('')}
-async function saveDialogueEditor(){if(!$('edTopic').value.trim()||!$('edTitle').value.trim()){toast('Заполните тему и название');return}const row={type:'dialogue',section:$('edSec').value,topic:$('edTopic').value.trim(),status:$('edStatus').value,difficulty:'Средний',title:$('edTitle').value.trim(),payload:{steps:S.dialogDraft},audience:$('edAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый диалог',row.title,row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Диалог сохранён')}
+async function saveDialogueEditor(){if(!$('edTopic').value.trim()||!$('edTitle').value.trim()){toast('Заполните тему и название');return}const row={type:'dialogue',section:$('edSec').value,topic:$('edTopic').value.trim(),status:$('edStatus').value,difficulty:'Средний',title:$('edTitle').value.trim(),payload:{steps:S.dialogDraft},audience:$('edAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Диалог сохранён')}
 function editContent(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)}
 async function deleteContent(id){if(!confirm('Удалить материал?'))return;const {error}=await S.sb.from('content').delete().eq('id',id);if(error)toast(error.message);else{await syncAll();renderContent();toast('Материал удалён')}}
 
@@ -613,8 +613,8 @@ function renderImportPane(){$('contentPane').innerHTML=`<div class="import-box">
 async function previewExcel(ev){try{const sheets=await parseWorkbook(ev.target.files[0]),cases=(sheets['Кейсы']||[]).filter(r=>String(r['Вопрос']||'').trim()),dialogs=(sheets['Диалоги']||[]).filter(r=>String(r['ID диалога']||'').trim()),assignments=(sheets['Назначения']||[]).filter(r=>String(r['Название']||'').trim());S.importDraft={sheets,cases,dialogs,employees:[],assignments};$('importPreview').innerHTML=`<div class="card" style="margin-top:12px"><h3>Предпросмотр</h3><div class="grid3"><div class="kpi"><small>Кейсы</small><strong>${cases.length}</strong></div><div class="kpi"><small>Диалоги</small><strong>${dialogs.length}</strong></div><div class="kpi"><small>Назначения</small><strong>${assignments.length}</strong></div></div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="commitExcel()">Импортировать</button></div></div>`}catch(e){$('importPreview').innerHTML='<div class="explain">Не удалось прочитать Excel. Используйте шаблон SkillHub.</div>'}}
 async function commitExcel(){
   if(!S.importDraft)return;const {sheets,cases,dialogs,assignments}=S.importDraft;try{
-    for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),audience)}
-    const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый диалог',row.title,audience)}
+    for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
+    const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
     for(const r of assignments){let rec=String(r['Кому']||'ALL').split(',').map(normalizeLogin).filter(Boolean);if(!rec.length)rec=['ALL'];if(!isTechAdmin()&&rec.includes('ALL'))rec=assignmentScopeEmployees().map(x=>x.login);const row={title:String(r['Название']),content_id:String(r['ID материала']||'').match(/^[0-9a-f-]{36}$/i)?String(r['ID материала']):null,section:String(r['Раздел']||''),topic:String(r['Тема']||''),due:String(r['Дедлайн']||'')||null,target:Number(r['Минимум %']||90),recipients:rec,status:String(r['Статус']||'active'),created_by:S.user.id};const {error}=await S.sb.from('assignments').insert(row);if(error)throw error;if(yn(r['Уведомить']))await notifyRecipients('Новое задание',`${row.title}${row.due?' · до '+row.due:''}`,rec,'assignment')}
     await syncAll();toast('Импорт завершён');contentTab='library';renderContent();
   }catch(e){console.error(e);toast('Ошибка импорта: '+(e.message||e))}
@@ -707,6 +707,11 @@ syncAll=async function(manual=false){
 trainingCards=function(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`};
 
 renderTraining=function(){
+  // Employees should see only the main training cards. The content library is a manager/admin tool.
+  if(S.profile?.role==='employee'){
+    $('page-training').innerHTML=trainingCards();
+    return;
+  }
   const auto=autoSoftContent().length,manual=manualSoftContent().length;
   $('page-training').innerHTML=trainingCards()+`<div class="section-title"><h2>Библиотека</h2><span class="muted small">${S.content.filter(x=>x.status==='published').length} материалов</span></div><div class="card"><div class="assignment"><div><b>Soft Skills</b><div class="meta">${auto} обычных · ${manual} ручных</div></div><button class="btn secondary" onclick="openSoftHub()">Открыть</button></div>${['hard','needs'].map(sec=>`<div class="assignment"><div><b>${secName(sec)}</b><div class="meta">${S.content.filter(x=>x.section===sec&&x.status==='published').length} материалов</div></div><button class="btn secondary" onclick="openSection('${sec}')">Открыть</button></div>`).join('')}</div>`;
 };
@@ -722,7 +727,10 @@ openSection=function(sec,mode=''){
   if(sec==='soft'&&mode==='auto')arr=arr.filter(x=>x.type!=='manual');
   else arr=arr.filter(x=>x.type!=='manual');
   const topics=[...new Set(arr.map(x=>x.topic))];
-  showModal(`<div class="modal-head"><div><h2>${secName(sec)}${sec==='soft'?' · обычные тренажёры':''}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  const hideEmployeeSoftMaterials=sec==='soft'&&S.profile?.role==='employee';
+  const subtitle=hideEmployeeSoftMaterials?'Выберите нужный блок':'Выберите тему или конкретный материал';
+  const materials=hideEmployeeSoftMaterials?'':`<div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`;
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}${sec==='soft'?' · обычные тренажёры':''}</h2><div class="muted small">${subtitle}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div>${materials}`);
 };
 
 function openManualSoft(){
@@ -803,7 +811,7 @@ function openManualEditor(x=null){
 async function saveManualEditor(){
   const topic=$('emTopic').value.trim(),title=$('emTitle').value.trim(),question=$('emQuestion').value.trim(),instruction=$('emInstruction').value.trim();if(!topic||!title||!question){toast('Заполните тему, название и фразу / ситуацию');return}
   const row={type:'manual',section:'soft',topic,status:$('emStatus').value,difficulty:'Средний',title,payload:{instruction,question},audience:$('emAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;
-  const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый ручной тренажёр',row.title,row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Ручной тренажёр сохранён');
+  const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Ручной тренажёр сохранён');
 }
 editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='manual'?openManualEditor(x):x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)};
 
@@ -1472,7 +1480,7 @@ const shHardSortOpenSectionBase=openSection;
 openSection=function(sec,...args){
   if(sec!=='hard')return shHardSortOpenSectionBase(sec,...args);
   const arr=S.content.filter(x=>x.section===sec&&x.status==='published'),topics=[...new Set(arr.map(x=>x.topic))];
-  showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
 };
 
 /* ===== SkillHub HARD topic flow + mixed flow ===== */
@@ -1560,7 +1568,7 @@ function shHardFlowOpenTopic(topic){
   const arr=shHardFlowItems(topic),p=topicProgress('hard',topic),seen=seenContentMap();
   showModal(`<div class="modal-head"><div><h2>${esc(topic)}</h2><div class="muted small">Hard Skills · пройдено ${p.done} из ${p.total}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
   <div class="sh-hard-topic-hero"><div><b>Выберите материал ниже</b><p>После завершения кейса SkillHub предложит следующий непройденный материал, а в конце блока — переход к следующему блоку.</p></div></div>
-  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartFromTopic('${jsq(topic)}','${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartFromTopic('${jsq(topic)}','${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
 }
 function shHardFlowCompletionMeta(){
   const f=shHardFlow;if(!f)return '';
@@ -1615,13 +1623,14 @@ openSection=function(sec,...args){
   const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))],seen=seenContentMap();
   const doneTopics=topics.filter(t=>{const p=topicProgress('hard',t);return p.total>0&&p.done>=p.total}).length;
   const doneMaterials=arr.filter(x=>seen.has(x.id)).length;
+  const materialsSection=isManager()?`
+  <div class="section-title sh-hard-section-title"><h2>Все материалы</h2><span class="muted small">Можно открыть конкретный кейс</span></div>
+  <div class="sh-hard-materials">${arr.map(x=>`<div class="content-row sh-hard-material-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seen.has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}</div>`:'';
   showModal(`<div class="modal-head sh-hard-root-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите блок или продолжите тренировку</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
   <div class="sh-hard-root-hero"><div><span>HARD SKILLS</span><h3>Прокачивайте знания по рабочим блокам</h3><p>Можно выбрать конкретный блок или пройти непройденные кейсы вразброс.</p></div><div class="sh-hard-root-stats"><b>${doneTopics} / ${topics.length}</b><small>блоков пройдено</small><b>${doneMaterials} / ${arr.length}</b><small>материалов пройдено</small></div></div>
   <div class="sh-hard-mode-row sh-hard-mode-row-left"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>Непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>
   <div class="section-title sh-hard-section-title"><h2>Все блоки</h2><span class="muted small">Выберите нужный блок</span></div>
-  <div class="sh-hard-block-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="sh-hard-block-card" onclick="shHardFlowOpenTopic('${jsq(t)}')"><span class="sh-hard-block-icon">${shHardFlowTopicIcon(t)}</span><span class="sh-hard-block-copy"><b>${esc(t)}</b><small>Пройдено ${p.done} из ${p.total} · открыть блок</small></span><span class="sh-hard-block-arrow">→</span></button>`}).join('')}</div>
-  <div class="section-title sh-hard-section-title"><h2>Все материалы</h2><span class="muted small">Можно открыть конкретный кейс</span></div>
-  <div class="sh-hard-materials">${arr.map(x=>`<div class="content-row sh-hard-material-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seen.has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}</div>`);
+  <div class="sh-hard-block-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="sh-hard-block-card" onclick="shHardFlowOpenTopic('${jsq(t)}')"><span class="sh-hard-block-icon">${shHardFlowTopicIcon(t)}</span><span class="sh-hard-block-copy"><b>${esc(t)}</b><small>Пройдено ${p.done} из ${p.total} · открыть блок</small></span><span class="sh-hard-block-arrow">→</span></button>`}).join('')}</div>${materialsSection}`);
 };
 
 finishDialogue=function(){
@@ -1820,11 +1829,17 @@ function shHardNumericSourceHtml(x){
   if(!src.path)return '';
   return `<div class="skill-card procedure-card sh-hard-num-source"><b>📚 Взято из процедуры</b>${src.name?`<br><strong>${esc(src.name)}</strong>`:''}<div class="small" style="margin-top:6px">${esc(src.path)}</div></div>`;
 }
+function shHardNumericFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-hard-num-facts">${facts.map(f=>`<div class="sh-hard-num-fact"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
 function renderHardNumeric(){
   const r=S.currentRun;if(!r||r.type!=='hard-numeric')return;
   const x=r.x,p=x.payload||{},unit=p.unit||'₽';
   const result=r.checked?`<div class="sh-hard-num-result ${r.ok?'is-correct':'is-wrong'}"><div class="sh-hard-num-result-icon">${r.ok?'✓':'!'}</div><div><b>${r.ok?'Верно':'Не совсем'}</b><p>Правильный ответ: <strong>${esc(shHardNumericFormat(p.answer,unit))}</strong></p></div></div><div class="explain sh-hard-num-explain">${esc(p.explanation||x.explanation||'')}</div>${shHardNumericSourceHtml(x)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
-  $('page-run').innerHTML=`<div class="sh-hard-num-wrap"><div class="card sh-hard-num-shell"><div class="actions sh-hard-num-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="pill">Задача</span></div><h2>${esc(x.title||'Расчётная задача')}</h2><div class="sh-hard-num-problem"><b>Условие</b><p>${esc(p.problem||p.question||x.question||'')}</p></div><div class="sh-hard-num-prompt">${esc(p.prompt||'Введите ответ')}</div>${r.checked?`<div class="sh-hard-num-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.value,unit))}</strong></div>`:`<form class="sh-hard-num-form" onsubmit="event.preventDefault();checkHardNumeric()"><label for="hardNumericInput">Ваш ответ</label><div class="sh-hard-num-input-row"><input id="hardNumericInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Например, 162000" aria-describedby="hardNumericHelp"><span>${esc(unit)}</span></div><small id="hardNumericHelp">Можно вводить сумму с пробелами или без них.</small><button class="btn primary" type="submit">Проверить →</button></form>`}${result}</div></div>`;
+  const situation=esc(p.situation||p.problem||p.question||x.question||'');
+  $('page-run').innerHTML=`<div class="sh-hard-num-wrap"><div class="card sh-hard-num-shell"><div class="actions sh-hard-num-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-hard-num-kicker">РАСЧЁТНАЯ ЗАДАЧА</span></div><h2>${esc(x.title||'Расчётная задача')}</h2><div class="sh-hard-num-scenario"><div class="sh-hard-num-scenario-head"><div class="sh-hard-num-scenario-icon">₽</div><div><span>СИТУАЦИЯ КЛИЕНТА</span><b>${esc(p.agency||'ФНС')}</b></div></div><p>${situation}</p>${shHardNumericFactsHtml(p)}</div><div class="sh-hard-num-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(p.prompt||'Введите ответ')}</strong></div>${r.checked?`<div class="sh-hard-num-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.value,unit))}</strong></div>`:`<form class="sh-hard-num-form" onsubmit="event.preventDefault();checkHardNumeric()"><label for="hardNumericInput">Введите сумму</label><div class="sh-hard-num-input-row"><input id="hardNumericInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Например, 162000" aria-describedby="hardNumericHelp"><span>${esc(unit)}</span></div><small id="hardNumericHelp">Введите только число — пробелы в сумме допустимы.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}</div></div>`;
   if(!r.checked){const inp=$('hardNumericInput');if(inp)setTimeout(()=>inp.focus(),0)}
 }
 function checkHardNumeric(){
@@ -1849,3 +1864,208 @@ startContent=function(id){
   return shHardNumericStartContentBase(id);
 };
 /* ===== end SkillHub 7.5.2 ================================================ */
+
+
+/* ===== SkillHub 7.5.4 — rich HARD situational tasks =======================
+   payload.mode = "scenario" renders a full client case with document details,
+   payment/queue facts and decision options.
+============================================================================ */
+function shHardScenarioIsCase(x){
+  return !!(x && x.type==='hardcase' && x.payload && x.payload.mode==='scenario' && Array.isArray(x.payload.options) && x.payload.options.length>=2);
+}
+function shHardScenarioFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-hard-sc-facts">${facts.map(f=>`<div class="sh-hard-sc-fact ${f?.tone?`tone-${esc(f.tone)}`:''}"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
+function shHardScenarioDocumentHtml(p){
+  const d=p?.document||{};
+  if(!d.number&&!d.date&&!d.received&&!d.type)return '';
+  const meta=[d.number?`№ ${esc(d.number)}`:'',d.date?`от ${esc(d.date)}`:'',d.received?`поступило ${esc(d.received)}`:''].filter(Boolean).join(' · ');
+  return `<div class="sh-hard-sc-docline"><span>ОГРАНИЧЕНИЕ</span><div><b>${esc(d.type||'Решение госоргана')}</b>${meta?`<small>${meta}</small>`:''}</div></div>`;
+}
+function shHardScenarioPaymentHtml(p){
+  const a=p?.action||{};
+  if(!a.title&&!a.amount&&!a.queue&&!a.recipient)return '';
+  const meta=[a.queue?`Очередность: ${esc(a.queue)}`:'',a.purpose?`Назначение: ${esc(a.purpose)}`:''].filter(Boolean);
+  return `<div class="sh-hard-sc-wants"><div class="sh-hard-sc-wants-head"><span>КЛИЕНТ ХОЧЕТ</span><b>${esc(a.title||'Платёж')}</b></div><div class="sh-hard-sc-wants-main">${a.amount?`<strong>${esc(a.amount)}</strong>`:''}${a.recipient?`<span>${esc(a.recipient)}</span>`:''}</div>${meta.length?`<div class="sh-hard-sc-wants-meta">${meta.map(x=>`<span>${x}</span>`).join('')}</div>`:''}</div>`;
+}
+function startHardScenario(x){
+  S.currentRun={type:'hard-scenario',x,checked:false,recorded:false,selected:null,ok:false};
+  goRun();renderHardScenario();
+}
+function renderHardScenario(){
+  const r=S.currentRun;if(!r||r.type!=='hard-scenario')return;
+  const x=r.x,p=x.payload||{},opts=p.options||[],right=Number(p.correct);
+  const options=opts.map((o,i)=>{
+    let cls='sh-hard-sc-option';
+    if(r.checked){if(i===right)cls+=' is-correct';if(i===r.selected&&i!==right)cls+=' is-wrong'}
+    return `<button type="button" class="${cls}" ${r.checked?'disabled':''} onclick="answerHardScenario(${i})"><span class="sh-hard-sc-option-num">${i+1}</span><span>${esc(o)}</span></button>`;
+  }).join('');
+  const result=r.checked?`<div class="sh-hard-sc-result ${r.ok?'is-correct':'is-wrong'}"><div class="sh-hard-sc-result-icon">${r.ok?'✓':'!'}</div><div><b>${r.ok?'Верно':'Неверно'}</b><p>${r.ok?'Вы выбрали корректное решение по условиям задачи.':'Ниже показан правильный вариант и логика решения.'}</p></div></div><div class="explain sh-hard-sc-explain">${esc(p.explanation||x.explanation||'')}</div>${shHardNumericSourceHtml(x)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+  const scenario=esc(p.scenario||p.situation||p.problem||p.question||x.question||'');
+  $('page-run').innerHTML=`<div class="sh-hard-sc-wrap"><div class="card sh-hard-sc-shell"><div class="actions sh-hard-sc-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-hard-sc-kicker">СИТУАЦИОННАЯ ЗАДАЧА</span></div><h2>${esc(x.title||'Ситуационная задача')}</h2><div class="sh-hard-sc-scenario"><div class="sh-hard-sc-scenario-head"><div class="sh-hard-sc-scenario-icon">🏛</div><div><span>СИТУАЦИЯ</span><b>${esc(p.agency||'Госорганы')}</b></div></div><p>${scenario}</p>${shHardScenarioDocumentHtml(p)}${shHardScenarioFactsHtml(p)}${shHardScenarioPaymentHtml(p)}</div><div class="sh-hard-sc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(p.question||'Какое решение верное?')}</strong></div><div class="sh-hard-sc-options">${options}</div>${result}</div></div>`;
+}
+function answerHardScenario(i){
+  const r=S.currentRun;if(!r||r.type!=='hard-scenario'||r.checked)return;
+  const right=Number(r.x.payload.correct);
+  r.selected=i;r.ok=i===right;r.checked=true;
+  if(!r.recorded){
+    const d={kind:'hard-scenario',content_id:r.x.id||null,title:r.x.title||'',question:r.x.payload.question||'',options:[...(r.x.payload.options||[])],selected:i,correct:right,is_correct:r.ok,explanation:r.x.payload.explanation||''};
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score:r.ok?100:0,type:'hardcase',cpm:0,details:[d]})}catch(e){console.error('scenario task save failed',e)}
+    r.recorded=true;
+  }
+  renderHardScenario();
+}
+const shHardScenarioStartContentBase=startContent;
+startContent=function(id){
+  const x=S.content.find(c=>c.id===id);
+  if(shHardScenarioIsCase(x)){if(!shHardFlowLaunching)shHardFlow=null;startHardScenario(x);return}
+  return shHardScenarioStartContentBase(id);
+};
+/* ===== end SkillHub 7.5.4 ================================================ */
+
+
+/* ===== SkillHub 2026-09-24 — two-step tariff calculation task ============
+   payload.mode = "tariff_calc"
+   Step 1: employee calculates a commission in a numeric field.
+   Step 2: client adds a condition; employee chooses the better tariff option.
+============================================================================ */
+function shTariffCalcIsCase(x){
+  const p=x&&x.payload;
+  return !!(x&&x.type==='hardcase'&&p&&p.mode==='tariff_calc'&&p.step1&&Number.isFinite(Number(p.step1.answer))&&p.step2&&(Array.isArray(p.step2.options)||Number.isFinite(Number(p.step2.answer))));
+}
+function shTariffCalcMetaHtml(p){
+  const items=[
+    p?.client?['КЛИЕНТ',p.client]:null,
+    p?.date?['ДАТА ОБРАЩЕНИЯ',p.date]:null,
+    p?.subject?['ТЕМА',p.subject]:null
+  ].filter(Boolean);
+  if(!items.length)return '';
+  return `<div class="sh-tcalc-meta">${items.map(([k,v])=>`<div><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')}</div>`;
+}
+function shTariffCalcFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-tcalc-conditions-title">УСЛОВИЯ ЗАДАЧИ</div><div class="sh-tcalc-facts">${facts.map(f=>`<div class="sh-tcalc-fact ${f?.tone?`tone-${esc(f.tone)}`:''}"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
+function shTariffCalcActionHtml(p){
+  const a=p?.action||{};
+  if(!a.title&&!a.amount&&!a.recipient&&!a.method)return '';
+  const descriptor=[a.title||'Провести перевод',a.recipient||''].filter(Boolean).join(' ');
+  return `<div class="sh-tcalc-wants"><div class="sh-tcalc-wants-head"><span>КЛИЕНТ ХОЧЕТ</span><b>${esc(descriptor)}</b></div><div class="sh-tcalc-wants-main">${a.amount?`<strong>${esc(a.amount)}</strong>`:''}</div>${a.method?`<div class="sh-tcalc-wants-meta"><span>${esc(a.method)}</span></div>`:''}</div>`;
+}
+function shTariffCalcSourceHtml(p){
+  const src=p?.source||{};
+  if(!src.path&&!src.name)return '';
+  return `<div class="skill-card procedure-card sh-tcalc-source"><b>📚 Где проверить</b>${src.name?`<br><strong>${esc(src.name)}</strong>`:''}${src.path?`<div class="small" style="margin-top:6px">${esc(src.path)}</div>`:''}</div>`;
+}
+function shTariffCalcScenarioHtml(p){
+  return `<div class="sh-tcalc-scenario"><div class="sh-tcalc-scenario-head"><div class="sh-tcalc-icon">₽</div><div><span>СИТУАЦИЯ</span><b>${esc(p.label||'Тарифы')}</b></div></div>${shTariffCalcMetaHtml(p)}${p.scenario||p.situation?`<p>${esc(p.scenario||p.situation||'')}</p>`:''}${shTariffCalcFactsHtml(p)}${shTariffCalcActionHtml(p)}</div>`;
+}
+function startTariffCalc(x){
+  S.currentRun={type:'tariff-calc',x,step:1,step1Checked:false,step1Value:null,step1Ok:false,step2Checked:false,step2Selected:null,step2Value:null,step2Ok:false,recorded:false};
+  goRun();renderTariffCalc();
+}
+function shTariffCalcStepPill(step){
+  return `<div class="sh-tcalc-progress"><span class="${step===1?'active':'done'}">1</span><i></i><span class="${step===2?'active':''}">2</span><b>Шаг ${step} из 2</b></div>`;
+}
+function renderTariffCalc(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc')return;
+  const x=r.x,p=x.payload||{},s1=p.step1||{},s2=p.step2||{};
+  let body='';
+  if(r.step===1){
+    const checked=r.step1Checked;
+    const result=checked?`<div class="sh-tcalc-result ${r.step1Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step1Ok?'✓':'!'}</div><div><b>${r.step1Ok?'Верно':'Не совсем'}</b><p>Правильная комиссия: <strong>${esc(shHardNumericFormat(s1.answer,s1.unit||'₽'))}</strong></p></div></div><div class="sh-tcalc-explain"><b>Расчёт</b><p>${esc(s1.formula||'')}</p>${s1.explanation?`<small>${esc(s1.explanation)}</small>`:''}</div><div class="sh-tcalc-next"><button class="btn primary" type="button" onclick="shTariffCalcNextStep()">Продолжить →</button></div>`:'';
+    body=`${shTariffCalcStepPill(1)}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s1.prompt||'Рассчитайте комиссию')}</strong></div>${checked?`<div class="sh-tcalc-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.step1Value,s1.unit||'₽'))}</strong></div>`:`<form class="sh-tcalc-form" onsubmit="event.preventDefault();checkTariffCalcStep1()"><label for="tariffCalcInput">Комиссия</label><div class="sh-tcalc-input"><input id="tariffCalcInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Введите сумму"><span>${esc(s1.unit||'₽')}</span></div><small>Посчитайте сумму самостоятельно и введите только число.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}`;
+  }else{
+    const comp=Array.isArray(s2.comparison)?`<div class="sh-tcalc-compare">${s2.comparison.map(c=>`<div><span>${esc(c.label||'')}</span><strong>${esc(c.value||'')}</strong>${c.note?`<small>${esc(c.note)}</small>`:''}</div>`).join('')}</div>`:'';
+    const cond=Array.isArray(s2.condition)&&s2.condition.length?`<div class="sh-tcalc-step2-conditions">${s2.condition.map(c=>`<div><span>${esc(c.label||'')}</span><strong>${esc(c.value||'')}</strong></div>`).join('')}</div>`:'';
+    if(Number.isFinite(Number(s2.answer))){
+      const checked=r.step2Checked;
+      const result=checked?`<div class="sh-tcalc-result ${r.step2Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step2Ok?'✓':'!'}</div><div><b>${r.step2Ok?'Верно':'Не совсем'}</b><p>Экономия клиента: <strong>${esc(shHardNumericFormat(s2.answer,s2.unit||'₽'))}</strong></p></div></div>${comp}<div class="sh-tcalc-explain"><b>Расчёт выгоды</b><p>${esc(s2.formula||'')}</p>${s2.explanation?`<small>${esc(s2.explanation)}</small>`:''}</div>${shTariffCalcSourceHtml(p)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+      body=`${shTariffCalcStepPill(2)}<div class="sh-tcalc-client"><div class="sh-tcalc-client-mark">2</div><div><span>НОВОЕ УСЛОВИЕ ОТ КЛИЕНТА</span><p>${esc(s2.client||'')}</p></div></div>${cond}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s2.question||'Рассчитайте выгоду клиента')}</strong></div>${checked?`<div class="sh-tcalc-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.step2Value,s2.unit||'₽'))}</strong></div>`:`<form class="sh-tcalc-form" onsubmit="event.preventDefault();checkTariffCalcStep2()"><label for="tariffCalcInput2">Экономия клиента</label><div class="sh-tcalc-input"><input id="tariffCalcInput2" type="text" inputmode="decimal" autocomplete="off" placeholder="Введите сумму"><span>${esc(s2.unit||'₽')}</span></div><small>Сравните расходы без пакета и с пакетом и введите сумму экономии.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}`;
+    }else{
+      const right=Number(s2.correct);
+      const opts=(s2.options||[]).map((o,i)=>{let cls='sh-tcalc-option';if(r.step2Checked){if(i===right)cls+=' is-correct';if(i===r.step2Selected&&i!==right)cls+=' is-wrong'}return `<button type="button" class="${cls}" ${r.step2Checked?'disabled':''} onclick="answerTariffCalcStep2(${i})"><span>${i+1}</span><b>${esc(o)}</b></button>`}).join('');
+      const result=r.step2Checked?`<div class="sh-tcalc-result ${r.step2Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step2Ok?'✓':'!'}</div><div><b>${r.step2Ok?'Верно':'Неверно'}</b><p>${r.step2Ok?'Вы выбрали более выгодный вариант для этой ситуации.':'Сравните итоговые расходы по двум вариантам.'}</p></div></div>${comp}<div class="sh-tcalc-explain"><b>Почему</b><p>${esc(s2.explanation||'')}</p></div>${shTariffCalcSourceHtml(p)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+      body=`${shTariffCalcStepPill(2)}<div class="sh-tcalc-client"><div class="sh-tcalc-client-mark">2</div><div><span>НОВОЕ УСЛОВИЕ ОТ КЛИЕНТА</span><p>${esc(s2.client||'')}</p></div></div>${cond}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s2.question||'Какой вариант выгоднее?')}</strong></div><div class="sh-tcalc-options">${opts}</div>${result}`;
+    }
+  }
+  $('page-run').innerHTML=`<div class="sh-tcalc-wrap"><div class="card sh-tcalc-shell"><div class="actions sh-tcalc-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-tcalc-kicker">РАСЧЁТНАЯ ЗАДАЧА · ТАРИФЫ</span></div><h2>${esc(x.title||'Расчёт комиссии')}</h2>${shTariffCalcScenarioHtml(p)}${body}</div></div>`;
+  if(r.step===1&&!r.step1Checked){const inp=$('tariffCalcInput');if(inp)setTimeout(()=>inp.focus(),0)}else if(r.step===2&&!r.step2Checked&&Number.isFinite(Number(s2.answer))){const inp=$('tariffCalcInput2');if(inp)setTimeout(()=>inp.focus(),0)}
+}
+function checkTariffCalcStep1(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==1||r.step1Checked)return;
+  const inp=$('tariffCalcInput'),v=shHardNumericParse(inp?.value);
+  if(v===null){toast('Введите сумму комиссии числом');if(inp)inp.focus();return}
+  const s1=r.x.payload.step1,right=Number(s1.answer),tol=Math.max(0,Number(s1.tolerance||0));
+  r.step1Value=v;r.step1Ok=Math.abs(v-right)<=tol;r.step1Checked=true;renderTariffCalc();
+}
+function shTariffCalcNextStep(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||!r.step1Checked)return;r.step=2;renderTariffCalc();
+}
+function checkTariffCalcStep2(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==2||r.step2Checked)return;
+  const s2=r.x.payload.step2;if(!Number.isFinite(Number(s2.answer)))return;
+  const inp=$('tariffCalcInput2'),v=shHardNumericParse(inp?.value);
+  if(v===null){toast('Введите сумму экономии числом');if(inp)inp.focus();return}
+  const right=Number(s2.answer),tol=Math.max(0,Number(s2.tolerance||0));
+  r.step2Value=v;r.step2Ok=Math.abs(v-right)<=tol;r.step2Checked=true;
+  if(!r.recorded){
+    const score=Math.round(((r.step1Ok?1:0)+(r.step2Ok?1:0))/2*100);
+    const details=[
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:1,question:r.x.payload.step1.prompt||'',selected_value:r.step1Value,correct_value:Number(r.x.payload.step1.answer),is_correct:r.step1Ok,explanation:r.x.payload.step1.explanation||''},
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:2,question:s2.question||'',selected_value:v,correct_value:right,is_correct:r.step2Ok,explanation:s2.explanation||''}
+    ];
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score,type:'hardcase',cpm:0,details})}catch(e){console.error('tariff calc save failed',e)}
+    r.recorded=true;
+  }
+  renderTariffCalc();
+}
+function answerTariffCalcStep2(i){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==2||r.step2Checked)return;
+  const s2=r.x.payload.step2,right=Number(s2.correct);
+  r.step2Selected=i;r.step2Ok=i===right;r.step2Checked=true;
+  if(!r.recorded){
+    const score=Math.round(((r.step1Ok?1:0)+(r.step2Ok?1:0))/2*100);
+    const details=[
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:1,question:r.x.payload.step1.prompt||'',selected_value:r.step1Value,correct_value:Number(r.x.payload.step1.answer),is_correct:r.step1Ok,explanation:r.x.payload.step1.explanation||''},
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:2,question:s2.question||'',options:[...(s2.options||[])],selected:i,correct:right,is_correct:r.step2Ok,explanation:s2.explanation||''}
+    ];
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score,type:'hardcase',cpm:0,details})}catch(e){console.error('tariff calc save failed',e)}
+    r.recorded=true;
+  }
+  renderTariffCalc();
+}
+const shTariffCalcStartContentBase=startContent;
+startContent=function(id){
+  const x=S.content.find(c=>c.id===id);
+  if(shTariffCalcIsCase(x)){if(!shHardFlowLaunching)shHardFlow=null;startTariffCalc(x);return}
+  return shTariffCalcStartContentBase(id);
+};
+/* ===== end two-step tariff calculation task ============================== */
+
+/* ===== SkillHub V8 — user-selectable dark / light theme ================ */
+function shThemeCurrent(){
+  const t=localStorage.getItem('sh_theme');
+  return t==='light'?'light':'dark';
+}
+function applyTheme(theme,save=true){
+  const t=theme==='light'?'light':'dark';
+  document.documentElement.dataset.theme=t;
+  if(save)localStorage.setItem('sh_theme',t);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',t==='light'?'#f4f5f7':'#0b0b0c');
+  const apple=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(apple)apple.setAttribute('content',t==='light'?'default':'black-translucent');
+  const btn=document.getElementById('themeToggleBtn');
+  if(btn)btn.textContent=t==='dark'?'☀️ Светлая тема':'🌙 Тёмная тема';
+}
+function toggleTheme(){
+  const next=shThemeCurrent()==='dark'?'light':'dark';
+  applyTheme(next,true);
+  try{toast(next==='light'?'Светлая тема включена':'Тёмная тема включена')}catch(e){}
+}
+applyTheme(shThemeCurrent(),false);
+/* ===== end theme switch ================================================= */
