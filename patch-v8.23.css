@@ -1,0 +1,96 @@
+/* SkillHub V8.23 — source/procedure cards + final light/dark contrast guard */
+
+/* Procedure/source blocks are intentionally distinct, but must remain readable in both themes. */
+html[data-theme="light"] .skill-card,
+html[data-theme="light"] .procedure-card,
+html[data-theme="light"] .sh-hard-num-source,
+html[data-theme="light"] .sh-hard-sort-source,
+html[data-theme="light"] .sh-tcalc-source {
+  background:#fff9dc !important;
+  border-color:#d8b900 !important;
+  color:#4f4300 !important;
+}
+html[data-theme="light"] .skill-card b,
+html[data-theme="light"] .procedure-card b,
+html[data-theme="light"] .sh-hard-num-source b,
+html[data-theme="light"] .sh-hard-sort-source b,
+html[data-theme="light"] .sh-tcalc-source b {
+  color:#5b4b00 !important;
+}
+html[data-theme="light"] .skill-card strong,
+html[data-theme="light"] .procedure-card strong,
+html[data-theme="light"] .sh-hard-num-source strong,
+html[data-theme="light"] .sh-hard-sort-source strong,
+html[data-theme="light"] .sh-tcalc-source strong {
+  color:#171719 !important;
+}
+html[data-theme="light"] .skill-card .small,
+html[data-theme="light"] .procedure-card .small,
+html[data-theme="light"] .sh-hard-num-source .small,
+html[data-theme="light"] .sh-hard-sort-source .small,
+html[data-theme="light"] .sh-tcalc-source .small {
+  color:#5d520f !important;
+}
+
+html:not([data-theme="light"]) .skill-card,
+html:not([data-theme="light"]) .procedure-card,
+html:not([data-theme="light"]) .sh-hard-num-source,
+html:not([data-theme="light"]) .sh-hard-sort-source,
+html:not([data-theme="light"]) .sh-tcalc-source {
+  background:#15140a !important;
+  border-color:#e8c600 !important;
+  color:#ffdd2d !important;
+}
+html:not([data-theme="light"]) .skill-card b,
+html:not([data-theme="light"]) .procedure-card b,
+html:not([data-theme="light"]) .sh-hard-num-source b,
+html:not([data-theme="light"]) .sh-hard-sort-source b,
+html:not([data-theme="light"]) .sh-tcalc-source b {
+  color:#ffdd2d !important;
+}
+html:not([data-theme="light"]) .skill-card strong,
+html:not([data-theme="light"]) .procedure-card strong,
+html:not([data-theme="light"]) .sh-hard-num-source strong,
+html:not([data-theme="light"]) .sh-hard-sort-source strong,
+html:not([data-theme="light"]) .sh-tcalc-source strong {
+  color:#ffffff !important;
+}
+html:not([data-theme="light"]) .skill-card .small,
+html:not([data-theme="light"]) .procedure-card .small,
+html:not([data-theme="light"]) .sh-hard-num-source .small,
+html:not([data-theme="light"]) .sh-hard-sort-source .small,
+html:not([data-theme="light"]) .sh-tcalc-source .small {
+  color:#ffe45d !important;
+}
+
+/* Structured Hard explanation source block. */
+html[data-theme="light"] .sh-hard-source-card {
+  background:#fff9dc !important;
+  border-color:#d8b900 !important;
+}
+html[data-theme="light"] .sh-hard-source-card span { color:#6c5a00 !important; }
+html[data-theme="light"] .sh-hard-source-card strong { color:#171719 !important; }
+html[data-theme="light"] .sh-hard-source-card small { color:#514a24 !important; }
+
+html:not([data-theme="light"]) .sh-hard-source-card {
+  background:#12161c !important;
+  border-color:#343b45 !important;
+}
+html:not([data-theme="light"]) .sh-hard-source-card span { color:#aab3bf !important; }
+html:not([data-theme="light"]) .sh-hard-source-card strong { color:#ffffff !important; }
+html:not([data-theme="light"]) .sh-hard-source-card small { color:#c3cad3 !important; }
+
+/* Guard against broad light-theme typography rules overriding text inside dark status banners. */
+html[data-theme="light"] .sh-hard-num-result.is-correct,
+html[data-theme="light"] .sh-hard-num-result.is-wrong,
+html[data-theme="light"] .sh-hard-sc-result.is-correct,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong,
+html[data-theme="light"] .sh-tcalc-result.is-correct,
+html[data-theme="light"] .sh-tcalc-result.is-wrong { color:#ffffff !important; }
+
+html[data-theme="light"] .sh-hard-num-result.is-correct *,
+html[data-theme="light"] .sh-hard-num-result.is-wrong *,
+html[data-theme="light"] .sh-hard-sc-result.is-correct *,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong *,
+html[data-theme="light"] .sh-tcalc-result.is-correct *,
+html[data-theme="light"] .sh-tcalc-result.is-wrong * { color:inherit !important; }
