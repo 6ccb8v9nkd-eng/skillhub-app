@@ -1,0 +1,66 @@
+/* SkillHub V8.28 — application-wide contrast guard for light/dark themes.
+   Fixes remaining low/borderline contrast values found in the loaded CSS audit. */
+
+/* Notification badges: previous white on #ef4444/#ff5a5f was below AA for small text. */
+.badge,
+html[data-theme="light"] .top-bell .badge {
+  background:#b42332 !important;
+  color:#ffffff !important;
+}
+
+/* Light theme: secondary/small text must stay above AA on white cards. */
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder,
+html[data-theme="light"] .kpi small,
+html[data-theme="light"] .sh-soft-review-head>span,
+html[data-theme="light"] .as-material-group-title span,
+html[data-theme="light"] .as-material-item small,
+html[data-theme="light"] .as-material-footer .meta {
+  color:#6f7077 !important;
+}
+
+/* Sticky headings and RG demo labels: darken amber when shown on white/light surfaces. */
+html[data-theme="light"] .as-material-group-title {
+  color:#765d00 !important;
+}
+html[data-theme="light"] .rg-demo-kicker,
+html[data-theme="light"] .rg-demo-case em,
+html[data-theme="light"] .rg-demo-review-row>span:last-child,
+html[data-theme="light"] .rg-demo-subhead {
+  color:#806000 !important;
+}
+
+/* Keep the RG demo accent bright enough in dark theme as well. */
+html:not([data-theme="light"]) .rg-demo-kicker,
+html:not([data-theme="light"]) .rg-demo-case em,
+html:not([data-theme="light"]) .rg-demo-review-row>span:last-child,
+html:not([data-theme="light"]) .rg-demo-subhead {
+  color:#ffdd2d !important;
+}
+
+/* Completed tariff step: white on the previous green was borderline below AA. */
+.sh-tcalc-progress span.done {
+  background:#14724f !important;
+  border-color:#1b8a61 !important;
+  color:#ffffff !important;
+}
+
+/* Login/help text — remove borderline 4.48:1 cases on very light cards. */
+html[data-theme="light"] .login-card .hint,
+html[data-theme="light"] .hint {
+  color:#5f6168 !important;
+}
+
+/* Global light surfaces that can be nested inside cards/modals. */
+html[data-theme="light"] .meta,
+html[data-theme="light"] .muted,
+html[data-theme="light"] .small.muted {
+  color:#656970 !important;
+}
+
+/* Dark theme secondary text stays readable on both background and panel. */
+html:not([data-theme="light"]) .meta,
+html:not([data-theme="light"]) .muted,
+html:not([data-theme="light"]) .small.muted {
+  color:#a9abb3 !important;
+}
