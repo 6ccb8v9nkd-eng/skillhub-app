@@ -609,3 +609,820 @@ body{letter-spacing:-.012em}.main{background:var(--bg)}
 .sh-hard-num-source{margin-top:14px}
 @media(max-width:620px){.sh-hard-num-shell{padding:18px 16px;border-radius:20px}.sh-hard-num-problem{padding:18px}.sh-hard-num-prompt{font-size:18px}.sh-hard-num-input-row{max-width:none}.sh-hard-num-form .btn{width:100%;justify-content:center}.sh-hard-num-answer-readonly{align-items:flex-start;flex-direction:column}}
 /* ===== end numeric Hard tasks ===== */
+
+/* ===== SkillHub 7.5.3 — premium numeric case layout ===== */
+.sh-hard-num-kicker{display:inline-flex;align-items:center;min-height:34px;padding:7px 12px;border-radius:999px;background:rgba(255,213,31,.12);border:1px solid rgba(255,213,31,.35);color:#ffd51f;font-size:12px;font-weight:950;letter-spacing:.12em}
+.sh-hard-num-scenario{position:relative;overflow:hidden;background:linear-gradient(145deg,#182334,#111923);border:1px solid #2d3d51;border-radius:24px;padding:22px 22px 20px;margin-bottom:18px}
+.sh-hard-num-scenario:after{content:"";position:absolute;right:-42px;top:-52px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,213,31,.11),rgba(255,213,31,0) 68%);pointer-events:none}
+.sh-hard-num-scenario-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;position:relative;z-index:1}
+.sh-hard-num-scenario-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:#ffd51f;color:#11151b;font-size:24px;font-weight:1000;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.sh-hard-num-scenario-head span{display:block;color:#93a2b5;font-size:11px;font-weight:900;letter-spacing:.13em;margin-bottom:3px}
+.sh-hard-num-scenario-head b{font-size:18px;color:#fff}
+.sh-hard-num-scenario>p{position:relative;z-index:1;margin:0;color:#f6f8fb;font-size:clamp(18px,2.5vw,23px);line-height:1.48;white-space:pre-line}
+.sh-hard-num-facts{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.sh-hard-num-fact{background:rgba(7,12,18,.52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:13px 14px;min-width:0}
+.sh-hard-num-fact span{display:block;color:#8f9cad;font-size:12px;font-weight:800;margin-bottom:4px}
+.sh-hard-num-fact strong{display:block;color:#fff;font-size:17px;line-height:1.28;overflow-wrap:anywhere}
+.sh-hard-num-question{border:1px solid rgba(255,213,31,.35);background:linear-gradient(180deg,rgba(255,213,31,.09),rgba(255,213,31,.035));border-radius:20px;padding:17px 18px;margin:0 0 18px}
+.sh-hard-num-question span{display:block;color:#ffd51f;font-size:11px;font-weight:950;letter-spacing:.13em;margin-bottom:7px}
+.sh-hard-num-question strong{display:block;color:#fff;font-size:clamp(18px,2.4vw,22px);line-height:1.4}
+.sh-hard-num-form{background:#10161e;border:1px solid #293646;border-radius:20px;padding:18px}
+.sh-hard-num-form>label{font-size:15px;color:#dce3eb}
+.sh-hard-num-form .btn.primary{margin-top:4px}
+.sh-hard-num-explain{background:#121b25;border:1px solid #2a3848;border-radius:20px;padding:18px 20px}
+@media(max-width:620px){.sh-hard-num-scenario{padding:18px 16px}.sh-hard-num-facts{grid-template-columns:1fr}.sh-hard-num-fact{padding:12px 13px}.sh-hard-num-scenario>p{font-size:18px}.sh-hard-num-question{padding:15px}.sh-hard-num-form{padding:15px}}
+/* ===== end premium numeric case layout ===== */
+
+/* ===== SkillHub 7.5.4 — rich HARD situational tasks ===== */
+.sh-hard-sc-wrap{max-width:920px;margin:0 auto;padding:8px 0 28px}
+.sh-hard-sc-shell{padding:28px;border-radius:24px}
+.sh-hard-sc-top{justify-content:space-between;align-items:center;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.sh-hard-sc-kicker{display:inline-flex;align-items:center;min-height:34px;padding:7px 12px;border-radius:999px;background:rgba(255,213,31,.12);border:1px solid rgba(255,213,31,.35);color:#ffd51f;font-size:12px;font-weight:950;letter-spacing:.12em}
+.sh-hard-sc-shell>h2{font-size:clamp(25px,4vw,38px);line-height:1.12;margin:0 0 22px}
+.sh-hard-sc-scenario{position:relative;overflow:hidden;background:linear-gradient(145deg,#182334,#101821);border:1px solid #2d3d51;border-radius:24px;padding:22px;margin-bottom:16px}
+.sh-hard-sc-scenario:after{content:"";position:absolute;right:-55px;top:-65px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,213,31,.12),rgba(255,213,31,0) 68%);pointer-events:none}
+.sh-hard-sc-scenario-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;position:relative;z-index:1}
+.sh-hard-sc-scenario-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#ffd51f;color:#11151b;font-size:22px;font-weight:1000;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.sh-hard-sc-scenario-head span{display:block;color:#93a2b5;font-size:11px;font-weight:950;letter-spacing:.13em;margin-bottom:3px}
+.sh-hard-sc-scenario-head b{font-size:18px;color:#fff}
+.sh-hard-sc-scenario>p{position:relative;z-index:1;margin:0;color:#f6f8fb;font-size:clamp(17px,2.4vw,21px);line-height:1.5;white-space:pre-line}
+.sh-hard-sc-docline{position:relative;z-index:1;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;margin-top:15px;padding:11px 13px;border-radius:14px;background:rgba(7,12,18,.42);border:1px solid rgba(255,255,255,.07)}
+.sh-hard-sc-docline>span{padding-top:2px;color:#ffd51f;font-size:10px;font-weight:950;letter-spacing:.12em;white-space:nowrap}
+.sh-hard-sc-docline b{display:block;color:#fff;font-size:14px;line-height:1.3}
+.sh-hard-sc-docline small{display:block;margin-top:3px;color:#9eabba;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.sh-hard-sc-facts{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.sh-hard-sc-fact{background:rgba(7,12,18,.42);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:11px 13px;min-width:0}
+.sh-hard-sc-fact span{display:block;color:#8f9cad;font-size:11px;font-weight:800;margin-bottom:3px}.sh-hard-sc-fact strong{display:block;color:#fff;font-size:16px;line-height:1.28;overflow-wrap:anywhere}
+.sh-hard-sc-fact.tone-danger{border-color:rgba(255,103,103,.30);background:rgba(90,29,29,.18)}.sh-hard-sc-fact.tone-accent{border-color:rgba(255,213,31,.28);background:rgba(255,213,31,.045)}.sh-hard-sc-fact.tone-good{border-color:rgba(70,211,151,.27);background:rgba(26,91,64,.15)}
+.sh-hard-sc-wants{position:relative;z-index:1;margin-top:14px;padding:15px 16px;border-radius:17px;background:linear-gradient(135deg,rgba(255,213,31,.13),rgba(255,213,31,.045));border:1px solid rgba(255,213,31,.35)}
+.sh-hard-sc-wants-head>span{display:block;color:#ffd51f;font-size:10px;font-weight:950;letter-spacing:.13em;margin-bottom:4px}.sh-hard-sc-wants-head>b{display:block;color:#fff;font-size:18px;line-height:1.3}
+.sh-hard-sc-wants-main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:10px}.sh-hard-sc-wants-main strong{font-size:24px;color:#fff}.sh-hard-sc-wants-main span{color:#dce3ec;font-size:14px;font-weight:800}
+.sh-hard-sc-wants-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.sh-hard-sc-wants-meta span{display:inline-flex;align-items:center;min-height:28px;padding:5px 9px;border-radius:999px;background:rgba(7,12,18,.42);border:1px solid rgba(255,255,255,.08);color:#b9c4d1;font-size:11px;font-weight:800}
+.sh-hard-sc-question{border:1px solid rgba(255,213,31,.38);background:linear-gradient(180deg,rgba(255,213,31,.10),rgba(255,213,31,.035));border-radius:20px;padding:17px 18px;margin:0 0 14px}.sh-hard-sc-question span{display:block;color:#ffd51f;font-size:11px;font-weight:950;letter-spacing:.13em;margin-bottom:7px}.sh-hard-sc-question strong{display:block;color:#fff;font-size:clamp(18px,2.4vw,22px);line-height:1.4}
+.sh-hard-sc-options{display:grid;gap:10px}.sh-hard-sc-option{width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;background:#10161e;border:1px solid #313d4b;color:#f3f6fa;border-radius:18px;padding:16px 17px;font:inherit;font-weight:750;font-size:16px;line-height:1.4;cursor:pointer}.sh-hard-sc-option:hover{border-color:#657286}.sh-hard-sc-option:focus-visible{outline:3px solid rgba(255,213,31,.28);outline-offset:2px}.sh-hard-sc-option:disabled{cursor:default;opacity:1}.sh-hard-sc-option-num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;display:grid;place-items:center;background:#202b39;color:#cbd4df;font-size:13px;font-weight:950}.sh-hard-sc-option.is-correct{border-color:#2eb67d;background:#103426}.sh-hard-sc-option.is-correct .sh-hard-sc-option-num{background:#2eb67d;color:#071711}.sh-hard-sc-option.is-wrong{border-color:#c85555;background:#351b1b}.sh-hard-sc-option.is-wrong .sh-hard-sc-option-num{background:#b44747;color:#fff}
+.sh-hard-sc-result{display:flex;gap:14px;align-items:center;border-radius:20px;padding:18px 20px;margin:18px 0 14px;border:1px solid}.sh-hard-sc-result.is-correct{background:#0d3224;border-color:#1f8d61}.sh-hard-sc-result.is-wrong{background:#341b1b;border-color:#a34848}.sh-hard-sc-result-icon{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;font-weight:1000;font-size:25px;background:rgba(255,255,255,.1)}.sh-hard-sc-result b{font-size:22px}.sh-hard-sc-result p{margin:4px 0 0;color:#d6dde7}
+.sh-hard-sc-explain{white-space:pre-line;line-height:1.55;background:#121b25;border:1px solid #2a3848;border-radius:20px;padding:18px 20px}
+@media(max-width:620px){.sh-hard-sc-shell{padding:18px 15px;border-radius:20px}.sh-hard-sc-scenario{padding:17px 15px}.sh-hard-sc-facts{grid-template-columns:1fr}.sh-hard-sc-option{padding:14px 13px}.sh-hard-sc-scenario>p{font-size:17px}.sh-hard-sc-top .btn{min-height:44px}.sh-hard-sc-docline{grid-template-columns:1fr;gap:4px}.sh-hard-sc-wants-main strong{font-size:22px}}
+/* ===== end rich HARD situational tasks ===== */
+
+/* ===== SkillHub 2026-09-24 — employee progress KPI contrast fix ===== */
+body[data-role="employee"] #page-progress .kpi small{
+  color:#c7cdd4 !important;
+}
+body[data-role="employee"] #page-progress .kpi strong{
+  color:#ffffff !important;
+}
+/* ===== end progress KPI contrast fix ===== */
+
+/* ===== SkillHub 2026-09-24 — two-step tariff calculation task ===== */
+.sh-tcalc-wrap{max-width:920px;margin:0 auto;padding:8px 0 28px}.sh-tcalc-shell{padding:28px;border-radius:24px}.sh-tcalc-top{justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px;flex-wrap:wrap}.sh-tcalc-kicker{display:inline-flex;align-items:center;min-height:34px;padding:7px 12px;border-radius:999px;background:rgba(255,213,31,.12);border:1px solid rgba(255,213,31,.35);color:#ffd51f;font-size:12px;font-weight:950;letter-spacing:.1em}.sh-tcalc-shell>h2{font-size:clamp(25px,4vw,38px);line-height:1.12;margin:0 0 20px}.sh-tcalc-scenario{position:relative;overflow:hidden;background:linear-gradient(145deg,#182334,#101821);border:1px solid #2d3d51;border-radius:24px;padding:22px;margin-bottom:17px}.sh-tcalc-scenario:after{content:"";position:absolute;right:-55px;top:-65px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,213,31,.12),rgba(255,213,31,0) 68%);pointer-events:none}.sh-tcalc-scenario-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;position:relative;z-index:1}.sh-tcalc-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#ffd51f;color:#11151b;font-size:23px;font-weight:1000}.sh-tcalc-scenario-head span{display:block;color:#93a2b5;font-size:11px;font-weight:950;letter-spacing:.13em;margin-bottom:3px}.sh-tcalc-scenario-head b{font-size:18px;color:#fff}.sh-tcalc-scenario>p{position:relative;z-index:1;margin:0;color:#f6f8fb;font-size:clamp(17px,2.4vw,21px);line-height:1.5}.sh-tcalc-facts{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:15px}.sh-tcalc-fact{background:rgba(7,12,18,.45);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:11px 13px;min-width:0}.sh-tcalc-fact span{display:block;color:#8f9cad;font-size:11px;font-weight:800;margin-bottom:3px}.sh-tcalc-fact strong{display:block;color:#fff;font-size:16px;line-height:1.3;overflow-wrap:anywhere}.sh-tcalc-fact.tone-accent{border-color:rgba(255,213,31,.28);background:rgba(255,213,31,.045)}.sh-tcalc-wants{position:relative;z-index:1;margin-top:14px;padding:15px 16px;border-radius:17px;background:linear-gradient(135deg,rgba(255,213,31,.13),rgba(255,213,31,.045));border:1px solid rgba(255,213,31,.35)}.sh-tcalc-wants>span{display:block;color:#ffd51f;font-size:10px;font-weight:950;letter-spacing:.13em;margin-bottom:4px}.sh-tcalc-wants>b{display:block;color:#fff;font-size:18px}.sh-tcalc-wants>div{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:9px}.sh-tcalc-wants strong{font-size:24px;color:#fff}.sh-tcalc-wants em{font-style:normal;color:#dce3ec;font-weight:800}.sh-tcalc-wants small{display:block;color:#aab6c4;margin-top:6px}.sh-tcalc-progress{display:flex;align-items:center;gap:8px;margin:4px 0 14px}.sh-tcalc-progress span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#242f3d;border:1px solid #3b4858;color:#aeb8c5;font-weight:950;font-size:13px}.sh-tcalc-progress span.active{background:#ffd51f;border-color:#ffd51f;color:#11151b}.sh-tcalc-progress span.done{background:#1f8d61;border-color:#2eb67d;color:#fff}.sh-tcalc-progress i{display:block;width:34px;height:2px;background:#394655}.sh-tcalc-progress b{margin-left:4px;color:#b6c0cd;font-size:13px}.sh-tcalc-question{border:1px solid rgba(255,213,31,.38);background:linear-gradient(180deg,rgba(255,213,31,.10),rgba(255,213,31,.035));border-radius:20px;padding:17px 18px;margin-bottom:14px}.sh-tcalc-question span{display:block;color:#ffd51f;font-size:11px;font-weight:950;letter-spacing:.13em;margin-bottom:7px}.sh-tcalc-question strong{display:block;color:#fff;font-size:clamp(18px,2.4vw,22px);line-height:1.4}.sh-tcalc-form{background:#10161e;border:1px solid #293646;border-radius:20px;padding:18px;display:grid;gap:10px}.sh-tcalc-form>label{color:#dce3eb;font-weight:800}.sh-tcalc-input{display:flex;align-items:center;gap:10px;background:#0f141b;border:2px solid #344150;border-radius:18px;padding:5px 16px;max-width:410px}.sh-tcalc-input:focus-within{border-color:#ffd51f;box-shadow:0 0 0 3px rgba(255,213,31,.12)}.sh-tcalc-input input{min-width:0;flex:1;border:0!important;outline:0;background:transparent!important;color:#fff;font-size:24px;font-weight:800;padding:13px 0!important;box-shadow:none!important}.sh-tcalc-input span{font-size:21px;font-weight:900;color:#ffd51f}.sh-tcalc-form small{color:#8f9baa}.sh-tcalc-form .btn{justify-self:start}.sh-tcalc-answer-readonly{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#10161e;border:1px solid #2d3948;border-radius:18px;padding:16px 18px;margin-bottom:14px}.sh-tcalc-answer-readonly span{color:#9ca8b7}.sh-tcalc-answer-readonly strong{font-size:24px}.sh-tcalc-result{display:flex;gap:14px;align-items:center;border-radius:20px;padding:18px 20px;margin:17px 0 13px;border:1px solid}.sh-tcalc-result.is-correct{background:#0d3224;border-color:#1f8d61}.sh-tcalc-result.is-wrong{background:#341b1b;border-color:#a34848}.sh-tcalc-result-icon{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;font-weight:1000;font-size:25px;background:rgba(255,255,255,.1)}.sh-tcalc-result b{font-size:21px}.sh-tcalc-result p{margin:4px 0 0;color:#d6dde7}.sh-tcalc-explain{background:#121b25;border:1px solid #2a3848;border-radius:20px;padding:17px 19px;margin-bottom:14px}.sh-tcalc-explain>b{color:#ffd51f}.sh-tcalc-explain p{margin:7px 0 0;color:#f2f5f8;font-size:17px;line-height:1.5}.sh-tcalc-explain small{display:block;margin-top:8px;color:#aeb8c5;line-height:1.5}.sh-tcalc-next{display:flex;justify-content:flex-end}.sh-tcalc-client{background:#121b25;border:1px solid #314154;border-radius:20px;padding:17px 18px;margin-bottom:14px}.sh-tcalc-client span{display:block;color:#9eabba;font-size:11px;font-weight:950;letter-spacing:.12em;margin-bottom:7px}.sh-tcalc-client p{margin:0;color:#fff;font-size:19px;line-height:1.45;font-weight:750}.sh-tcalc-options{display:grid;gap:10px}.sh-tcalc-option{width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;background:#10161e;border:1px solid #313d4b;color:#f3f6fa;border-radius:18px;padding:16px 17px;font:inherit;line-height:1.4;cursor:pointer}.sh-tcalc-option>span{width:30px;height:30px;flex:0 0 30px;border-radius:10px;display:grid;place-items:center;background:#202b39;color:#cbd4df;font-size:13px;font-weight:950}.sh-tcalc-option>b{font-size:15px}.sh-tcalc-option:disabled{cursor:default;opacity:1}.sh-tcalc-option.is-correct{border-color:#2eb67d;background:#103426}.sh-tcalc-option.is-correct>span{background:#2eb67d;color:#071711}.sh-tcalc-option.is-wrong{border-color:#c85555;background:#351b1b}.sh-tcalc-option.is-wrong>span{background:#b44747;color:#fff}.sh-tcalc-compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:0 0 14px}.sh-tcalc-compare>div{background:#10161e;border:1px solid #2c3948;border-radius:16px;padding:13px}.sh-tcalc-compare span{display:block;color:#8f9cad;font-size:11px;font-weight:800;margin-bottom:4px}.sh-tcalc-compare strong{display:block;color:#fff;font-size:19px}.sh-tcalc-compare small{display:block;color:#aeb8c5;margin-top:4px}.sh-tcalc-source{margin-top:14px}
+@media(max-width:620px){.sh-tcalc-shell{padding:18px 15px;border-radius:20px}.sh-tcalc-scenario{padding:17px 15px}.sh-tcalc-facts{grid-template-columns:1fr}.sh-tcalc-form{padding:15px}.sh-tcalc-input{max-width:none}.sh-tcalc-form .btn{width:100%;justify-content:center}.sh-tcalc-answer-readonly{align-items:flex-start;flex-direction:column}.sh-tcalc-client p{font-size:17px}.sh-tcalc-compare{grid-template-columns:1fr}.sh-tcalc-next .btn{width:100%;justify-content:center}}
+/* ===== end two-step tariff calculation task ===== */
+
+/* ===== SkillHub 2026-09-24 — polished tariff case layout v5 ===== */
+.sh-tcalc-wrap{max-width:960px}
+.sh-tcalc-shell{padding:30px;border-radius:26px}
+.sh-tcalc-shell>h2{max-width:760px;margin-bottom:22px}
+.sh-tcalc-scenario{padding:23px 23px 21px;border-radius:24px;background:linear-gradient(145deg,#192536 0%,#111923 62%,#101720 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.sh-tcalc-scenario-head{margin-bottom:16px}
+.sh-tcalc-icon{box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.sh-tcalc-meta{position:relative;z-index:1;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:9px;margin:0 0 14px}
+.sh-tcalc-meta>div{min-width:0;padding:10px 12px;border-radius:14px;background:rgba(7,12,18,.42);border:1px solid rgba(255,255,255,.07)}
+.sh-tcalc-meta span{display:block;color:#8593a5;font-size:9px;font-weight:950;letter-spacing:.11em;margin-bottom:3px}
+.sh-tcalc-meta strong{display:block;color:#f8fafc;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.sh-tcalc-scenario>p{padding:0 1px;color:#dfe6ef;font-size:16px;line-height:1.55}
+.sh-tcalc-conditions-title{position:relative;z-index:1;margin:16px 0 8px;color:#9aa8b9;font-size:10px;font-weight:950;letter-spacing:.13em}
+.sh-tcalc-facts{margin-top:0;gap:9px}
+.sh-tcalc-fact{padding:12px 13px;border-radius:14px;background:rgba(7,12,18,.42)}
+.sh-tcalc-fact span{font-size:10px;letter-spacing:.015em;color:#8f9cad}
+.sh-tcalc-fact strong{font-size:16px;line-height:1.32}
+.sh-tcalc-fact.tone-accent{border-color:rgba(255,213,31,.34);background:rgba(255,213,31,.055)}
+.sh-tcalc-wants{margin-top:14px;padding:15px 16px 14px;border-radius:17px;background:linear-gradient(135deg,rgba(255,213,31,.14),rgba(255,213,31,.045));border-color:rgba(255,213,31,.38)}
+.sh-tcalc-wants-head>span{display:block;color:#ffd51f;font-size:10px;font-weight:950;letter-spacing:.13em;margin-bottom:4px}
+.sh-tcalc-wants-head>b{display:block;color:#fff;font-size:17px;line-height:1.35}
+.sh-tcalc-wants-main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:9px}
+.sh-tcalc-wants-main strong{font-size:28px;line-height:1;color:#fff;letter-spacing:-.02em}
+.sh-tcalc-wants-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sh-tcalc-wants-meta span{display:inline-flex;align-items:center;min-height:27px;padding:4px 9px;border-radius:999px;background:rgba(7,12,18,.42);border:1px solid rgba(255,255,255,.08);color:#bec9d6;font-size:11px;font-weight:800}
+.sh-tcalc-progress{margin:5px 0 15px;padding:0 2px}
+.sh-tcalc-progress b{color:#c1cad5}
+.sh-tcalc-question{padding:18px 19px;border-radius:20px}
+.sh-tcalc-question strong{max-width:760px}
+.sh-tcalc-form{padding:18px 19px;background:#111821}
+.sh-tcalc-form>label{font-size:14px}
+.sh-tcalc-client{display:flex;align-items:flex-start;gap:13px;padding:16px 17px;background:linear-gradient(135deg,rgba(255,213,31,.09),rgba(18,27,37,.95));border-color:rgba(255,213,31,.28)}
+.sh-tcalc-client-mark{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border-radius:12px;background:#ffd51f;color:#11151b;font-size:15px;font-weight:1000}
+.sh-tcalc-client>div:last-child{min-width:0}
+.sh-tcalc-client span{color:#ffd51f;margin-bottom:5px}
+.sh-tcalc-client p{font-size:18px;line-height:1.45;font-weight:780}
+.sh-tcalc-option{padding:16px 17px;border-radius:18px;transition:border-color .15s ease,background .15s ease}
+@media(hover:hover) and (pointer:fine){.sh-tcalc-option:not(:disabled):hover{border-color:#667488;background:#131b25}}
+.sh-tcalc-option:focus-visible{outline:3px solid rgba(255,213,31,.27);outline-offset:2px}
+.sh-tcalc-compare>div:last-child{border-color:rgba(70,211,151,.32);background:rgba(26,91,64,.15)}
+@media(max-width:720px){.sh-tcalc-meta{grid-template-columns:1fr 1fr}.sh-tcalc-meta>div:first-child{grid-column:1/-1}}
+@media(max-width:620px){.sh-tcalc-shell{padding:18px 14px}.sh-tcalc-scenario{padding:17px 15px}.sh-tcalc-meta{grid-template-columns:1fr;gap:7px}.sh-tcalc-meta>div:first-child{grid-column:auto}.sh-tcalc-scenario>p{font-size:15px}.sh-tcalc-wants-main strong{font-size:25px}.sh-tcalc-client{gap:10px}.sh-tcalc-client-mark{width:32px;height:32px;flex-basis:32px}.sh-tcalc-client p{font-size:17px}}
+/* ===== end polished tariff case layout v5 ===== */
+
+/* SkillHub 2026-09-24 — tariff savings numeric step */
+.sh-tcalc-step2-conditions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+.sh-tcalc-step2-conditions>div{min-width:0;padding:14px 16px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.035)}
+.sh-tcalc-step2-conditions span{display:block;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.02em;margin-bottom:5px}
+.sh-tcalc-step2-conditions strong{display:block;color:var(--text);font-size:17px;line-height:1.25}
+@media(max-width:760px){.sh-tcalc-step2-conditions{grid-template-columns:1fr}.sh-tcalc-step2-conditions>div{padding:12px 14px}}
+
+/* =========================================================
+   SkillHub V8 — light theme
+   Theme preference is stored locally on each device/browser.
+   ========================================================= */
+html[data-theme="light"]{
+  --bg:#f4f5f7;
+  --panel:#ffffff;
+  --panel2:#f7f7f8;
+  --ink:#171719;
+  --muted:#6f7077;
+  --line:#dedfe3;
+  --primary:#ffdd2d;
+  --violet:#ffdd2d;
+  --green:#11875f;
+  --orange:#a96500;
+  --red:#c43d4d;
+  color-scheme:light;
+}
+html[data-theme="light"],html[data-theme="light"] body{background:#f4f5f7;color:#171719}
+html[data-theme="light"] .main{background:radial-gradient(circle at 92% 2%,rgba(255,221,45,.18),transparent 24%),#f4f5f7}
+html[data-theme="light"] .sidebar{background:#ffffff;border-color:#e0e1e5;box-shadow:8px 0 30px rgba(0,0,0,.035)}
+html[data-theme="light"] .brand-skill{color:#171719}
+html[data-theme="light"] .brand small,html[data-theme="light"] .topbar p,html[data-theme="light"] .muted,html[data-theme="light"] .meta{color:#73747b}
+html[data-theme="light"] .nav-btn{color:#676870}
+html[data-theme="light"] .nav-btn:hover{background:#f1f2f4;color:#171719}
+html[data-theme="light"] .nav-btn.active{background:#ffdd2d;color:#101012}
+html[data-theme="light"] .sync-card{background:#f7f7f8;border-color:#e0e1e5;color:#171719}
+html[data-theme="light"] .profile{background:#ffffff;border-color:#dedfe3;color:#171719}
+html[data-theme="light"] .profile-menu{background:#ffffff;border-color:#dedfe3;box-shadow:0 18px 50px rgba(0,0,0,.12)}
+html[data-theme="light"] .profile-menu button{color:#171719}
+html[data-theme="light"] .profile-menu button:hover{background:#f1f2f4}
+html[data-theme="light"] .card,
+html[data-theme="light"] .train-card,
+html[data-theme="light"] .topic,
+html[data-theme="light"] .option,
+html[data-theme="light"] .review-item,
+html[data-theme="light"] .review-option,
+html[data-theme="light"] .sh74-team-row,
+html[data-theme="light"] .sh74-review-card,
+html[data-theme="light"] .sh742-quick,
+html[data-theme="light"] .sh742-manual-kpi,
+html[data-theme="light"] .sh742-manual-item{background:#ffffff;border-color:#dedfe3;color:#171719;box-shadow:0 10px 28px rgba(18,20,24,.055)}
+html[data-theme="light"] .topic:hover,html[data-theme="light"] .option:hover{border-color:#cfaa00}
+html[data-theme="light"] .kpi{background:#ffffff;color:#171719;border-color:#dedfe3}
+html[data-theme="light"] .kpi small{color:#777981}html[data-theme="light"] .kpi strong{color:#171719}
+html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] textarea{background:#ffffff;border-color:#d6d7dc;color:#171719}
+html[data-theme="light"] input::placeholder,html[data-theme="light"] textarea::placeholder{color:#9a9ba2}
+html[data-theme="light"] .btn.secondary{background:#f0f1f3;color:#171719;border-color:#d8d9dd}
+html[data-theme="light"] .btn.secondary:hover{background:#e8e9ec}
+html[data-theme="light"] .btn.ghost{background:#ffffff;color:#171719;border-color:#d2d3d7}
+html[data-theme="light"] .modal{background:rgba(30,31,35,.34)}
+html[data-theme="light"] .modal-card{background:#ffffff;border-color:#dedfe3;color:#171719;box-shadow:0 22px 70px rgba(0,0,0,.18)}
+html[data-theme="light"] .toast{background:#171719;color:#ffffff}
+html[data-theme="light"] .offline-banner{background:#fff5c9;border-color:#e6c95b;color:#645100}
+html[data-theme="light"] .code-card,html[data-theme="light"] .adaptive-rule,html[data-theme="light"] .import-box{background:#f7f7f8;border-color:#dfe0e4;color:#303137}
+html[data-theme="light"] .table td,html[data-theme="light"] .table th,html[data-theme="light"] .content-row,html[data-theme="light"] .employee-row,html[data-theme="light"] .assignment,html[data-theme="light"] .notification{border-color:#e3e4e7}
+html[data-theme="light"] .tab{background:#ffffff;color:#66676e;border-color:#dadbdf}
+html[data-theme="light"] .tab.active{background:#ffdd2d;border-color:#ffdd2d;color:#111113}
+html[data-theme="light"] .progress{background:#e7e8eb}
+html[data-theme="light"] .bubble.client{background:#f0f1f3;color:#171719}
+html[data-theme="light"] .bubble.worker{background:#fff0a8;color:#171719}
+html[data-theme="light"] .explain{background:#fff7d6;color:#3b3520;border:1px solid #ead887}
+html[data-theme="light"] .review-option.right{background:#e8f8f1;border-color:#8bcfb5}
+html[data-theme="light"] .review-option.picked-wrong{background:#fff0f2;border-color:#e4a1aa}
+html[data-theme="light"] .sh742-quick small,html[data-theme="light"] .sh742-manual-kpi small{color:#73747b}
+html[data-theme="light"] .sh74-profile-meta>div{background:#f3f4f6}
+html[data-theme="light"] .sh745-rework-item{border-color:#e4e5e8}
+html[data-theme="light"] .sh745-rework-comment{background:#fff5c7;color:#4a3c00}
+html[data-theme="light"] .sh-tcalc-shell,
+html[data-theme="light"] .sh-scenario-shell,
+html[data-theme="light"] .sh-hard-flow-shell{background:#ffffff!important;color:#171719!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-tcalc-scenario,
+html[data-theme="light"] .sh-tcalc-question,
+html[data-theme="light"] .sh-tcalc-step2-conditions>div,
+html[data-theme="light"] .sh-tcalc-answer-readonly,
+html[data-theme="light"] .sh-tcalc-explain,
+html[data-theme="light"] .sh-tcalc-compare>div,
+html[data-theme="light"] .sh-tcalc-option{background:#f7f7f8!important;color:#171719!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-tcalc-client{background:#fff6c9!important;color:#171719!important;border-color:#ead264!important}
+html[data-theme="light"] .sh-tcalc-fact{background:#ffffff!important;color:#171719!important;border-color:#e2e3e6!important}
+html[data-theme="light"] .sh-tcalc-meta>div{background:#f7f7f8!important;border-color:#e2e3e6!important}
+html[data-theme="light"] .sh-tcalc-scenario p,html[data-theme="light"] .sh-tcalc-explain small,html[data-theme="light"] .sh-tcalc-form small{color:#6f7077!important}
+html[data-theme="light"] .sh-tcalc-input input{background:#ffffff!important;color:#171719!important;border-color:#d6d7dc!important}
+html[data-theme="light"] .sh-tcalc-option.is-correct{background:#e8f8f1!important;border-color:#71bd9e!important}
+html[data-theme="light"] .sh-tcalc-option.is-wrong{background:#fff0f2!important;border-color:#dd909b!important}
+html[data-theme="light"] .login-screen{background:radial-gradient(circle at 82% 12%,rgba(255,221,45,.26),transparent 30%),#f4f5f7}
+html[data-theme="light"] .login-card{background:#ffffff;color:#171719;box-shadow:0 24px 65px rgba(0,0,0,.12)}
+html[data-theme="light"] .top-bell{background:#ffffff;border:1px solid #dedfe3;color:#171719;box-shadow:0 8px 22px rgba(0,0,0,.06)}
+html[data-theme="light"] .top-bell:hover{background:#f1f2f4;border-color:#d4d5da}
+html[data-theme="light"] .top-bell svg{stroke:#171719}
+html[data-theme="light"] .top-bell .badge{background:#ff5a5f;color:#ffffff}
+@media(max-width:720px){html[data-theme="light"] .sidebar{background:#ffffff;border-color:#dedfe3}}
+
+/* ===== SkillHub 2026-09-24 — employee progress contrast fix for light theme ===== */
+html[data-theme="light"] body[data-role="employee"] #page-progress .kpi{
+  background:#ffffff !important;
+  border-color:#dedfe3 !important;
+  color:#171719 !important;
+}
+html[data-theme="light"] body[data-role="employee"] #page-progress .kpi small{
+  color:#61636b !important;
+}
+html[data-theme="light"] body[data-role="employee"] #page-progress .kpi strong{
+  color:#171719 !important;
+}
+html[data-theme="light"] body[data-role="employee"] #pageSub{
+  color:#61636b !important;
+}
+html[data-theme="light"] body[data-role="employee"] #page-progress .section-title h2,
+html[data-theme="light"] body[data-role="employee"] #page-progress .table td,
+html[data-theme="light"] body[data-role="employee"] #page-progress .table b,
+html[data-theme="light"] body[data-role="employee"] #page-progress .table .muted,
+html[data-theme="light"] body[data-role="employee"] #page-progress .adaptive-rule{
+  color:#171719;
+}
+html[data-theme="light"] body[data-role="employee"] #page-progress .table th{
+  color:#6f7077;
+}
+/* ===== end employee progress contrast fix for light theme ===== */
+
+/* ===== SkillHub 2026-09-24 — light theme modal / picker cleanup ===== */
+html[data-theme="light"] .hint{
+  background:#f7f7f8 !important;
+  border-color:#dfe0e4 !important;
+  color:#5f6168 !important;
+}
+html[data-theme="light"] .modal-head h2,
+html[data-theme="light"] .field label,
+html[data-theme="light"] .section-title h2{
+  color:#171719 !important;
+}
+html[data-theme="light"] .as-material-picker{
+  background:#ffffff !important;
+  border-color:#dedfe3 !important;
+  box-shadow:inset 0 1px 0 rgba(0,0,0,.02);
+}
+html[data-theme="light"] .as-material-group-title{
+  background:#ffffff !important;
+  color:#b48500 !important;
+  border-bottom:1px solid #ececef;
+}
+html[data-theme="light"] .as-material-group-title span,
+html[data-theme="light"] .as-material-item small,
+html[data-theme="light"] .as-material-footer .meta{
+  color:#76777e !important;
+}
+html[data-theme="light"] .as-material-item{
+  color:#171719 !important;
+}
+html[data-theme="light"] .as-material-item:hover{
+  background:#f4f5f7 !important;
+}
+html[data-theme="light"] .as-material-item input{
+  accent-color:#ffdd2d;
+}
+html[data-theme="light"] .as-material-footer{
+  border-top:1px solid #ececef;
+  padding-top:8px;
+}
+
+/* manual review / free answer surfaces */
+html[data-theme="light"] .manual-status-box,
+html[data-theme="light"] .review-current-answer,
+html[data-theme="light"] .review-prompt,
+html[data-theme="light"] .sh74-run-card,
+html[data-theme="light"] .sh74-answer-panel,
+html[data-theme="light"] .sh74-result-stats{
+  background:#ffffff !important;
+  color:#171719 !important;
+  border-color:#dedfe3 !important;
+}
+html[data-theme="light"] .review-prompt small,
+html[data-theme="light"] .sh74-success p,
+html[data-theme="light"] .sh74-run-counter,
+html[data-theme="light"] .sh74-answer-panel label,
+html[data-theme="light"] .sh74-result-stats small,
+html[data-theme="light"] .manual-status-box small{
+  color:#6f7077 !important;
+}
+html[data-theme="light"] .sh74-prompt{
+  background:#fff7d6 !important;
+  color:#171719 !important;
+}
+html[data-theme="light"] .sh74-answer-panel textarea{
+  background:#ffffff !important;
+  color:#171719 !important;
+  border-color:#d6d7dc !important;
+}
+html[data-theme="light"] .sh74-run-top .back{
+  color:#171719 !important;
+}
+/* ===== end light theme modal / picker cleanup ===== */
+
+/* ===== SkillHub 2026-09-24 — grouped manual review cards v8.6 ===== */
+.sh-manual-review-section{margin-top:16px}
+.sh-manual-review-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:10px}
+.sh-manual-review-head h2{margin:0;font-size:22px}.sh-manual-review-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.sh-manual-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sh-manual-review-card{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:13px;text-align:left;border:1px solid #303034;background:#171719;color:#f4f4f5;border-radius:18px;padding:14px 15px;cursor:pointer;transition:.15s ease}
+.sh-manual-review-card:hover{border-color:#625d2a;transform:translateY(-1px)}
+.sh-manual-review-avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#ffdd2d;color:#111113;font-weight:950;font-size:13px}
+.sh-manual-review-copy{min-width:0;display:grid;gap:2px}.sh-manual-review-copy>b{font-size:15px}.sh-manual-review-copy>strong{font-size:13px;color:#ffdd2d}.sh-manual-review-copy>small{font-size:11px;color:#9b9ba2}.sh-manual-review-copy>em{font-size:11px;color:#c2c2c7;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-manual-review-open{white-space:nowrap;border-radius:11px;padding:8px 10px;background:#27272a;color:#fff;font-size:12px;font-weight:900}
+.sh-manual-review-empty{border:1px solid #303034;background:#171719;border-radius:18px;padding:17px;color:var(--muted)}
+.sh-manual-review-modal-kicker{display:inline-flex;margin-bottom:5px;padding:5px 8px;border-radius:999px;background:#fff1a8;color:#6c5400;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+.sh-manual-review-progress{height:6px;background:#29292d;border-radius:99px;overflow:hidden;margin:-2px 0 14px}.sh-manual-review-progress>span{display:block;height:100%;background:#ffdd2d}
+.sh-manual-review-next{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#111113;border:1px solid #303034}.sh-manual-review-next span{color:var(--muted);font-size:11px}.sh-manual-review-next b{font-size:12px;text-align:right}
+.sh-manual-history-details{margin-top:16px}.sh-manual-history-details>summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:800}
+html[data-theme="light"] .sh-manual-review-card,html[data-theme="light"] .sh-manual-review-empty{background:#fff;color:#171719;border-color:#dedfe3;box-shadow:0 8px 24px rgba(0,0,0,.045)}
+html[data-theme="light"] .sh-manual-review-card:hover{border-color:#c9ae31;background:#fffdf3}
+html[data-theme="light"] .sh-manual-review-copy>strong{color:#8b6a00}html[data-theme="light"] .sh-manual-review-copy>small{color:#6f7077}html[data-theme="light"] .sh-manual-review-copy>em{color:#55565d}
+html[data-theme="light"] .sh-manual-review-open{background:#f0f1f3;color:#171719}
+html[data-theme="light"] .sh-manual-review-progress{background:#e7e8eb}
+html[data-theme="light"] .sh-manual-review-next{background:#f7f7f8;border-color:#dedfe3;color:#171719}
+@media(max-width:820px){.sh-manual-review-grid{grid-template-columns:1fr}.sh-manual-review-card{grid-template-columns:auto minmax(0,1fr)}.sh-manual-review-open{grid-column:2;justify-self:start}.sh-manual-review-head{align-items:flex-start}.sh-manual-review-head .pill{flex:0 0 auto}}
+/* ===== end grouped manual review cards v8.6 ===== */
+
+/* ===== SkillHub v8.7 — RG self-practice sandbox ===== */
+.rg-demo-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,rgba(255,221,45,.12),rgba(255,221,45,.035));margin-bottom:14px}.rg-demo-intro h2{font-size:28px;margin:7px 0}.rg-demo-intro p{margin:0;color:var(--muted);max-width:680px;line-height:1.45}.rg-demo-kicker{color:#ffdd2d;font-size:11px;font-weight:950;letter-spacing:.11em}.rg-demo-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.rg-demo-steps>div{display:flex;align-items:center;gap:10px;padding:13px 15px;border:1px solid var(--line);background:var(--panel);border-radius:16px}.rg-demo-steps b{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#ffdd2d;color:#111;font-size:14px}.rg-demo-steps span{font-size:13px;font-weight:850}.rg-demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.rg-demo-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}.rg-demo-card-head h3{margin:0;font-size:19px}.rg-demo-card-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.rg-demo-case-list{display:grid;gap:8px}.rg-demo-case,.rg-demo-review-row{width:100%;border:1px solid var(--line);background:#131517;color:var(--ink);border-radius:15px;padding:13px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;cursor:pointer}.rg-demo-case:hover,.rg-demo-review-row:hover{border-color:#ffdd2d}.rg-demo-case span,.rg-demo-review-row span:first-child{min-width:0}.rg-demo-case b,.rg-demo-review-row b{display:block}.rg-demo-case small,.rg-demo-review-row small{display:block;color:var(--muted);margin-top:3px}.rg-demo-case em,.rg-demo-review-row>span:last-child{font-style:normal;color:#ffdd2d;font-size:12px;font-weight:900;white-space:nowrap}.rg-demo-empty{padding:20px 10px;text-align:center;color:var(--muted)}.rg-demo-subhead{margin:16px 0 8px;font-size:12px;font-weight:900;color:#ffdd2d}.rg-demo-run{max-width:820px}.rg-demo-run .manual-prompt{font-size:18px}
+html[data-theme="light"] .rg-demo-intro{background:linear-gradient(135deg,#fff8d8,#ffffff);border-color:#e2e3e6}.rg-demo-kicker{color:#b98500}html[data-theme="light"] .rg-demo-steps>div,html[data-theme="light"] .rg-demo-case,html[data-theme="light"] .rg-demo-review-row{background:#fff;color:#171719;border-color:#dedfe3}html[data-theme="light"] .rg-demo-case:hover,html[data-theme="light"] .rg-demo-review-row:hover{background:#fffdf2;border-color:#cfaa00}html[data-theme="light"] .rg-demo-case em,html[data-theme="light"] .rg-demo-review-row>span:last-child,html[data-theme="light"] .rg-demo-subhead{color:#9a7200}
+@media(max-width:900px){.rg-demo-grid{grid-template-columns:1fr}.rg-demo-steps{grid-template-columns:1fr}.rg-demo-intro{flex-direction:column}.rg-demo-intro .btn{width:100%}}
+/* ===== end RG self-practice sandbox ===== */
+
+
+/* ===== SkillHub RG demo personal results v8.9 ===== */
+.rg-demo-results{margin:14px 0 16px}.rg-demo-results-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:9px}.rg-demo-results-head h3{margin:0;font-size:19px}.rg-demo-results-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.rg-demo-result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.rg-demo-result-card{width:100%;min-width:0;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:17px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;text-align:left;cursor:pointer}.rg-demo-result-card:hover{border-color:#ffdd2d}.rg-demo-result-icon{width:38px;height:38px;border-radius:12px;background:rgba(255,221,45,.13);display:grid;place-items:center;font-size:19px}.rg-demo-result-card>span:nth-child(2){min-width:0}.rg-demo-result-card small{display:block;color:var(--muted);font-size:11px;font-weight:800}.rg-demo-result-card strong{display:block;margin-top:3px;font-size:22px;line-height:1.1}.rg-demo-result-card em{display:block;margin-top:4px;color:var(--muted);font-size:11px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rg-demo-result-card>b{grid-column:2;color:#ffdd2d;font-size:12px}.rg-demo-results+.rg-demo-steps{margin-top:4px}html[data-theme="light"] .rg-demo-result-card{background:#fff;color:#171719;border-color:#dedfe3}html[data-theme="light"] .rg-demo-result-card:hover{background:#fffdf2;border-color:#cfaa00}html[data-theme="light"] .rg-demo-result-card>b{color:#946d00}html[data-theme="light"] .rg-demo-result-icon{background:#fff3b0}@media(max-width:900px){.rg-demo-result-grid{grid-template-columns:1fr}}
+/* ===== end RG demo personal results ===== */
+
+/* ===== SkillHub 2026-09-24 — HARD block titles contrast in light theme ===== */
+html[data-theme="light"] .sh-hard-block-card{
+  background:#2f3438 !important;
+  border-color:#3b4147 !important;
+  color:#ffffff !important;
+}
+html[data-theme="light"] .sh-hard-block-card:hover{
+  background:#383e43 !important;
+  border-color:#d4ad00 !important;
+}
+html[data-theme="light"] .sh-hard-block-copy b{
+  color:#ffffff !important;
+}
+html[data-theme="light"] .sh-hard-block-copy small{
+  color:#d7d9dd !important;
+}
+html[data-theme="light"] .sh-hard-block-arrow{
+  color:#ffdd2d !important;
+}
+/* ===== end HARD block titles contrast in light theme ===== */
+
+/* ===== SkillHub V8.11 — Soft Skills explanation redesign ===== */
+.sh-soft-review{display:grid;gap:12px;margin-top:16px}
+.sh-soft-review-head{display:flex;flex-direction:column;gap:5px;padding:2px 2px 0}
+.sh-soft-review-head>span{color:#9299a3;font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.sh-soft-review-head>b{color:#f4f4f5;font-size:16px;line-height:1.35}
+.sh-soft-signals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sh-soft-signal{background:#17191d;border:1px solid #30343a;border-radius:16px;padding:13px 14px}
+.sh-soft-signal span{display:block;color:#9198a1;font-size:11px;font-weight:800;margin-bottom:5px}
+.sh-soft-signal strong{display:block;color:#f5f5f6;font-size:14px;line-height:1.4}
+.sh-soft-best,.sh-soft-others{border-radius:17px;padding:15px 16px}
+.sh-soft-best{background:linear-gradient(135deg,rgba(54,188,126,.13),rgba(54,188,126,.055));border:1px solid rgba(72,211,151,.38)}
+.sh-soft-others{background:linear-gradient(135deg,rgba(255,221,45,.09),rgba(255,221,45,.035));border:1px solid rgba(255,221,45,.28)}
+.sh-soft-card-title{font-size:13px;font-weight:950;margin-bottom:7px}
+.sh-soft-best .sh-soft-card-title{color:#6fdda8}
+.sh-soft-others .sh-soft-card-title{color:#f3d54e}
+.sh-soft-best p,.sh-soft-others p{margin:0;color:#dfe3e8;font-size:14px;line-height:1.55}
+html[data-theme="light"] .sh-soft-review-head>span{color:#777981}
+html[data-theme="light"] .sh-soft-review-head>b{color:#171719}
+html[data-theme="light"] .sh-soft-signal{background:#fff;border-color:#dedfe3}
+html[data-theme="light"] .sh-soft-signal span{color:#74767d}
+html[data-theme="light"] .sh-soft-signal strong{color:#171719}
+html[data-theme="light"] .sh-soft-best{background:#eef9f4;border-color:#a8d9c3}
+html[data-theme="light"] .sh-soft-others{background:#fff9df;border-color:#e8d67c}
+html[data-theme="light"] .sh-soft-best .sh-soft-card-title{color:#16724d}
+html[data-theme="light"] .sh-soft-others .sh-soft-card-title{color:#806600}
+html[data-theme="light"] .sh-soft-best p,html[data-theme="light"] .sh-soft-others p{color:#303238}
+@media(max-width:620px){.sh-soft-signals{grid-template-columns:1fr}.sh-soft-best,.sh-soft-others{padding:14px}}
+/* ===== end Soft Skills explanation redesign ===== */
+
+
+/* ===== SkillHub V8.13 — RG employee-card simulator ===== */
+.rg-demo-self-card{border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:15px;display:grid;gap:13px}
+.rg-demo-self-main{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.rg-demo-self-main .sh74-person-avatar{width:46px;height:46px}
+.rg-demo-self-person{min-width:0}.rg-demo-self-person>b{display:block;font-size:16px}.rg-demo-self-person>small,.rg-demo-self-person>span{display:block;color:var(--muted);margin-top:3px;font-size:11px}.rg-demo-self-person>span{font-size:12px}
+.rg-demo-open-card{white-space:nowrap}
+.rg-demo-self-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.rg-demo-self-metrics>div{border:1px solid var(--line);background:#111315;border-radius:14px;padding:12px}.rg-demo-self-metrics span{display:block;color:var(--muted);font-size:11px;font-weight:850}.rg-demo-self-metrics strong{display:block;font-size:21px;margin-top:4px}.rg-demo-self-metrics small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.rg-demo-self-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}.rg-demo-self-actions>span{color:var(--muted);font-size:11px;font-weight:800;margin-right:auto}
+.rg-demo-modal-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}.rg-demo-modal-kpis>div{border:1px solid var(--line);background:#111315;border-radius:13px;padding:10px}.rg-demo-modal-kpis small{display:block;color:var(--muted);font-size:10px}.rg-demo-modal-kpis strong{display:block;font-size:18px;margin-top:4px}.rg-demo-card-hint{margin-bottom:12px}
+html[data-theme="light"] .rg-demo-self-card,html[data-theme="light"] .rg-demo-self-metrics>div,html[data-theme="light"] .rg-demo-modal-kpis>div{background:#fff;color:#171719;border-color:#dedfe3}
+@media(max-width:720px){.rg-demo-self-main{grid-template-columns:auto 1fr}.rg-demo-open-card{grid-column:1/-1;width:100%}.rg-demo-self-metrics{grid-template-columns:1fr}.rg-demo-modal-kpis{grid-template-columns:repeat(2,1fr)}.rg-demo-self-actions .btn{flex:1}}
+/* ===== end RG employee-card simulator ===== */
+
+/* ===== SkillHub V8.15 — hierarchical modal navigation ===== */
+.sh815-modal-nav{min-height:34px;margin:0 0 8px;display:flex;align-items:center}
+.sh815-back-btn{padding:7px 11px!important;min-height:34px!important;border-radius:10px!important;font-size:13px!important}
+@media(max-width:700px){.sh815-modal-nav{margin-bottom:6px}.sh815-back-btn{width:auto!important;max-width:100%;font-size:12px!important}}
+/* ===== end SkillHub V8.15 ===== */
+
+/* V8.16: no visual changes; RS navigation/demo access only. */
+
+/* SkillHub V8.18 — RG: keep Home/Progress/Notifications accessible on mobile */
+@media(max-width:720px){
+  body[data-role="mentor"] .sidebar nav{
+    display:flex!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    gap:2px;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  body[data-role="mentor"] .sidebar nav::-webkit-scrollbar{display:none}
+  body[data-role="mentor"] .nav-btn{
+    display:flex;
+    flex:0 0 72px;
+    min-width:72px;
+  }
+  body[data-role="mentor"] .nav-btn[data-page="home"],
+  body[data-role="mentor"] .nav-btn[data-page="progress"],
+  body[data-role="mentor"] .nav-btn[data-page="notifications"]{
+    display:flex!important;
+  }
+}
+
+/* ===== SkillHub V8.19 — Progress KPI contrast in dark theme (all roles) =====
+   RG/RS also use the common Progress renderer. Previous fix was employee-only,
+   so mentor/RS KPI values could inherit the old black T-style KPI color.
+   Keep dark theme values explicitly light; light theme rules remain unchanged. */
+html:not([data-theme="light"]) #page-progress .kpi{
+  background:#171719 !important;
+  border-color:#303034 !important;
+  color:#ffffff !important;
+}
+html:not([data-theme="light"]) #page-progress .kpi small{
+  color:#a9abb3 !important;
+}
+html:not([data-theme="light"]) #page-progress .kpi strong{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+/* Also protect bold/numeric values in the progress tables from accidental
+   dark text inheritance while leaving status pills with their own colors. */
+html:not([data-theme="light"]) #page-progress .table td,
+html:not([data-theme="light"]) #page-progress .table b,
+html:not([data-theme="light"]) #page-progress .section-title h2{
+  color:#f4f4f5;
+}
+html:not([data-theme="light"]) #page-progress .table th{
+  color:#9d9da4;
+}
+/* ===== end V8.19 dark progress contrast fix ===== */
+/* SkillHub V8.20 — explanation layout */
+.sh-soft-answer-quote,.sh-soft-alt-quote{border-radius:13px;padding:11px 12px;margin:8px 0 10px;line-height:1.45;background:#101215;border:1px solid #30343a;color:#f5f5f6;font-size:14px}
+.sh-soft-alt-grid{display:grid;gap:10px}.sh-soft-alt-card{border:1px solid #34383e;background:#15171a;border-radius:16px;padding:14px}.sh-soft-alt-title{font-weight:950;color:#f3d54e;margin-bottom:6px}.sh-soft-alt-good,.sh-soft-alt-weak{display:grid;gap:3px;padding-top:8px}.sh-soft-alt-good b{color:#7bd9ab}.sh-soft-alt-weak b{color:#f0be5a}.sh-soft-alt-good span,.sh-soft-alt-weak span{color:#d8dde3;line-height:1.48;font-size:14px}
+.sh-hard-review{display:grid;gap:10px;margin:14px 0}.sh-hard-review-answer{border:1px solid #2f8b70;background:linear-gradient(135deg,#0f3428,#122a24);border-radius:18px;padding:16px}.sh-hard-review-answer span{display:block;color:#7be0b5;font-size:12px;font-weight:950;letter-spacing:.04em;margin-bottom:7px}.sh-hard-review-answer strong{display:block;color:#f4fff9;font-size:17px;line-height:1.5}.sh-hard-review-step{background:#15191f;border:1px solid #303843;border-radius:17px;padding:14px 15px}.sh-hard-review-step-title{color:#ffdd2d;font-weight:950;margin-bottom:6px}.sh-hard-review-step p{margin:0;color:#e0e5ec;line-height:1.55}.sh-hard-review-section-title{font-weight:950;font-size:15px;margin-top:4px}.sh-hard-review-section-title.good{color:#74d9ae}.sh-hard-review-section-title.bad{color:#f0c15c}.sh-hard-wrong-grid{display:grid;gap:9px}.sh-hard-wrong-card{background:#17191d;border:1px solid #373b42;border-radius:17px;padding:14px}.sh-hard-wrong-card>b{display:block;color:#ffdd2d;margin-bottom:8px}.sh-hard-wrong-card>div{margin-top:8px}.sh-hard-wrong-card span{display:block;color:#aeb6c1;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.sh-hard-wrong-card p{margin:3px 0 0;color:#e0e4ea;line-height:1.48}.sh-hard-source-card{background:#12161c;border:1px solid #343b45;border-radius:17px;padding:14px}.sh-hard-source-card span{display:block;color:#aab3bf;font-size:11px;font-weight:900;margin-bottom:5px}.sh-hard-source-card strong{display:block;color:#fff;margin-bottom:5px}.sh-hard-source-card small{display:block;color:#aeb6c1;line-height:1.45}
+/* light theme */
+html[data-theme="light"] .sh-soft-answer-quote,html[data-theme="light"] .sh-soft-alt-quote{background:#fff;border-color:#d9dce1;color:#171719}html[data-theme="light"] .sh-soft-alt-card{background:#fff;border-color:#dfe1e5}html[data-theme="light"] .sh-soft-alt-title{color:#7b6500}html[data-theme="light"] .sh-soft-alt-good b{color:#176f4c}html[data-theme="light"] .sh-soft-alt-weak b{color:#8b5f00}html[data-theme="light"] .sh-soft-alt-good span,html[data-theme="light"] .sh-soft-alt-weak span{color:#3c3f45}html[data-theme="light"] .sh-hard-review-answer{background:#eaf8f1;border-color:#83c9ad}html[data-theme="light"] .sh-hard-review-answer span{color:#146b49}html[data-theme="light"] .sh-hard-review-answer strong{color:#173428}html[data-theme="light"] .sh-hard-review-step,html[data-theme="light"] .sh-hard-wrong-card,html[data-theme="light"] .sh-hard-source-card{background:#fff;border-color:#dde0e4}html[data-theme="light"] .sh-hard-review-step-title{color:#725b00}html[data-theme="light"] .sh-hard-review-step p,html[data-theme="light"] .sh-hard-wrong-card p,html[data-theme="light"] .sh-hard-source-card small{color:#34373d}html[data-theme="light"] .sh-hard-wrong-card>b{color:#725b00}html[data-theme="light"] .sh-hard-wrong-card span,html[data-theme="light"] .sh-hard-source-card span{color:#6f737b}html[data-theme="light"] .sh-hard-source-card strong{color:#171719}html[data-theme="light"] .sh-hard-review-section-title.good{color:#176f4c}html[data-theme="light"] .sh-hard-review-section-title.bad{color:#805d00}
+/* contrast audit */
+.review-num{color:#fff!important;background:#172b4a!important}html[data-theme="light"] .review-num{color:#fff!important;background:#172b4a!important}html[data-theme="light"] .review-tag{color:#555b66!important}html[data-theme="light"] .main,html[data-theme="light"] .page{color:#171719}html[data-theme="light"] .card h1,html[data-theme="light"] .card h2,html[data-theme="light"] .card h3,html[data-theme="light"] .card h4,html[data-theme="light"] .card b,html[data-theme="light"] .card strong,html[data-theme="light"] .assignment b,html[data-theme="light"] .notification b,html[data-theme="light"] .employee-row b,html[data-theme="light"] .content-row b,html[data-theme="light"] .question,html[data-theme="light"] .review-question{color:#171719}html[data-theme="light"] .muted,html[data-theme="light"] .meta,html[data-theme="light"] .train-card p,html[data-theme="light"] .topic small,html[data-theme="light"] .profile small{color:#656970!important}html[data-theme="light"] .assignment,html[data-theme="light"] .notification,html[data-theme="light"] .employee-row,html[data-theme="light"] .content-row{color:#171719}html[data-theme="light"] .option{color:#171719!important;background:#fff!important;border-color:#d8dbe0!important}html[data-theme="light"] .option.correct{background:#e8f8f1!important;border-color:#77c4a4!important;color:#16392b!important}html[data-theme="light"] .option.wrong{background:#fff0f2!important;border-color:#df929e!important;color:#551e27!important}html[data-theme="light"] .topic{color:#171719!important;background:#fff!important;border-color:#d8dbe0!important}html[data-theme="light"] .table{color:#171719}html[data-theme="light"] .table td{color:#25272c}html[data-theme="light"] .table th{color:#656970!important}html[data-theme="light"] .pill:not(.good):not(.warn):not(.bad){background:#eceef1;color:#34373d}html[data-theme="light"] .nav-btn{color:#565b63!important}html[data-theme="light"] .nav-btn:hover,html[data-theme="light"] .nav-btn.active{background:#fff4ad!important;color:#171719!important}html[data-theme="light"] .nav-btn svg,html[data-theme="light"] .top-actions svg{stroke:currentColor!important}html[data-theme="light"] .section-title h2{color:#171719!important}html[data-theme="light"] .review-item,html[data-theme="light"] .review-option{color:#171719!important}html[data-theme="light"] .sh-soft-review-head>b,html[data-theme="light"] .sh-soft-signal strong{color:#171719!important}html:not([data-theme="light"]) .review-num{color:#fff!important}html:not([data-theme="light"]) .review-tag{color:#bfc8d4!important}html:not([data-theme="light"]) .card strong,html:not([data-theme="light"]) .card b,html:not([data-theme="light"]) .question,html:not([data-theme="light"]) .review-question{color:#f5f7fa}
+@media(max-width:620px){.sh-soft-alt-card,.sh-hard-review-step,.sh-hard-wrong-card{padding:13px}}
+html[data-theme="light"]{--bg:#f4f5f7;--panel:#ffffff;--panel2:#ffffff;--ink:#171719;--muted:#656970;--line:#dedfe3;--green:#14835a;--red:#c9384d}
+html[data-theme="light"] .main{background:radial-gradient(circle at 100% 0%,rgba(255,221,45,.10),transparent 24%),var(--bg)!important}
+html[data-theme="light"] .train-card .icon,html[data-theme="light"] .rg-demo-result-icon,html[data-theme="light"] .sh-hard-block-icon{opacity:1!important;filter:none!important}
+
+/* SkillHub V8.21 — complete light/dark contrast pass for Hard and tariff screens */
+html[data-theme="light"] .sh-tcalc-scenario-head b,
+html[data-theme="light"] .sh-tcalc-meta strong,
+html[data-theme="light"] .sh-tcalc-fact strong,
+html[data-theme="light"] .sh-tcalc-wants-head>b,
+html[data-theme="light"] .sh-tcalc-wants-main strong,
+html[data-theme="light"] .sh-tcalc-wants em,
+html[data-theme="light"] .sh-tcalc-question strong,
+html[data-theme="light"] .sh-tcalc-form>label,
+html[data-theme="light"] .sh-tcalc-answer-readonly strong,
+html[data-theme="light"] .sh-tcalc-client p,
+html[data-theme="light"] .sh-tcalc-compare strong,
+html[data-theme="light"] .sh-tcalc-step2-conditions strong{color:#171719!important}
+html[data-theme="light"] .sh-tcalc-scenario-head span,
+html[data-theme="light"] .sh-tcalc-meta span,
+html[data-theme="light"] .sh-tcalc-fact span,
+html[data-theme="light"] .sh-tcalc-conditions-title,
+html[data-theme="light"] .sh-tcalc-progress b,
+html[data-theme="light"] .sh-tcalc-answer-readonly span,
+html[data-theme="light"] .sh-tcalc-compare span,
+html[data-theme="light"] .sh-tcalc-compare small,
+html[data-theme="light"] .sh-tcalc-wants small{color:#656970!important}
+html[data-theme="light"] .sh-tcalc-wants-main em,
+html[data-theme="light"] .sh-tcalc-wants-meta span{color:#4a4c52!important}
+html[data-theme="light"] .sh-tcalc-wants-meta span{background:#fff!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-tcalc-form{background:#f7f7f8!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-tcalc-input{background:#fff!important;border-color:#d6d7dc!important}
+html[data-theme="light"] .sh-tcalc-result.is-correct b,
+html[data-theme="light"] .sh-tcalc-result.is-correct strong,
+html[data-theme="light"] .sh-tcalc-result.is-wrong b,
+html[data-theme="light"] .sh-tcalc-result.is-wrong strong{color:#fff!important}
+html[data-theme="light"] .sh-tcalc-result p{color:#eef1f4!important}
+
+/* hard numeric */
+html[data-theme="light"] .sh-hard-num-shell{background:#fff!important;color:#171719!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-hard-num-scenario,
+html[data-theme="light"] .sh-hard-num-question,
+html[data-theme="light"] .sh-hard-num-form,
+html[data-theme="light"] .sh-hard-num-answer-readonly{background:#f7f7f8!important;border-color:#dedfe3!important;color:#171719!important}
+html[data-theme="light"] .sh-hard-num-fact{background:#fff!important;border-color:#e2e3e6!important}
+html[data-theme="light"] .sh-hard-num-scenario-head b,
+html[data-theme="light"] .sh-hard-num-scenario>p,
+html[data-theme="light"] .sh-hard-num-fact strong,
+html[data-theme="light"] .sh-hard-num-question strong,
+html[data-theme="light"] .sh-hard-num-form>label,
+html[data-theme="light"] .sh-hard-num-answer-readonly strong{color:#171719!important}
+html[data-theme="light"] .sh-hard-num-scenario-head span,
+html[data-theme="light"] .sh-hard-num-fact span,
+html[data-theme="light"] .sh-hard-num-answer-readonly span,
+html[data-theme="light"] .sh-hard-num-form small{color:#656970!important}
+html[data-theme="light"] .sh-hard-num-input-row{background:#fff!important;border-color:#d6d7dc!important}
+html[data-theme="light"] .sh-hard-num-input-row input{color:#171719!important}
+html[data-theme="light"] .sh-hard-num-result.is-correct b,
+html[data-theme="light"] .sh-hard-num-result.is-correct strong,
+html[data-theme="light"] .sh-hard-num-result.is-wrong b,
+html[data-theme="light"] .sh-hard-num-result.is-wrong strong{color:#fff!important}
+html[data-theme="light"] .sh-hard-num-result p{color:#eef1f4!important}
+
+/* hard scenario */
+html[data-theme="light"] .sh-hard-sc-shell{background:#fff!important;color:#171719!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-hard-sc-scenario,
+html[data-theme="light"] .sh-hard-sc-question,
+html[data-theme="light"] .sh-hard-sc-option{background:#f7f7f8!important;border-color:#dedfe3!important;color:#171719!important}
+html[data-theme="light"] .sh-hard-sc-docline,
+html[data-theme="light"] .sh-hard-sc-fact{background:#fff!important;border-color:#e2e3e6!important}
+html[data-theme="light"] .sh-hard-sc-scenario-head b,
+html[data-theme="light"] .sh-hard-sc-scenario>p,
+html[data-theme="light"] .sh-hard-sc-docline b,
+html[data-theme="light"] .sh-hard-sc-fact strong,
+html[data-theme="light"] .sh-hard-sc-wants-head>b,
+html[data-theme="light"] .sh-hard-sc-wants-main strong,
+html[data-theme="light"] .sh-hard-sc-question strong{color:#171719!important}
+html[data-theme="light"] .sh-hard-sc-scenario-head span,
+html[data-theme="light"] .sh-hard-sc-docline small,
+html[data-theme="light"] .sh-hard-sc-fact span,
+html[data-theme="light"] .sh-hard-sc-wants-main span,
+html[data-theme="light"] .sh-hard-sc-wants-meta span{color:#656970!important}
+html[data-theme="light"] .sh-hard-sc-wants-meta span{background:#fff!important;border-color:#dedfe3!important}
+html[data-theme="light"] .sh-hard-sc-option-num{background:#eceef1!important;color:#34373d!important}
+html[data-theme="light"] .sh-hard-sc-option.is-correct{background:#e8f8f1!important;border-color:#71bd9e!important;color:#173428!important}
+html[data-theme="light"] .sh-hard-sc-option.is-wrong{background:#fff0f2!important;border-color:#dd909b!important;color:#551e27!important}
+html[data-theme="light"] .sh-hard-sc-option.is-correct .sh-hard-sc-option-num{background:#2eb67d!important;color:#071711!important}
+html[data-theme="light"] .sh-hard-sc-option.is-wrong .sh-hard-sc-option-num{background:#b44747!important;color:#fff!important}
+html[data-theme="light"] .sh-hard-sc-result.is-correct b,
+html[data-theme="light"] .sh-hard-sc-result.is-correct strong,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong b,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong strong{color:#fff!important}
+html[data-theme="light"] .sh-hard-sc-result p{color:#eef1f4!important}
+
+/* explanation cards: keep hierarchy readable on both themes */
+.sh-hard-review{white-space:normal!important}
+.sh-hard-review-step p,.sh-hard-wrong-card p,.sh-hard-source-card small{overflow-wrap:anywhere}
+.sh-hard-review-section-title{letter-spacing:.01em}
+html[data-theme="light"] .sh-hard-review-answer strong{color:#173428!important}
+html[data-theme="light"] .sh-soft-best p,
+html[data-theme="light"] .sh-soft-alt-good span,
+html[data-theme="light"] .sh-soft-alt-weak span{color:#303238!important}
+/* SkillHub V8.23 — source/procedure cards + final light/dark contrast guard */
+
+/* Procedure/source blocks are intentionally distinct, but must remain readable in both themes. */
+html[data-theme="light"] .skill-card,
+html[data-theme="light"] .procedure-card,
+html[data-theme="light"] .sh-hard-num-source,
+html[data-theme="light"] .sh-hard-sort-source,
+html[data-theme="light"] .sh-tcalc-source {
+  background:#fff9dc !important;
+  border-color:#d8b900 !important;
+  color:#4f4300 !important;
+}
+html[data-theme="light"] .skill-card b,
+html[data-theme="light"] .procedure-card b,
+html[data-theme="light"] .sh-hard-num-source b,
+html[data-theme="light"] .sh-hard-sort-source b,
+html[data-theme="light"] .sh-tcalc-source b {
+  color:#5b4b00 !important;
+}
+html[data-theme="light"] .skill-card strong,
+html[data-theme="light"] .procedure-card strong,
+html[data-theme="light"] .sh-hard-num-source strong,
+html[data-theme="light"] .sh-hard-sort-source strong,
+html[data-theme="light"] .sh-tcalc-source strong {
+  color:#171719 !important;
+}
+html[data-theme="light"] .skill-card .small,
+html[data-theme="light"] .procedure-card .small,
+html[data-theme="light"] .sh-hard-num-source .small,
+html[data-theme="light"] .sh-hard-sort-source .small,
+html[data-theme="light"] .sh-tcalc-source .small {
+  color:#5d520f !important;
+}
+
+html:not([data-theme="light"]) .skill-card,
+html:not([data-theme="light"]) .procedure-card,
+html:not([data-theme="light"]) .sh-hard-num-source,
+html:not([data-theme="light"]) .sh-hard-sort-source,
+html:not([data-theme="light"]) .sh-tcalc-source {
+  background:#15140a !important;
+  border-color:#e8c600 !important;
+  color:#ffdd2d !important;
+}
+html:not([data-theme="light"]) .skill-card b,
+html:not([data-theme="light"]) .procedure-card b,
+html:not([data-theme="light"]) .sh-hard-num-source b,
+html:not([data-theme="light"]) .sh-hard-sort-source b,
+html:not([data-theme="light"]) .sh-tcalc-source b {
+  color:#ffdd2d !important;
+}
+html:not([data-theme="light"]) .skill-card strong,
+html:not([data-theme="light"]) .procedure-card strong,
+html:not([data-theme="light"]) .sh-hard-num-source strong,
+html:not([data-theme="light"]) .sh-hard-sort-source strong,
+html:not([data-theme="light"]) .sh-tcalc-source strong {
+  color:#ffffff !important;
+}
+html:not([data-theme="light"]) .skill-card .small,
+html:not([data-theme="light"]) .procedure-card .small,
+html:not([data-theme="light"]) .sh-hard-num-source .small,
+html:not([data-theme="light"]) .sh-hard-sort-source .small,
+html:not([data-theme="light"]) .sh-tcalc-source .small {
+  color:#ffe45d !important;
+}
+
+/* Structured Hard explanation source block. */
+html[data-theme="light"] .sh-hard-source-card {
+  background:#fff9dc !important;
+  border-color:#d8b900 !important;
+}
+html[data-theme="light"] .sh-hard-source-card span { color:#6c5a00 !important; }
+html[data-theme="light"] .sh-hard-source-card strong { color:#171719 !important; }
+html[data-theme="light"] .sh-hard-source-card small { color:#514a24 !important; }
+
+html:not([data-theme="light"]) .sh-hard-source-card {
+  background:#12161c !important;
+  border-color:#343b45 !important;
+}
+html:not([data-theme="light"]) .sh-hard-source-card span { color:#aab3bf !important; }
+html:not([data-theme="light"]) .sh-hard-source-card strong { color:#ffffff !important; }
+html:not([data-theme="light"]) .sh-hard-source-card small { color:#c3cad3 !important; }
+
+/* Guard against broad light-theme typography rules overriding text inside dark status banners. */
+html[data-theme="light"] .sh-hard-num-result.is-correct,
+html[data-theme="light"] .sh-hard-num-result.is-wrong,
+html[data-theme="light"] .sh-hard-sc-result.is-correct,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong,
+html[data-theme="light"] .sh-tcalc-result.is-correct,
+html[data-theme="light"] .sh-tcalc-result.is-wrong { color:#ffffff !important; }
+
+html[data-theme="light"] .sh-hard-num-result.is-correct *,
+html[data-theme="light"] .sh-hard-num-result.is-wrong *,
+html[data-theme="light"] .sh-hard-sc-result.is-correct *,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong *,
+html[data-theme="light"] .sh-tcalc-result.is-correct *,
+html[data-theme="light"] .sh-tcalc-result.is-wrong * { color:inherit !important; }
+/* SkillHub V8.27 — final light/dark contrast guard for Hard calculation screens */
+
+/* Tariff calculation: the formula paragraph had a dark-theme text color (#f2f5f8)
+   while the card itself became light in the light theme. */
+html[data-theme="light"] .sh-tcalc-explain {
+  background:#f7f7f8 !important;
+  border-color:#dedfe3 !important;
+  color:#171719 !important;
+}
+html[data-theme="light"] .sh-tcalc-explain > b {
+  color:#171719 !important;
+}
+html[data-theme="light"] .sh-tcalc-explain p,
+html[data-theme="light"] .sh-tcalc-explain p *,
+html[data-theme="light"] .sh-tcalc-explain strong {
+  color:#2f3238 !important;
+}
+html[data-theme="light"] .sh-tcalc-explain small {
+  color:#60646b !important;
+}
+
+/* Amber labels need a darker amber on white/light cards. */
+html[data-theme="light"] .sh-tcalc-kicker,
+html[data-theme="light"] .sh-tcalc-question > span,
+html[data-theme="light"] .sh-tcalc-wants > span,
+html[data-theme="light"] .sh-tcalc-wants-head > span,
+html[data-theme="light"] .sh-tcalc-input > span,
+html[data-theme="light"] .sh-tcalc-client span,
+html[data-theme="light"] .sh-hard-num-kicker,
+html[data-theme="light"] .sh-hard-num-question > span,
+html[data-theme="light"] .sh-hard-num-input-row > span {
+  color:#765d00 !important;
+}
+
+/* Structured Hard explanations: explicit theme-safe body text, including formula lines. */
+html[data-theme="light"] .sh-hard-review-step {
+  background:#f7f7f8 !important;
+  border-color:#dedfe3 !important;
+}
+html[data-theme="light"] .sh-hard-review-step p,
+html[data-theme="light"] .sh-hard-review-step p *,
+html[data-theme="light"] .sh-hard-review-step strong {
+  color:#34373d !important;
+}
+html:not([data-theme="light"]) .sh-hard-review-step p,
+html:not([data-theme="light"]) .sh-hard-review-step p *,
+html:not([data-theme="light"]) .sh-hard-review-step strong {
+  color:#e0e5ec !important;
+}
+
+/* Numeric explanation fallback when the structured-explanation patch has not replaced it yet. */
+html[data-theme="light"] .sh-hard-num-explain,
+html[data-theme="light"] .sh-hard-num-explain p,
+html[data-theme="light"] .sh-hard-num-explain strong,
+html[data-theme="light"] .sh-hard-num-explain b {
+  color:#34373d !important;
+}
+html:not([data-theme="light"]) .sh-hard-num-explain,
+html:not([data-theme="light"]) .sh-hard-num-explain p,
+html:not([data-theme="light"]) .sh-hard-num-explain strong,
+html:not([data-theme="light"]) .sh-hard-num-explain b {
+  color:#e0e5ec !important;
+}
+
+/* Keep result banners readable regardless of broad theme typography rules. */
+html[data-theme="light"] .sh-tcalc-result.is-correct *,
+html[data-theme="light"] .sh-tcalc-result.is-wrong *,
+html[data-theme="light"] .sh-hard-num-result.is-correct *,
+html[data-theme="light"] .sh-hard-num-result.is-wrong *,
+html[data-theme="light"] .sh-hard-sc-result.is-correct *,
+html[data-theme="light"] .sh-hard-sc-result.is-wrong * {
+  color:#fff !important;
+}
+/* SkillHub V8.28 — application-wide contrast guard for light/dark themes.
+   Fixes remaining low/borderline contrast values found in the loaded CSS audit. */
+
+/* Notification badges: previous white on #ef4444/#ff5a5f was below AA for small text. */
+.badge,
+html[data-theme="light"] .top-bell .badge {
+  background:#b42332 !important;
+  color:#ffffff !important;
+}
+
+/* Light theme: secondary/small text must stay above AA on white cards. */
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder,
+html[data-theme="light"] .kpi small,
+html[data-theme="light"] .sh-soft-review-head>span,
+html[data-theme="light"] .as-material-group-title span,
+html[data-theme="light"] .as-material-item small,
+html[data-theme="light"] .as-material-footer .meta {
+  color:#6f7077 !important;
+}
+
+/* Sticky headings and RG demo labels: darken amber when shown on white/light surfaces. */
+html[data-theme="light"] .as-material-group-title {
+  color:#765d00 !important;
+}
+html[data-theme="light"] .rg-demo-kicker,
+html[data-theme="light"] .rg-demo-case em,
+html[data-theme="light"] .rg-demo-review-row>span:last-child,
+html[data-theme="light"] .rg-demo-subhead {
+  color:#806000 !important;
+}
+
+/* Keep the RG demo accent bright enough in dark theme as well. */
+html:not([data-theme="light"]) .rg-demo-kicker,
+html:not([data-theme="light"]) .rg-demo-case em,
+html:not([data-theme="light"]) .rg-demo-review-row>span:last-child,
+html:not([data-theme="light"]) .rg-demo-subhead {
+  color:#ffdd2d !important;
+}
+
+/* Completed tariff step: white on the previous green was borderline below AA. */
+.sh-tcalc-progress span.done {
+  background:#14724f !important;
+  border-color:#1b8a61 !important;
+  color:#ffffff !important;
+}
+
+/* Login/help text — remove borderline 4.48:1 cases on very light cards. */
+html[data-theme="light"] .login-card .hint,
+html[data-theme="light"] .hint {
+  color:#5f6168 !important;
+}
+
+/* Global light surfaces that can be nested inside cards/modals. */
+html[data-theme="light"] .meta,
+html[data-theme="light"] .muted,
+html[data-theme="light"] .small.muted {
+  color:#656970 !important;
+}
+
+/* Dark theme secondary text stays readable on both background and panel. */
+html:not([data-theme="light"]) .meta,
+html:not([data-theme="light"]) .muted,
+html:not([data-theme="light"]) .small.muted {
+  color:#a9abb3 !important;
+}

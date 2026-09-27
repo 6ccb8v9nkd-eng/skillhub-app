@@ -1,4 +1,4 @@
-console.info('SkillHub build 20260924_0730_finish_click_fix');
+console.info('SkillHub build 20260924_v8.17_restore_original_rg');
 const S={
   sb:null,user:null,profile:null,content:[],assignments:[],attempts:[],notifications:[],allowed:[],profiles:[],
   queue:JSON.parse(localStorage.getItem('sh7_queue')||'[]'),deferredInstall:null,currentRun:null,
@@ -134,8 +134,30 @@ const client=isNew?data.scenario.client:data.step.client;
 const options=isNew?data.answers.map(a=>a.text):data.step.options;
 $('page-run').innerHTML=`<div class="dialogue"><div class="card"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('training')">← Выйти</button><b>${esc(x.title)}</b><span class="muted small">${r.i+1}/${total}</span></div><div class="bubble client"><b>Клиент</b><br>${esc(client)}</div><div class="muted small" style="margin:14px 0 8px">Что ответит сотрудник?</div><div class="options">${options.map((a,i)=>`<button class="option" onclick="answerDialogue(${i})">${esc(a)}</button>`).join('')}</div><div id="runFeedback"></div></div></div>`}
 function parseDialogueExplanation(text){
-  const src=String(text||'').replace(/\r/g,'').trim();
+  const src=String(text||'').replace(/\\+n/g,'\n').replace(/\r/g,'').trim();
   if(!src)return null;
+
+  const psychSkill=(src.match(/🎯\s*ЧТО ПРОВЕРЯЕМ:\s*([^\n]+)/i)||[])[1]?.trim()||'';
+  const emotion=(src.match(/Эмоция клиента:\s*([^\n]+)/i)||[])[1]?.trim().replace(/[.]+$/,'')||'';
+  const need=(src.match(/Потребность клиента:\s*([^\n]+)/i)||[])[1]?.trim().replace(/[.]+$/,'')||'';
+  const bestMatch=src.match(/✅\s*ПОЧЕМУ ЭТО ЛУЧШИЙ ВАРИАНТ\s*\n+([\s\S]*?)(?=\n+⚖️\s*ПОЧЕМУ ДРУГИЕ ВАРИАНТЫ|$)/i);
+  const othersMatch=src.match(/⚖️\s*ПОЧЕМУ ДРУГИЕ ВАРИАНТЫ[^\n]*\s*\n+([\s\S]*)$/i);
+  if(psychSkill||emotion||need||bestMatch||othersMatch){
+    return {
+      softPsych:{
+        skill:psychSkill,
+        emotion,
+        need,
+        best:(bestMatch?.[1]||'').trim(),
+        others:(othersMatch?.[1]||'').trim()
+      },
+      correct:{blocks:[]},
+      wrong:[],
+      skill:psychSkill,
+      raw:src
+    };
+  }
+
   const skill=(src.match(/🎯\s*КЛЮЧЕВОЙ НАВЫК:\s*([^\n]+)/i)||[])[1]?.trim()||'';
   const procedurePath=(src.match(/📍\s*ГДЕ ПРОВЕРИТЬ\s*\n([^\n]+)/i)||[])[1]?.trim()||'';
   let procedureName='';
@@ -167,13 +189,28 @@ const blocks=e.correct?.blocks||[];
 const wrong=e.wrong||[];
 const correctBlocks=blocks.map(x=>`<div class="review-card"><b>${esc(x.title)}</b>${x.text?`<div>${esc(x.text)}</div>`:''}</div>`).join('');
 const wrongBlocks=wrong.map(x=>`<div class="wrong-card"><h4>🔴 Вариант ${esc(x.answer??x.variant)}</h4><div class="mini"><b>✅ Что хорошо</b><br>${esc(x.good)}</div><div class="mini"><b>⚠️ Где ошибка</b><br>${esc(x.mistake||x.error)}</div><div class="mini"><b>🎯 Риск</b><br>${esc(x.risk)}</div></div>`).join('');
+
+const psych=e.softPsych||null;
+const softReview=psych?`<div class="sh-soft-review">
+  <div class="sh-soft-review-head">
+    <span>Разбор ответа</span>
+    ${psych.skill?`<b>🎯 ${esc(psych.skill)}</b>`:''}
+  </div>
+  <div class="sh-soft-signals">
+    <div class="sh-soft-signal"><span>Эмоция клиента</span><strong>${esc(psych.emotion||'—')}</strong></div>
+    <div class="sh-soft-signal"><span>Что ему важно</span><strong>${esc(psych.need||'—')}</strong></div>
+  </div>
+  ${psych.best?`<div class="sh-soft-best"><div class="sh-soft-card-title">✓ Почему этот ответ точнее</div><p>${esc(psych.best)}</p></div>`:''}
+  ${psych.others?`<div class="sh-soft-others"><div class="sh-soft-card-title">↔ А что с другими вариантами?</div><p>${esc(psych.others)}</p></div>`:''}
+</div>`:'';
+
 const isHard=String(x.section||'').toLowerCase()==='hard';
 const procedurePath=e.procedurePath||e.source?.path||'';
 const procedureName=e.procedureName||e.source?.name||'';
-const sourceCard=isHard&&procedurePath?`<div class="skill-card procedure-card"><b>📚 Взято из процедуры</b><br><strong>${esc(procedureName||'Процедура')}</strong><div class="small" style="margin-top:6px">${esc(procedurePath)}</div></div>`:(!isHard&&e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:'');
-const fallback=(!correctBlocks&&!wrongBlocks&&!sourceCard&&legacyExplanation)?`<div class="explain">${esc(legacyExplanation).replace(/\n/g,'<br>')}</div>`:'';
+const sourceCard=psych?'':(isHard&&procedurePath?`<div class="skill-card procedure-card"><b>📚 Взято из процедуры</b><br><strong>${esc(procedureName||'Процедура')}</strong><div class="small" style="margin-top:6px">${esc(procedurePath)}</div></div>`:(!isHard&&e.skill?`<div class="skill-card"><b>🎯 Главный навык</b><br>${esc(e.skill)}</div>`:''));
+const fallback=(!psych&&!correctBlocks&&!wrongBlocks&&!sourceCard&&legacyExplanation)?`<div class="explain">${esc(String(legacyExplanation).replace(/\\+n/g,'\n')).replace(/\n/g,'<br>')}</div>`:'';
 const total=isNew?1:(x.steps||[]).length,isLast=r.i>=total-1;
-$('runFeedback').innerHTML=`${correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${sourceCard}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:12px"><button id="dialogueAdvanceBtn" type="button" class="btn primary sh-run-advance">${isLast?'Завершить кейс →':'Продолжить'}</button></div>`;
+$('runFeedback').innerHTML=`${softReview}${!psych&&correctBlocks?`<div class="review-title success">✅ Почему выбранный ответ правильный</div><div>${correctBlocks}</div>`:''}${!psych&&wrongBlocks?`<div class="review-title danger">❌ Почему другие варианты не подходят</div><div>${wrongBlocks}</div>`:''}${sourceCard}${fallback}<div class="actions" style="justify-content:flex-end;margin-top:14px"><button id="dialogueAdvanceBtn" type="button" class="btn primary sh-run-advance">${isLast?'Завершить кейс →':'Продолжить'}</button></div>`;
 const nextBtn=$('dialogueAdvanceBtn');if(nextBtn)nextBtn.onclick=()=>advanceDialogue()}
 function advanceDialogue(){
   const r=S.currentRun;if(!r||r.type!=='dialogue')return;
@@ -348,19 +385,19 @@ function yn(x){return ['да','yes','true','1'].includes(String(x).trim().toLowe
 async function notifyRecipients(title,body,recipients,kind='content'){let logs=recipients.includes('ALL')?S.allowed.filter(x=>x.active&&x.role==='employee').map(x=>x.login):recipients;logs=[...new Set(logs)];if(!logs.length)return;const rows=logs.map(login=>({login,title,body,kind,read:false}));const {error}=await S.sb.from('notifications').insert(rows);if(error)console.warn(error)}
 async function commitExcel(){if(!S.importDraft)return;const {sheets,cases,dialogs,employees,assignments}=S.importDraft;const generated=[];try{
   for(const r of employees){const login=normalizeLogin(r['Логин']);if(!login)continue;const existing=S.allowed.find(x=>x.login===login),claimed=!!existing?.claimed_user_id;let code='';if(!claimed)code=randCode();const rr=String(r['Роль']||'').toLowerCase(),role=rr.includes('рс')?'rs':(rr.startsWith('настав')||rr.startsWith('руковод'))?'mentor':'employee';const {error}=await S.sb.rpc('mentor_upsert_allowed_user',{p_login:login,p_name:String(r['Имя']||login),p_role:role,p_group_name:String(r['Группа']||'Группа'),p_active:String(r['Статус']||'active').toLowerCase()!=='inactive',p_invite_code:code||null});if(error)throw error;if(code)generated.push([login,code])}
-  for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),audience)}
-  const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый диалог',row.title,audience)}
+  for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error)throw error}
+  const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);const row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
   for(const r of assignments){let rec=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean);if(S.profile.role==='mentor'&&rec.includes('ALL'))rec=S.allowed.filter(x=>x.active&&x.role==='employee').map(x=>x.login);const row={title:String(r['Название']),content_id:String(r['ID материала']||'').match(/^[0-9a-f-]{36}$/i)?String(r['ID материала']):null,section:String(r['Раздел']||''),topic:String(r['Тема']||''),due:String(r['Дедлайн']||'')||null,target:Number(r['Минимум %']||90),recipients:rec,status:String(r['Статус']||'active'),created_by:S.user.id};const {error}=await S.sb.from('assignments').insert(row);if(error)throw error;if(yn(r['Уведомить']))await notifyRecipients('Новое задание',`${row.title}${row.due?' · до '+row.due:''}`,rec,'assignment')}
   await syncAll();toast('Импорт завершён');if(generated.length)showCodes(generated,'Коды для новых сотрудников');contentTab='library';renderContent();
 }catch(e){console.error(e);toast('Ошибка импорта: '+(e.message||e))}}
 function exportExcel(){const wb=XLSX.utils.book_new();const cases=[],dialogs=[],steps=[];for(const x of S.content){if(x.type==='dialogue'){dialogs.push({'ID диалога':x.id,'Статус':x.status,'Раздел':x.section,'Тема':x.topic,'Название':x.title,'Описание':x.description||'','Кому':(x.audience||['ALL']).join(', '),'Уведомить':'Нет'});(x.steps||[]).forEach((s,i)=>steps.push({'ID диалога':x.id,'Шаг':i+1,'Реплика клиента':s.client,'Ответ 1':s.options?.[0]||'','Ответ 2':s.options?.[1]||'','Ответ 3':s.options?.[2]||'','Правильный ответ':Number(s.correct)+1,'Следующая реплика клиента':s.next_client||'','Объяснение':s.explanation||''}))}else cases.push({'ID':x.id,'Статус':x.status,'Раздел':x.section,'Тема':x.topic,'Сложность':x.difficulty,'Тип':x.type,'Заголовок':x.title,'Вопрос':x.question,'Ответ 1':x.answers?.[0]||'','Ответ 2':x.answers?.[1]||'','Ответ 3':x.answers?.[2]||'','Ответ 4':x.answers?.[3]||'','Правильный ответ':Number(x.correct)+1,'Объяснение':x.explanation||'','Кому':(x.audience||['ALL']).join(', '),'Уведомить':'Нет'})}XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cases),'Кейсы');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dialogs),'Диалоги');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(steps),'Шаги диалогов');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.allowed.map(x=>({'Логин':x.login,'Имя':x.name,'Роль':roleName(x.role),'Группа':x.group_name,'Статус':x.active?'active':'inactive'}))),'Сотрудники');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.assignments.map(x=>({'ID':x.id,'Название':x.title,'Раздел':x.section,'Тема':x.topic,'ID материала':x.content_id||'','Кому':(x.recipients||['ALL']).join(', '),'Дедлайн':x.due||'','Минимум %':x.target,'Уведомить':'Нет','Статус':x.status}))),'Назначения');XLSX.writeFile(wb,'SkillHub_export.xlsx')}
 function openCaseEditor(type,x=null){S.editing=x?.id||null;showModal(`<div class="modal-head"><h2>${x?'Редактировать':type==='hardcase'?'Новый Hard-кейс':'Новый кейс'}</h2><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>Раздел</label><select id="ecSec"><option value="soft">Soft</option><option value="hard">Hard</option><option value="needs">Потребность</option></select></div><div class="field"><label>Тема для аналитики</label><input id="ecTopic" placeholder="Например, Кредиты / Тарифы / Госорганы"><div class="meta">Все кейсы одной темы объединяются в аналитику сотрудника.</div></div><div class="field"><label>Статус</label><select id="ecStatus"><option value="draft">Черновик</option><option value="published">Опубликовать</option></select></div><div class="field"><label>Сложность</label><select id="ecDiff"><option>Лёгкий</option><option>Средний</option><option>Сложный</option></select></div><div class="field full"><label>Заголовок</label><input id="ecTitle"></div><div class="field full"><label>Вопрос / ситуация</label><textarea id="ecQ"></textarea></div>${[1,2,3,4].map(i=>`<div class="field"><label>Ответ ${i}</label><textarea id="ecA${i}"></textarea></div>`).join('')}<div class="field"><label>Правильный ответ</label><select id="ecCorrect">${[1,2,3,4].map(i=>`<option value="${i-1}">${i}</option>`).join('')}</select></div><div class="field"><label>Кому</label><input id="ecAudience" value="ALL"></div><div class="field full"><label>Объяснение</label><textarea id="ecExpl"></textarea></div></div><div class="actions" style="justify-content:flex-end;margin-top:13px"><button class="btn primary" onclick="saveCaseEditor('${type}')">Сохранить</button></div>`);$('ecSec').value=x?.section|| (type==='hardcase'?'hard':'soft');$('ecTopic').value=x?.topic||'';$('ecStatus').value=x?.status||'draft';$('ecDiff').value=x?.difficulty||'Средний';$('ecTitle').value=x?.title||'';$('ecQ').value=x?.question||'';[1,2,3,4].forEach((i,k)=>$('ecA'+i).value=x?.answers?.[k]||'');$('ecCorrect').value=String(x?.correct??0);$('ecAudience').value=(x?.audience||['ALL']).join(', ');$('ecExpl').value=x?.explanation||''}
-async function saveCaseEditor(type){const answers=[1,2,3,4].map(i=>$('ecA'+i).value.trim());if(!$('ecTopic').value.trim()||!$('ecQ').value.trim()||answers.some(x=>!x)){toast('Заполните тему, вопрос и 4 ответа');return}const row={type,section:$('ecSec').value,topic:$('ecTopic').value.trim(),status:$('ecStatus').value,difficulty:$('ecDiff').value,title:$('ecTitle').value.trim(),payload:{question:$('ecQ').value.trim(),answers,correct:Number($('ecCorrect').value),explanation:$('ecExpl').value.trim()},audience:$('ecAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Материал сохранён')}
+async function saveCaseEditor(type){const answers=[1,2,3,4].map(i=>$('ecA'+i).value.trim());if(!$('ecTopic').value.trim()||!$('ecQ').value.trim()||answers.some(x=>!x)){toast('Заполните тему, вопрос и 4 ответа');return}const row={type,section:$('ecSec').value,topic:$('ecTopic').value.trim(),status:$('ecStatus').value,difficulty:$('ecDiff').value,title:$('ecTitle').value.trim(),payload:{question:$('ecQ').value.trim(),answers,correct:Number($('ecCorrect').value),explanation:$('ecExpl').value.trim()},audience:$('ecAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {data,error}=await S.sb.from('content').upsert(row).select().single();if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Материал сохранён')}
 function openDialogueEditor(x=null){S.editing=x?.id||null;S.dialogDraft=x?.steps?structuredClone(x.steps):[{client:'',options:['','',''],correct:0,next_client:'',explanation:''}];showModal(`<div class="modal-head"><h2>${x?'Редактировать диалог':'Новый живой диалог'}</h2><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="form-grid"><div class="field"><label>Раздел</label><select id="edSec"><option value="needs">Потребность</option><option value="soft">Soft</option><option value="hard">Hard</option></select></div><div class="field"><label>Тема для аналитики</label><input id="edTopic" placeholder="Например, Выявление потребности"><div class="meta">Используйте одинаковое название для материалов одной темы.</div></div><div class="field full"><label>Название</label><input id="edTitle"></div><div class="field"><label>Статус</label><select id="edStatus"><option value="draft">Черновик</option><option value="published">Опубликовать</option></select></div><div class="field"><label>Кому</label><input id="edAudience" value="ALL"></div></div><div id="dialogSteps"></div><div class="actions" style="justify-content:space-between;margin-top:13px"><button class="btn secondary" onclick="addDialogStep()">+ Шаг</button><button class="btn primary" onclick="saveDialogueEditor()">Сохранить</button></div>`);$('edSec').value=x?.section||'needs';$('edTopic').value=x?.topic||'';$('edTitle').value=x?.title||'';$('edStatus').value=x?.status||'draft';$('edAudience').value=(x?.audience||['ALL']).join(', ');renderDialogSteps()}
 function addDialogStep(){S.dialogDraft.push({client:'',options:['','',''],correct:0,next_client:'',explanation:''});renderDialogSteps()}
 function removeDialogStep(i){if(S.dialogDraft.length===1)return;S.dialogDraft.splice(i,1);renderDialogSteps()}
 function renderDialogSteps(){$('dialogSteps').innerHTML=S.dialogDraft.map((s,i)=>`<div class="card" style="margin-top:11px"><div class="toolbar"><b>Шаг ${i+1}</b><button class="btn danger" onclick="removeDialogStep(${i})">Удалить</button></div><div class="field"><label>Реплика клиента</label><textarea oninput="S.dialogDraft[${i}].client=this.value">${esc(s.client)}</textarea></div>${[0,1,2].map(j=>`<div class="field"><label>Ответ ${j+1}${j===Number(s.correct)?' ✓':''}</label><input value="${esc(s.options[j])}" oninput="S.dialogDraft[${i}].options[${j}]=this.value"><button class="btn secondary" style="margin-top:5px" onclick="S.dialogDraft[${i}].correct=${j};renderDialogSteps()">Сделать правильным</button></div>`).join('')}<div class="field"><label>Следующая реплика клиента</label><textarea oninput="S.dialogDraft[${i}].next_client=this.value">${esc(s.next_client||'')}</textarea></div><div class="field"><label>Объяснение</label><textarea oninput="S.dialogDraft[${i}].explanation=this.value">${esc(s.explanation||'')}</textarea></div></div>`).join('')}
-async function saveDialogueEditor(){if(!$('edTopic').value.trim()||!$('edTitle').value.trim()){toast('Заполните тему и название');return}const row={type:'dialogue',section:$('edSec').value,topic:$('edTopic').value.trim(),status:$('edStatus').value,difficulty:'Средний',title:$('edTitle').value.trim(),payload:{steps:S.dialogDraft},audience:$('edAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый диалог',row.title,row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Диалог сохранён')}
+async function saveDialogueEditor(){if(!$('edTopic').value.trim()||!$('edTitle').value.trim()){toast('Заполните тему и название');return}const row={type:'dialogue',section:$('edSec').value,topic:$('edTopic').value.trim(),status:$('edStatus').value,difficulty:'Средний',title:$('edTitle').value.trim(),payload:{steps:S.dialogDraft},audience:$('edAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Диалог сохранён')}
 function editContent(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)}
 async function deleteContent(id){if(!confirm('Удалить материал?'))return;const {error}=await S.sb.from('content').delete().eq('id',id);if(error)toast(error.message);else{await syncAll();renderContent();toast('Материал удалён')}}
 
@@ -422,24 +459,67 @@ async function submitAuth(){
   $('loginError').textContent='';
   if(!login||pin.length<6){$('loginError').textContent='Введите корпоративный логин и PIN минимум из 6 символов.';return}
   try{
+    let authData=null;
     if(S.authMode==='register'){
       const {data,error}=await S.sb.auth.signUp({email:emailFor(login),password:pin,options:{data:{login,invite_code:invite}}});
-      if(error)throw error;
+      if(error)throw error;authData=data;
       if(!data.session)throw new Error('В Supabase включено подтверждение e-mail. Отключите Confirm email в Authentication → Providers → Email.');
     }else{
-      const {error}=await S.sb.auth.signInWithPassword({email:emailFor(login),password:pin});if(error)throw error;
+      const {data,error}=await S.sb.auth.signInWithPassword({email:emailFor(login),password:pin});
+      if(error)throw error;authData=data;
     }
-    await afterAuth();
+    if(authData?.session?.access_token&&authData?.session?.refresh_token){
+      await S.sb.auth.setSession({access_token:authData.session.access_token,refresh_token:authData.session.refresh_token});
+    }
+    await afterAuth(authData?.user||authData?.session?.user||null,authData?.session?.access_token||null);
   }catch(e){
     let m=e.message||String(e),low=m.toLowerCase();
     if(m.includes('Database error saving new user'))m='Не удалось создать доступ. Проверьте корпоративный логин. Для сотрудника также проверьте код первого входа. Руководителям и техадминистратору код не нужен. Если PIN уже создавался — используйте обычный вход или сбросьте доступ.';
     if(low.includes('invalid login')||low.includes('invalid credentials'))m='Неверный логин или PIN.';
     if(low.includes('already registered')||low.includes('user already registered'))m='Для этого логина PIN уже создан. Используйте обычный вход или сбросьте доступ.';
-    if(low.includes('load failed')||low.includes('failed to fetch')||low.includes('network'))m='Нет связи с базой SkillHub. Обновите страницу и проверьте интернет. Настройки подключения обновляются автоматически.';
-    if(m==='Load failed'||m.toLowerCase().includes('failed to fetch'))m='Не удалось связаться с Supabase. Обновите страницу и повторите. Если ошибка останется — проверьте защиту Safari/VPN.';$('loginError').textContent=m;
+    if(low.includes('load failed')||low.includes('failed to fetch')||low.includes('network'))m='Нет связи с базой SkillHub. Обновите страницу и проверьте интернет.';
+    if(low.includes('cannot coerce')||low.includes('json object'))m='Не удалось загрузить профиль после входа. Обновите страницу и войдите ещё раз.';
+    $('loginError').textContent=m;
   }
 }
-async function afterAuth(){const {data:{user}}=await S.sb.auth.getUser();if(!user)throw new Error('Нет сессии');S.user=user;const {data,error}=await S.sb.from('profiles').select('*').eq('id',user.id).single();if(error)throw error;if(!data.active){await S.sb.auth.signOut();throw new Error('Доступ к SkillHub отключён.')}S.profile=data;localStorage.setItem('sh7_profile',JSON.stringify(data));enterApp();await syncAll()}
+async function afterAuth(userHint=null,tokenHint=null){
+  let session=null,user=userHint;
+  const sessionRes=await S.sb.auth.getSession();
+  session=sessionRes?.data?.session||null;
+  user=user||session?.user||null;
+  tokenHint=tokenHint||session?.access_token||null;
+  if(!user)throw new Error('Нет сессии');
+
+  S.user=user;
+  let profile=null,profileError=null;
+  const q=await S.sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
+  profile=q.data||null;profileError=q.error||null;
+
+  // Safari/новая CDN-версия клиента иногда успевала сделать первый REST-запрос
+  // без пользовательского Authorization. Дублируем профильный запрос с JWT явно.
+  if(!profile&&tokenHint){
+    try{
+      const cfg=currentConfig();
+      const resp=await fetch(cfg.url+'/rest/v1/profiles?select=*&id=eq.'+encodeURIComponent(user.id),{
+        headers:{apikey:cfg.key,Authorization:'Bearer '+tokenHint,Accept:'application/json'}
+      });
+      if(resp.ok){
+        const rows=await resp.json();
+        if(Array.isArray(rows)&&rows.length===1)profile=rows[0];
+      }
+    }catch(_){}
+  }
+
+  if(!profile){
+    if(profileError)console.warn('Profile load error',profileError);
+    throw new Error('Профиль SkillHub не найден. Обновите страницу и войдите ещё раз.');
+  }
+  if(!profile.active){await S.sb.auth.signOut();throw new Error('Доступ к SkillHub отключён.')}
+  S.profile=profile;
+  localStorage.setItem('sh7_profile',JSON.stringify(profile));
+  enterApp();
+  await syncAll();
+}
 function enterApp(){
   $('setupView').classList.add('hidden');$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
   $('profileName').textContent=S.profile.name||S.profile.login;$('roleLabel').textContent=roleName(S.profile.role);$('avatar').textContent=initials(S.profile.name||S.profile.login);
@@ -613,8 +693,8 @@ function renderImportPane(){$('contentPane').innerHTML=`<div class="import-box">
 async function previewExcel(ev){try{const sheets=await parseWorkbook(ev.target.files[0]),cases=(sheets['Кейсы']||[]).filter(r=>String(r['Вопрос']||'').trim()),dialogs=(sheets['Диалоги']||[]).filter(r=>String(r['ID диалога']||'').trim()),assignments=(sheets['Назначения']||[]).filter(r=>String(r['Название']||'').trim());S.importDraft={sheets,cases,dialogs,employees:[],assignments};$('importPreview').innerHTML=`<div class="card" style="margin-top:12px"><h3>Предпросмотр</h3><div class="grid3"><div class="kpi"><small>Кейсы</small><strong>${cases.length}</strong></div><div class="kpi"><small>Диалоги</small><strong>${dialogs.length}</strong></div><div class="kpi"><small>Назначения</small><strong>${assignments.length}</strong></div></div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="commitExcel()">Импортировать</button></div></div>`}catch(e){$('importPreview').innerHTML='<div class="explain">Не удалось прочитать Excel. Используйте шаблон SkillHub.</div>'}}
 async function commitExcel(){
   if(!S.importDraft)return;const {sheets,cases,dialogs,assignments}=S.importDraft;try{
-    for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый материал',row.title||row.payload.question.slice(0,80),audience)}
-    const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error;if(row.status==='published'&&yn(r['Уведомить']))await notifyRecipients('Новый диалог',row.title,audience)}
+    for(const r of cases){const answers=[1,2,3,4].map(i=>String(r['Ответ '+i]||'').trim());if(answers.some(x=>!x))continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:String(r['Тип']||'quiz'),status:String(r['Статус']||'draft'),section:String(r['Раздел']||'soft'),topic:String(r['Тема']||'Общий'),difficulty:String(r['Сложность']||'Средний'),title:String(r['Заголовок']||''),payload:{question:String(r['Вопрос']||''),answers,correct:Math.max(0,Number(r['Правильный ответ']||1)-1),explanation:String(r['Объяснение']||'')},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(String(r['ID']||'').match(/^[0-9a-f-]{36}$/i))row.id=r['ID'];const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
+    const stepRows=sheets['Шаги диалогов']||[];for(const r of dialogs){const did=String(r['ID диалога']).trim(),steps=stepRows.filter(s=>String(s['ID диалога']).trim()===did).sort((a,b)=>Number(a['Шаг'])-Number(b['Шаг'])).map(s=>({client:String(s['Реплика клиента']||''),options:[1,2,3].map(i=>String(s['Ответ '+i]||'')),correct:Math.max(0,Number(s['Правильный ответ']||1)-1),next_client:String(s['Следующая реплика клиента']||''),explanation:String(s['Объяснение']||'')}));if(!steps.length)continue;const audience=String(r['Кому']||'ALL').split(',').map(x=>x.trim()).filter(Boolean),row={type:'dialogue',status:String(r['Статус']||'draft'),section:String(r['Раздел']||'needs'),topic:String(r['Тема']||'Общий'),difficulty:'Средний',title:String(r['Название']||did),payload:{description:String(r['Описание']||''),steps},audience,created_by:S.user.id,updated_at:new Date().toISOString()};if(did.match(/^[0-9a-f-]{36}$/i))row.id=did;const {error}=await S.sb.from('content').upsert(row);if(error)throw error}
     for(const r of assignments){let rec=String(r['Кому']||'ALL').split(',').map(normalizeLogin).filter(Boolean);if(!rec.length)rec=['ALL'];if(!isTechAdmin()&&rec.includes('ALL'))rec=assignmentScopeEmployees().map(x=>x.login);const row={title:String(r['Название']),content_id:String(r['ID материала']||'').match(/^[0-9a-f-]{36}$/i)?String(r['ID материала']):null,section:String(r['Раздел']||''),topic:String(r['Тема']||''),due:String(r['Дедлайн']||'')||null,target:Number(r['Минимум %']||90),recipients:rec,status:String(r['Статус']||'active'),created_by:S.user.id};const {error}=await S.sb.from('assignments').insert(row);if(error)throw error;if(yn(r['Уведомить']))await notifyRecipients('Новое задание',`${row.title}${row.due?' · до '+row.due:''}`,rec,'assignment')}
     await syncAll();toast('Импорт завершён');contentTab='library';renderContent();
   }catch(e){console.error(e);toast('Ошибка импорта: '+(e.message||e))}
@@ -707,6 +787,11 @@ syncAll=async function(manual=false){
 trainingCards=function(){return `<div class="grid4"><div class="card train-card"><div class="icon">💬</div><h3>Soft Skills</h3><p>Автоматические тесты и ручные тренажёры с проверкой РГ.</p><button class="btn primary" onclick="openSoftHub()">Тренировать</button></div><div class="card train-card"><div class="icon">🧠</div><h3>Hard Skills</h3><p>Решение реальных клиентских кейсов по продуктам.</p><button class="btn primary" onclick="openSection('hard')">Тренировать</button></div><div class="card train-card"><div class="icon">🎯</div><h3>Потребность</h3><p>Вопросы, критерии и живые диалоги.</p><button class="btn primary" onclick="openSection('needs')">Тренировать</button></div><div class="card train-card"><div class="icon">⌨️</div><h3>Печать</h3><p>50 текстов для тренировки скорости и точности.</p><button class="btn primary" onclick="startTyping()">Начать</button></div></div>`};
 
 renderTraining=function(){
+  // Employees should see only the main training cards. The content library is a manager/admin tool.
+  if(S.profile?.role==='employee'){
+    $('page-training').innerHTML=trainingCards();
+    return;
+  }
   const auto=autoSoftContent().length,manual=manualSoftContent().length;
   $('page-training').innerHTML=trainingCards()+`<div class="section-title"><h2>Библиотека</h2><span class="muted small">${S.content.filter(x=>x.status==='published').length} материалов</span></div><div class="card"><div class="assignment"><div><b>Soft Skills</b><div class="meta">${auto} обычных · ${manual} ручных</div></div><button class="btn secondary" onclick="openSoftHub()">Открыть</button></div>${['hard','needs'].map(sec=>`<div class="assignment"><div><b>${secName(sec)}</b><div class="meta">${S.content.filter(x=>x.section===sec&&x.status==='published').length} материалов</div></div><button class="btn secondary" onclick="openSection('${sec}')">Открыть</button></div>`).join('')}</div>`;
 };
@@ -722,7 +807,10 @@ openSection=function(sec,mode=''){
   if(sec==='soft'&&mode==='auto')arr=arr.filter(x=>x.type!=='manual');
   else arr=arr.filter(x=>x.type!=='manual');
   const topics=[...new Set(arr.map(x=>x.topic))];
-  showModal(`<div class="modal-head"><div><h2>${secName(sec)}${sec==='soft'?' · обычные тренажёры':''}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  const hideEmployeeSoftMaterials=sec==='soft'&&S.profile?.role==='employee';
+  const subtitle=hideEmployeeSoftMaterials?'Выберите нужный блок':'Выберите тему или конкретный материал';
+  const materials=hideEmployeeSoftMaterials?'':`<div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${manualTypeName(x.type)}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`;
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}${sec==='soft'?' · обычные тренажёры':''}</h2><div class="muted small">${subtitle}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div>${materials}`);
 };
 
 function openManualSoft(){
@@ -803,7 +891,7 @@ function openManualEditor(x=null){
 async function saveManualEditor(){
   const topic=$('emTopic').value.trim(),title=$('emTitle').value.trim(),question=$('emQuestion').value.trim(),instruction=$('emInstruction').value.trim();if(!topic||!title||!question){toast('Заполните тему, название и фразу / ситуацию');return}
   const row={type:'manual',section:'soft',topic,status:$('emStatus').value,difficulty:'Средний',title,payload:{instruction,question},audience:$('emAudience').value.split(',').map(x=>x.trim()).filter(Boolean),created_by:S.user.id,updated_at:new Date().toISOString()};if(S.editing)row.id=S.editing;
-  const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}if(row.status==='published')await notifyRecipients('Новый ручной тренажёр',row.title,row.audience);closeModal();await syncAll();contentTab='library';renderContent();toast('Ручной тренажёр сохранён');
+  const {error}=await S.sb.from('content').upsert(row);if(error){toast(error.message);return}closeModal();await syncAll();contentTab='library';renderContent();toast('Ручной тренажёр сохранён');
 }
 editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.type==='manual'?openManualEditor(x):x.type==='dialogue'?openDialogueEditor(x):openCaseEditor(x.type,x)};
 
@@ -1472,7 +1560,7 @@ const shHardSortOpenSectionBase=openSection;
 openSection=function(sec,...args){
   if(sec!=='hard')return shHardSortOpenSectionBase(sec,...args);
   const arr=S.content.filter(x=>x.section===sec&&x.status==='published'),topics=[...new Set(arr.map(x=>x.topic))];
-  showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
+  showModal(`<div class="modal-head"><div><h2>${secName(sec)}</h2><div class="muted small">Выберите тему или конкретный материал</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="topic-grid">${topics.map(t=>{const p=topicProgress(sec,t);return `<button class="topic" onclick="closeModal();startTopic('${sec}','${jsq(t)}')">${esc(t)}<small>Пройдено ${p.done} из ${p.total} · умная выдача</small></button>`}).join('')}</div><div class="section-title"><h2>Материалы</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seenContentMap().has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="closeModal();startContent('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`)
 };
 
 /* ===== SkillHub HARD topic flow + mixed flow ===== */
@@ -1560,7 +1648,7 @@ function shHardFlowOpenTopic(topic){
   const arr=shHardFlowItems(topic),p=topicProgress('hard',topic),seen=seenContentMap();
   showModal(`<div class="modal-head"><div><h2>${esc(topic)}</h2><div class="muted small">Hard Skills · пройдено ${p.done} из ${p.total}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
   <div class="sh-hard-topic-hero"><div><b>Выберите материал ниже</b><p>После завершения кейса SkillHub предложит следующий непройденный материал, а в конце блока — переход к следующему блоку.</p></div></div>
-  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartFromTopic('${jsq(topic)}','${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
+  <div class="section-title"><h2>Материалы блока</h2></div>${arr.map(x=>`<div class="content-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${seen.has(x.id)?'✓ пройден':'ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartFromTopic('${jsq(topic)}','${x.id}')">Открыть</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}`);
 }
 function shHardFlowCompletionMeta(){
   const f=shHardFlow;if(!f)return '';
@@ -1615,13 +1703,14 @@ openSection=function(sec,...args){
   const arr=shHardFlowItems(),topics=[...new Set(arr.map(x=>x.topic))],seen=seenContentMap();
   const doneTopics=topics.filter(t=>{const p=topicProgress('hard',t);return p.total>0&&p.done>=p.total}).length;
   const doneMaterials=arr.filter(x=>seen.has(x.id)).length;
+  const materialsSection=isManager()?`
+  <div class="section-title sh-hard-section-title"><h2>Все материалы</h2><span class="muted small">Можно открыть конкретный кейс</span></div>
+  <div class="sh-hard-materials">${arr.map(x=>`<div class="content-row sh-hard-material-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Расчёт':shHardScenarioIsCase(x)?'Ситуация':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seen.has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}</div>`:'';
   showModal(`<div class="modal-head sh-hard-root-head"><div><h2>Hard Skills</h2><div class="muted small">Выберите блок или продолжите тренировку</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
   <div class="sh-hard-root-hero"><div><span>HARD SKILLS</span><h3>Прокачивайте знания по рабочим блокам</h3><p>Можно выбрать конкретный блок или пройти непройденные кейсы вразброс.</p></div><div class="sh-hard-root-stats"><b>${doneTopics} / ${topics.length}</b><small>блоков пройдено</small><b>${doneMaterials} / ${arr.length}</b><small>материалов пройдено</small></div></div>
   <div class="sh-hard-mode-row sh-hard-mode-row-left"><div class="sh-hard-mode-copy"><span>🎲</span><div><b>Вразброс по всем блокам</b><small>Непройденные кейсы из разных тем в случайном порядке.</small></div></div><button class="btn primary" onclick="shHardFlowStartMix()">Начать микс →</button></div>
   <div class="section-title sh-hard-section-title"><h2>Все блоки</h2><span class="muted small">Выберите нужный блок</span></div>
-  <div class="sh-hard-block-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="sh-hard-block-card" onclick="shHardFlowOpenTopic('${jsq(t)}')"><span class="sh-hard-block-icon">${shHardFlowTopicIcon(t)}</span><span class="sh-hard-block-copy"><b>${esc(t)}</b><small>Пройдено ${p.done} из ${p.total} · открыть блок</small></span><span class="sh-hard-block-arrow">→</span></button>`}).join('')}</div>
-  <div class="section-title sh-hard-section-title"><h2>Все материалы</h2><span class="muted small">Можно открыть конкретный кейс</span></div>
-  <div class="sh-hard-materials">${arr.map(x=>`<div class="content-row sh-hard-material-row"><div><span class="pill">${x.type==='dialogue'?'Диалог':shHardSortIsCase(x)?'Карточки':shHardNumericIsCase(x)?'Задача':x.type==='hardcase'?'Hard-кейс':'Кейс'}</span><b>${esc(x.title||x.question)}</b><div class="meta">${esc(x.topic)}${seen.has(x.id)?' · ✓ пройден':' · ещё не пройден'}</div></div><button class="btn secondary" onclick="shHardFlowStartSingle('${x.id}')">Начать</button></div>`).join('')||'<p class="muted">Пока пусто.</p>'}</div>`);
+  <div class="sh-hard-block-grid">${topics.map(t=>{const p=topicProgress('hard',t);return `<button class="sh-hard-block-card" onclick="shHardFlowOpenTopic('${jsq(t)}')"><span class="sh-hard-block-icon">${shHardFlowTopicIcon(t)}</span><span class="sh-hard-block-copy"><b>${esc(t)}</b><small>Пройдено ${p.done} из ${p.total} · открыть блок</small></span><span class="sh-hard-block-arrow">→</span></button>`}).join('')}</div>${materialsSection}`);
 };
 
 finishDialogue=function(){
@@ -1820,11 +1909,17 @@ function shHardNumericSourceHtml(x){
   if(!src.path)return '';
   return `<div class="skill-card procedure-card sh-hard-num-source"><b>📚 Взято из процедуры</b>${src.name?`<br><strong>${esc(src.name)}</strong>`:''}<div class="small" style="margin-top:6px">${esc(src.path)}</div></div>`;
 }
+function shHardNumericFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-hard-num-facts">${facts.map(f=>`<div class="sh-hard-num-fact"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
 function renderHardNumeric(){
   const r=S.currentRun;if(!r||r.type!=='hard-numeric')return;
   const x=r.x,p=x.payload||{},unit=p.unit||'₽';
   const result=r.checked?`<div class="sh-hard-num-result ${r.ok?'is-correct':'is-wrong'}"><div class="sh-hard-num-result-icon">${r.ok?'✓':'!'}</div><div><b>${r.ok?'Верно':'Не совсем'}</b><p>Правильный ответ: <strong>${esc(shHardNumericFormat(p.answer,unit))}</strong></p></div></div><div class="explain sh-hard-num-explain">${esc(p.explanation||x.explanation||'')}</div>${shHardNumericSourceHtml(x)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
-  $('page-run').innerHTML=`<div class="sh-hard-num-wrap"><div class="card sh-hard-num-shell"><div class="actions sh-hard-num-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="pill">Задача</span></div><h2>${esc(x.title||'Расчётная задача')}</h2><div class="sh-hard-num-problem"><b>Условие</b><p>${esc(p.problem||p.question||x.question||'')}</p></div><div class="sh-hard-num-prompt">${esc(p.prompt||'Введите ответ')}</div>${r.checked?`<div class="sh-hard-num-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.value,unit))}</strong></div>`:`<form class="sh-hard-num-form" onsubmit="event.preventDefault();checkHardNumeric()"><label for="hardNumericInput">Ваш ответ</label><div class="sh-hard-num-input-row"><input id="hardNumericInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Например, 162000" aria-describedby="hardNumericHelp"><span>${esc(unit)}</span></div><small id="hardNumericHelp">Можно вводить сумму с пробелами или без них.</small><button class="btn primary" type="submit">Проверить →</button></form>`}${result}</div></div>`;
+  const situation=esc(p.situation||p.problem||p.question||x.question||'');
+  $('page-run').innerHTML=`<div class="sh-hard-num-wrap"><div class="card sh-hard-num-shell"><div class="actions sh-hard-num-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-hard-num-kicker">РАСЧЁТНАЯ ЗАДАЧА</span></div><h2>${esc(x.title||'Расчётная задача')}</h2><div class="sh-hard-num-scenario"><div class="sh-hard-num-scenario-head"><div class="sh-hard-num-scenario-icon">₽</div><div><span>СИТУАЦИЯ КЛИЕНТА</span><b>${esc(p.agency||'ФНС')}</b></div></div><p>${situation}</p>${shHardNumericFactsHtml(p)}</div><div class="sh-hard-num-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(p.prompt||'Введите ответ')}</strong></div>${r.checked?`<div class="sh-hard-num-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.value,unit))}</strong></div>`:`<form class="sh-hard-num-form" onsubmit="event.preventDefault();checkHardNumeric()"><label for="hardNumericInput">Введите сумму</label><div class="sh-hard-num-input-row"><input id="hardNumericInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Например, 162000" aria-describedby="hardNumericHelp"><span>${esc(unit)}</span></div><small id="hardNumericHelp">Введите только число — пробелы в сумме допустимы.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}</div></div>`;
   if(!r.checked){const inp=$('hardNumericInput');if(inp)setTimeout(()=>inp.focus(),0)}
 }
 function checkHardNumeric(){
@@ -1849,3 +1944,904 @@ startContent=function(id){
   return shHardNumericStartContentBase(id);
 };
 /* ===== end SkillHub 7.5.2 ================================================ */
+
+
+/* ===== SkillHub 7.5.4 — rich HARD situational tasks =======================
+   payload.mode = "scenario" renders a full client case with document details,
+   payment/queue facts and decision options.
+============================================================================ */
+function shHardScenarioIsCase(x){
+  return !!(x && x.type==='hardcase' && x.payload && x.payload.mode==='scenario' && Array.isArray(x.payload.options) && x.payload.options.length>=2);
+}
+function shHardScenarioFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-hard-sc-facts">${facts.map(f=>`<div class="sh-hard-sc-fact ${f?.tone?`tone-${esc(f.tone)}`:''}"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
+function shHardScenarioDocumentHtml(p){
+  const d=p?.document||{};
+  if(!d.number&&!d.date&&!d.received&&!d.type)return '';
+  const meta=[d.number?`№ ${esc(d.number)}`:'',d.date?`от ${esc(d.date)}`:'',d.received?`поступило ${esc(d.received)}`:''].filter(Boolean).join(' · ');
+  return `<div class="sh-hard-sc-docline"><span>ОГРАНИЧЕНИЕ</span><div><b>${esc(d.type||'Решение госоргана')}</b>${meta?`<small>${meta}</small>`:''}</div></div>`;
+}
+function shHardScenarioPaymentHtml(p){
+  const a=p?.action||{};
+  if(!a.title&&!a.amount&&!a.queue&&!a.recipient)return '';
+  const meta=[a.queue?`Очередность: ${esc(a.queue)}`:'',a.purpose?`Назначение: ${esc(a.purpose)}`:''].filter(Boolean);
+  return `<div class="sh-hard-sc-wants"><div class="sh-hard-sc-wants-head"><span>КЛИЕНТ ХОЧЕТ</span><b>${esc(a.title||'Платёж')}</b></div><div class="sh-hard-sc-wants-main">${a.amount?`<strong>${esc(a.amount)}</strong>`:''}${a.recipient?`<span>${esc(a.recipient)}</span>`:''}</div>${meta.length?`<div class="sh-hard-sc-wants-meta">${meta.map(x=>`<span>${x}</span>`).join('')}</div>`:''}</div>`;
+}
+function startHardScenario(x){
+  S.currentRun={type:'hard-scenario',x,checked:false,recorded:false,selected:null,ok:false};
+  goRun();renderHardScenario();
+}
+function renderHardScenario(){
+  const r=S.currentRun;if(!r||r.type!=='hard-scenario')return;
+  const x=r.x,p=x.payload||{},opts=p.options||[],right=Number(p.correct);
+  const options=opts.map((o,i)=>{
+    let cls='sh-hard-sc-option';
+    if(r.checked){if(i===right)cls+=' is-correct';if(i===r.selected&&i!==right)cls+=' is-wrong'}
+    return `<button type="button" class="${cls}" ${r.checked?'disabled':''} onclick="answerHardScenario(${i})"><span class="sh-hard-sc-option-num">${i+1}</span><span>${esc(o)}</span></button>`;
+  }).join('');
+  const result=r.checked?`<div class="sh-hard-sc-result ${r.ok?'is-correct':'is-wrong'}"><div class="sh-hard-sc-result-icon">${r.ok?'✓':'!'}</div><div><b>${r.ok?'Верно':'Неверно'}</b><p>${r.ok?'Вы выбрали корректное решение по условиям задачи.':'Ниже показан правильный вариант и логика решения.'}</p></div></div><div class="explain sh-hard-sc-explain">${esc(p.explanation||x.explanation||'')}</div>${shHardNumericSourceHtml(x)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+  const scenario=esc(p.scenario||p.situation||p.problem||p.question||x.question||'');
+  $('page-run').innerHTML=`<div class="sh-hard-sc-wrap"><div class="card sh-hard-sc-shell"><div class="actions sh-hard-sc-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-hard-sc-kicker">СИТУАЦИОННАЯ ЗАДАЧА</span></div><h2>${esc(x.title||'Ситуационная задача')}</h2><div class="sh-hard-sc-scenario"><div class="sh-hard-sc-scenario-head"><div class="sh-hard-sc-scenario-icon">🏛</div><div><span>СИТУАЦИЯ</span><b>${esc(p.agency||'Госорганы')}</b></div></div><p>${scenario}</p>${shHardScenarioDocumentHtml(p)}${shHardScenarioFactsHtml(p)}${shHardScenarioPaymentHtml(p)}</div><div class="sh-hard-sc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(p.question||'Какое решение верное?')}</strong></div><div class="sh-hard-sc-options">${options}</div>${result}</div></div>`;
+}
+function answerHardScenario(i){
+  const r=S.currentRun;if(!r||r.type!=='hard-scenario'||r.checked)return;
+  const right=Number(r.x.payload.correct);
+  r.selected=i;r.ok=i===right;r.checked=true;
+  if(!r.recorded){
+    const d={kind:'hard-scenario',content_id:r.x.id||null,title:r.x.title||'',question:r.x.payload.question||'',options:[...(r.x.payload.options||[])],selected:i,correct:right,is_correct:r.ok,explanation:r.x.payload.explanation||''};
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score:r.ok?100:0,type:'hardcase',cpm:0,details:[d]})}catch(e){console.error('scenario task save failed',e)}
+    r.recorded=true;
+  }
+  renderHardScenario();
+}
+const shHardScenarioStartContentBase=startContent;
+startContent=function(id){
+  const x=S.content.find(c=>c.id===id);
+  if(shHardScenarioIsCase(x)){if(!shHardFlowLaunching)shHardFlow=null;startHardScenario(x);return}
+  return shHardScenarioStartContentBase(id);
+};
+/* ===== end SkillHub 7.5.4 ================================================ */
+
+
+/* ===== SkillHub 2026-09-24 — two-step tariff calculation task ============
+   payload.mode = "tariff_calc"
+   Step 1: employee calculates a commission in a numeric field.
+   Step 2: client adds a condition; employee chooses the better tariff option.
+============================================================================ */
+function shTariffCalcIsCase(x){
+  const p=x&&x.payload;
+  return !!(x&&x.type==='hardcase'&&p&&p.mode==='tariff_calc'&&p.step1&&Number.isFinite(Number(p.step1.answer))&&p.step2&&(Array.isArray(p.step2.options)||Number.isFinite(Number(p.step2.answer))));
+}
+function shTariffCalcMetaHtml(p){
+  const items=[
+    p?.client?['КЛИЕНТ',p.client]:null,
+    p?.date?['ДАТА ОБРАЩЕНИЯ',p.date]:null,
+    p?.subject?['ТЕМА',p.subject]:null
+  ].filter(Boolean);
+  if(!items.length)return '';
+  return `<div class="sh-tcalc-meta">${items.map(([k,v])=>`<div><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('')}</div>`;
+}
+function shTariffCalcFactsHtml(p){
+  const facts=Array.isArray(p?.facts)?p.facts:[];
+  if(!facts.length)return '';
+  return `<div class="sh-tcalc-conditions-title">УСЛОВИЯ ЗАДАЧИ</div><div class="sh-tcalc-facts">${facts.map(f=>`<div class="sh-tcalc-fact ${f?.tone?`tone-${esc(f.tone)}`:''}"><span>${esc(f?.label||'')}</span><strong>${esc(f?.value||'')}</strong></div>`).join('')}</div>`;
+}
+function shTariffCalcActionHtml(p){
+  const a=p?.action||{};
+  if(!a.title&&!a.amount&&!a.recipient&&!a.method)return '';
+  const descriptor=[a.title||'Провести перевод',a.recipient||''].filter(Boolean).join(' ');
+  return `<div class="sh-tcalc-wants"><div class="sh-tcalc-wants-head"><span>КЛИЕНТ ХОЧЕТ</span><b>${esc(descriptor)}</b></div><div class="sh-tcalc-wants-main">${a.amount?`<strong>${esc(a.amount)}</strong>`:''}</div>${a.method?`<div class="sh-tcalc-wants-meta"><span>${esc(a.method)}</span></div>`:''}</div>`;
+}
+function shTariffCalcSourceHtml(p){
+  const src=p?.source||{};
+  if(!src.path&&!src.name)return '';
+  return `<div class="skill-card procedure-card sh-tcalc-source"><b>📚 Где проверить</b>${src.name?`<br><strong>${esc(src.name)}</strong>`:''}${src.path?`<div class="small" style="margin-top:6px">${esc(src.path)}</div>`:''}</div>`;
+}
+function shTariffCalcScenarioHtml(p){
+  return `<div class="sh-tcalc-scenario"><div class="sh-tcalc-scenario-head"><div class="sh-tcalc-icon">₽</div><div><span>СИТУАЦИЯ</span><b>${esc(p.label||'Тарифы')}</b></div></div>${shTariffCalcMetaHtml(p)}${p.scenario||p.situation?`<p>${esc(p.scenario||p.situation||'')}</p>`:''}${shTariffCalcFactsHtml(p)}${shTariffCalcActionHtml(p)}</div>`;
+}
+function startTariffCalc(x){
+  S.currentRun={type:'tariff-calc',x,step:1,step1Checked:false,step1Value:null,step1Ok:false,step2Checked:false,step2Selected:null,step2Value:null,step2Ok:false,recorded:false};
+  goRun();renderTariffCalc();
+}
+function shTariffCalcStepPill(step){
+  return `<div class="sh-tcalc-progress"><span class="${step===1?'active':'done'}">1</span><i></i><span class="${step===2?'active':''}">2</span><b>Шаг ${step} из 2</b></div>`;
+}
+function renderTariffCalc(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc')return;
+  const x=r.x,p=x.payload||{},s1=p.step1||{},s2=p.step2||{};
+  let body='';
+  if(r.step===1){
+    const checked=r.step1Checked;
+    const result=checked?`<div class="sh-tcalc-result ${r.step1Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step1Ok?'✓':'!'}</div><div><b>${r.step1Ok?'Верно':'Не совсем'}</b><p>Правильная комиссия: <strong>${esc(shHardNumericFormat(s1.answer,s1.unit||'₽'))}</strong></p></div></div><div class="sh-tcalc-explain"><b>Расчёт</b><p>${esc(s1.formula||'')}</p>${s1.explanation?`<small>${esc(s1.explanation)}</small>`:''}</div><div class="sh-tcalc-next"><button class="btn primary" type="button" onclick="shTariffCalcNextStep()">Продолжить →</button></div>`:'';
+    body=`${shTariffCalcStepPill(1)}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s1.prompt||'Рассчитайте комиссию')}</strong></div>${checked?`<div class="sh-tcalc-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.step1Value,s1.unit||'₽'))}</strong></div>`:`<form class="sh-tcalc-form" onsubmit="event.preventDefault();checkTariffCalcStep1()"><label for="tariffCalcInput">Комиссия</label><div class="sh-tcalc-input"><input id="tariffCalcInput" type="text" inputmode="decimal" autocomplete="off" placeholder="Введите сумму"><span>${esc(s1.unit||'₽')}</span></div><small>Посчитайте сумму самостоятельно и введите только число.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}`;
+  }else{
+    const comp=Array.isArray(s2.comparison)?`<div class="sh-tcalc-compare">${s2.comparison.map(c=>`<div><span>${esc(c.label||'')}</span><strong>${esc(c.value||'')}</strong>${c.note?`<small>${esc(c.note)}</small>`:''}</div>`).join('')}</div>`:'';
+    const cond=Array.isArray(s2.condition)&&s2.condition.length?`<div class="sh-tcalc-step2-conditions">${s2.condition.map(c=>`<div><span>${esc(c.label||'')}</span><strong>${esc(c.value||'')}</strong></div>`).join('')}</div>`:'';
+    if(Number.isFinite(Number(s2.answer))){
+      const checked=r.step2Checked;
+      const result=checked?`<div class="sh-tcalc-result ${r.step2Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step2Ok?'✓':'!'}</div><div><b>${r.step2Ok?'Верно':'Не совсем'}</b><p>Экономия клиента: <strong>${esc(shHardNumericFormat(s2.answer,s2.unit||'₽'))}</strong></p></div></div>${comp}<div class="sh-tcalc-explain"><b>Расчёт выгоды</b><p>${esc(s2.formula||'')}</p>${s2.explanation?`<small>${esc(s2.explanation)}</small>`:''}</div>${shTariffCalcSourceHtml(p)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+      body=`${shTariffCalcStepPill(2)}<div class="sh-tcalc-client"><div class="sh-tcalc-client-mark">2</div><div><span>НОВОЕ УСЛОВИЕ ОТ КЛИЕНТА</span><p>${esc(s2.client||'')}</p></div></div>${cond}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s2.question||'Рассчитайте выгоду клиента')}</strong></div>${checked?`<div class="sh-tcalc-answer-readonly"><span>Ваш ответ</span><strong>${esc(shHardNumericFormat(r.step2Value,s2.unit||'₽'))}</strong></div>`:`<form class="sh-tcalc-form" onsubmit="event.preventDefault();checkTariffCalcStep2()"><label for="tariffCalcInput2">Экономия клиента</label><div class="sh-tcalc-input"><input id="tariffCalcInput2" type="text" inputmode="decimal" autocomplete="off" placeholder="Введите сумму"><span>${esc(s2.unit||'₽')}</span></div><small>Сравните расходы без пакета и с пакетом и введите сумму экономии.</small><button class="btn primary" type="submit">Проверить ответ →</button></form>`}${result}`;
+    }else{
+      const right=Number(s2.correct);
+      const opts=(s2.options||[]).map((o,i)=>{let cls='sh-tcalc-option';if(r.step2Checked){if(i===right)cls+=' is-correct';if(i===r.step2Selected&&i!==right)cls+=' is-wrong'}return `<button type="button" class="${cls}" ${r.step2Checked?'disabled':''} onclick="answerTariffCalcStep2(${i})"><span>${i+1}</span><b>${esc(o)}</b></button>`}).join('');
+      const result=r.step2Checked?`<div class="sh-tcalc-result ${r.step2Ok?'is-correct':'is-wrong'}"><div class="sh-tcalc-result-icon">${r.step2Ok?'✓':'!'}</div><div><b>${r.step2Ok?'Верно':'Неверно'}</b><p>${r.step2Ok?'Вы выбрали более выгодный вариант для этой ситуации.':'Сравните итоговые расходы по двум вариантам.'}</p></div></div>${comp}<div class="sh-tcalc-explain"><b>Почему</b><p>${esc(s2.explanation||'')}</p></div>${shTariffCalcSourceHtml(p)}${shHardFlowCompletionMeta()}<div class="sh-hard-flow-actions">${shHardFlowCompletionButtons()}</div>`:'';
+      body=`${shTariffCalcStepPill(2)}<div class="sh-tcalc-client"><div class="sh-tcalc-client-mark">2</div><div><span>НОВОЕ УСЛОВИЕ ОТ КЛИЕНТА</span><p>${esc(s2.client||'')}</p></div></div>${cond}<div class="sh-tcalc-question"><span>ВОПРОС СОТРУДНИКУ</span><strong>${esc(s2.question||'Какой вариант выгоднее?')}</strong></div><div class="sh-tcalc-options">${opts}</div>${result}`;
+    }
+  }
+  $('page-run').innerHTML=`<div class="sh-tcalc-wrap"><div class="card sh-tcalc-shell"><div class="actions sh-tcalc-top"><button class="btn secondary" onclick="shHardFlowBack()">← Выйти</button><span class="sh-tcalc-kicker">РАСЧЁТНАЯ ЗАДАЧА · ТАРИФЫ</span></div><h2>${esc(x.title||'Расчёт комиссии')}</h2>${shTariffCalcScenarioHtml(p)}${body}</div></div>`;
+  if(r.step===1&&!r.step1Checked){const inp=$('tariffCalcInput');if(inp)setTimeout(()=>inp.focus(),0)}else if(r.step===2&&!r.step2Checked&&Number.isFinite(Number(s2.answer))){const inp=$('tariffCalcInput2');if(inp)setTimeout(()=>inp.focus(),0)}
+}
+function checkTariffCalcStep1(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==1||r.step1Checked)return;
+  const inp=$('tariffCalcInput'),v=shHardNumericParse(inp?.value);
+  if(v===null){toast('Введите сумму комиссии числом');if(inp)inp.focus();return}
+  const s1=r.x.payload.step1,right=Number(s1.answer),tol=Math.max(0,Number(s1.tolerance||0));
+  r.step1Value=v;r.step1Ok=Math.abs(v-right)<=tol;r.step1Checked=true;renderTariffCalc();
+}
+function shTariffCalcNextStep(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||!r.step1Checked)return;r.step=2;renderTariffCalc();
+}
+function checkTariffCalcStep2(){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==2||r.step2Checked)return;
+  const s2=r.x.payload.step2;if(!Number.isFinite(Number(s2.answer)))return;
+  const inp=$('tariffCalcInput2'),v=shHardNumericParse(inp?.value);
+  if(v===null){toast('Введите сумму экономии числом');if(inp)inp.focus();return}
+  const right=Number(s2.answer),tol=Math.max(0,Number(s2.tolerance||0));
+  r.step2Value=v;r.step2Ok=Math.abs(v-right)<=tol;r.step2Checked=true;
+  if(!r.recorded){
+    const score=Math.round(((r.step1Ok?1:0)+(r.step2Ok?1:0))/2*100);
+    const details=[
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:1,question:r.x.payload.step1.prompt||'',selected_value:r.step1Value,correct_value:Number(r.x.payload.step1.answer),is_correct:r.step1Ok,explanation:r.x.payload.step1.explanation||''},
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:2,question:s2.question||'',selected_value:v,correct_value:right,is_correct:r.step2Ok,explanation:s2.explanation||''}
+    ];
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score,type:'hardcase',cpm:0,details})}catch(e){console.error('tariff calc save failed',e)}
+    r.recorded=true;
+  }
+  renderTariffCalc();
+}
+function answerTariffCalcStep2(i){
+  const r=S.currentRun;if(!r||r.type!=='tariff-calc'||r.step!==2||r.step2Checked)return;
+  const s2=r.x.payload.step2,right=Number(s2.correct);
+  r.step2Selected=i;r.step2Ok=i===right;r.step2Checked=true;
+  if(!r.recorded){
+    const score=Math.round(((r.step1Ok?1:0)+(r.step2Ok?1:0))/2*100);
+    const details=[
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:1,question:r.x.payload.step1.prompt||'',selected_value:r.step1Value,correct_value:Number(r.x.payload.step1.answer),is_correct:r.step1Ok,explanation:r.x.payload.step1.explanation||''},
+      {kind:'tariff-calc',content_id:r.x.id||null,title:r.x.title||'',step:2,question:s2.question||'',options:[...(s2.options||[])],selected:i,correct:right,is_correct:r.step2Ok,explanation:s2.explanation||''}
+    ];
+    try{recordAttempt({section:r.x.section,topic:r.x.topic,score,type:'hardcase',cpm:0,details})}catch(e){console.error('tariff calc save failed',e)}
+    r.recorded=true;
+  }
+  renderTariffCalc();
+}
+const shTariffCalcStartContentBase=startContent;
+startContent=function(id){
+  const x=S.content.find(c=>c.id===id);
+  if(shTariffCalcIsCase(x)){if(!shHardFlowLaunching)shHardFlow=null;startTariffCalc(x);return}
+  return shTariffCalcStartContentBase(id);
+};
+/* ===== end two-step tariff calculation task ============================== */
+
+/* ===== SkillHub V8 — user-selectable dark / light theme ================ */
+function shThemeCurrent(){
+  const t=localStorage.getItem('sh_theme');
+  return t==='light'?'light':'dark';
+}
+function applyTheme(theme,save=true){
+  const t=theme==='light'?'light':'dark';
+  document.documentElement.dataset.theme=t;
+  if(save)localStorage.setItem('sh_theme',t);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',t==='light'?'#f4f5f7':'#0b0b0c');
+  const apple=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(apple)apple.setAttribute('content',t==='light'?'default':'black-translucent');
+  const btn=document.getElementById('themeToggleBtn');
+  if(btn)btn.textContent=t==='dark'?'☀️ Светлая тема':'🌙 Тёмная тема';
+}
+function toggleTheme(){
+  const next=shThemeCurrent()==='dark'?'light':'dark';
+  applyTheme(next,true);
+  try{toast(next==='light'?'Светлая тема включена':'Тёмная тема включена')}catch(e){}
+}
+applyTheme(shThemeCurrent(),false);
+/* ===== end theme switch ================================================= */
+
+/* ===== SkillHub 2026-09-24 — grouped RG manual review queue v8.6 ===== */
+let shManualReviewBatch={login:null,ids:[],pos:0,total:0};
+
+function shManualCaseWord(n){
+  const a=Math.abs(Number(n)||0)%100,b=a%10;
+  if(a>10&&a<20)return 'кейсов';
+  if(b===1)return 'кейс';
+  if(b>=2&&b<=4)return 'кейса';
+  return 'кейсов';
+}
+function shManualWorkWord(n){
+  const a=Math.abs(Number(n)||0)%100,b=a%10;
+  if(a>10&&a<20)return 'работ';
+  if(b===1)return 'работа';
+  if(b>=2&&b<=4)return 'работы';
+  return 'работ';
+}
+function shManualDateParts(v){
+  const d=new Date(v);if(Number.isNaN(d.getTime()))return{date:'—',time:'—',full:'—'};
+  return {
+    date:d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}),
+    time:d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),
+    full:d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  };
+}
+function shManualRangeText(rows){
+  if(!rows?.length)return '';
+  const sorted=rows.slice().sort((a,b)=>Date.parse(a.created_at||0)-Date.parse(b.created_at||0));
+  const first=shManualDateParts(sorted[0].created_at),last=shManualDateParts(sorted[sorted.length-1].created_at);
+  if(first.date===last.date)return `${first.date} · ${first.time}–${last.time}`;
+  return `${first.date} ${first.time} — ${last.date} ${last.time}`;
+}
+function shManualPendingGroups(){
+  const rows=typeof pendingManualForMentor==='function'?pendingManualForMentor():[];
+  const map=new Map();
+  for(const r of rows){
+    if(!map.has(r.login))map.set(r.login,[]);
+    map.get(r.login).push(r);
+  }
+  return [...map.entries()].map(([login,items])=>{
+    items.sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0));
+    const user=(S.allowed||[]).find(x=>x.login===login)||{};
+    const latest=items[0],latestContent=(S.content||[]).find(x=>x.id===latest?.content_id);
+    return {login,user,name:user.name||login,rows:items,count:items.length,latest,latestContent,latestTs:Date.parse(latest?.created_at||0)||0};
+  }).sort((a,b)=>b.latestTs-a.latestTs);
+}
+
+manualReviewPanelHtml=function(){
+  const groups=shManualPendingGroups(),total=groups.reduce((n,g)=>n+g.count,0);
+  if(!groups.length){
+    return `<section class="sh-manual-review-section"><div class="sh-manual-review-head"><div><h2>✍️ Проверка работ</h2><p>Ручные кейсы сотрудников</p></div><span class="pill good">0 на проверке</span></div><div class="sh-manual-review-empty">Новых работ на проверку нет 🎉</div></section>`;
+  }
+  return `<section class="sh-manual-review-section"><div class="sh-manual-review-head"><div><h2>✍️ Проверка работ</h2><p>${groups.length} ${groups.length===1?'сотрудник':'сотрудников'} · ${total} ${shManualCaseWord(total)} на проверке</p></div><span class="pill warn">${total} на проверке</span></div><div class="sh-manual-review-grid">${groups.map(g=>{
+    const initialsText=typeof initials==='function'?initials(g.name):String(g.name||g.login).slice(0,2).toUpperCase();
+    return `<button class="sh-manual-review-card" onclick="openManualReviewGroup('${jsq(g.login)}')"><span class="sh-manual-review-avatar">${esc(initialsText)}</span><span class="sh-manual-review-copy"><b>${esc(g.name)}</b><strong>${g.count} ручн. ${shManualCaseWord(g.count)} на проверке</strong><small>${esc(shManualRangeText(g.rows))}</small><em>Последняя: ${esc(g.latestContent?.title||'Ручной тренажёр')}</em></span><span class="sh-manual-review-open">Проверить ${g.count} →</span></button>`;
+  }).join('')}</div></section>`;
+};
+
+function openManualReviewGroup(login){
+  const rows=(typeof pendingManualForMentor==='function'?pendingManualForMentor():[]).filter(x=>x.login===login).sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0));
+  if(!rows.length){toast('У сотрудника уже нет работ на проверке');renderMentor();return}
+  shManualReviewBatch={login,ids:rows.map(x=>x.id),pos:0,total:rows.length};
+  openManualReview(rows[0].id);
+}
+function closeManualReviewBatch(){
+  shManualReviewBatch={login:null,ids:[],pos:0,total:0};
+  closeModal();
+}
+function shManualBatchPosition(answerId){
+  if(!shManualReviewBatch.login)return null;
+  const idx=shManualReviewBatch.ids.indexOf(answerId);
+  return idx<0?null:{index:idx+1,total:shManualReviewBatch.total};
+}
+
+openManualReview=function(answerId){
+  const r=(S.manualAnswers||[]).find(x=>x.id===answerId);if(!r)return;
+  const c=S.content.find(x=>x.id===r.content_id),u=S.allowed.find(x=>x.login===r.login),history=manualHistory(r.content_id,r.login),batch=shManualBatchPosition(answerId);
+  const nextId=batch?shManualReviewBatch.ids.slice(batch.index).find(id=>(S.manualAnswers||[]).some(x=>x.id===id&&x.status==='submitted')):null;
+  const nextRow=nextId?(S.manualAnswers||[]).find(x=>x.id===nextId):null,nextContent=nextRow?S.content.find(x=>x.id===nextRow.content_id):null;
+  showModal(`<div class="modal-head"><div><div class="sh-manual-review-modal-kicker">${batch?`Работа ${batch.index} из ${batch.total}`:'Ручная проверка'}</div><h2>${esc(c?.title||'Ручной тренажёр')}</h2><div class="meta">${esc(u?.name||r.login)} · ${esc(r.login)} · версия ${r.version} · ${new Date(r.created_at).toLocaleString('ru-RU')}</div></div><button class="btn secondary" onclick="${batch?'closeManualReviewBatch()':'closeModal()'}">✕</button></div>${batch?`<div class="sh-manual-review-progress"><span style="width:${Math.round(batch.index/batch.total*100)}%"></span></div>`:''}<div class="review-prompt"><b>Задание</b><div>${esc(c?.question||'')}</div>${c?.instruction?`<small>${esc(c.instruction)}</small>`:''}</div><div class="review-current-answer"><b>Ответ сотрудника</b><div>${esc(r.answer)}</div></div><div class="form-grid"><div class="field full"><label>Комментарий РГ</label><textarea id="manualReviewComment" rows="4" placeholder="Что хорошо / что нужно поправить"></textarea></div><div class="field full"><label>Как можно было сформулировать <span class="muted">(необязательно)</span></label><textarea id="manualReviewSuggestion" rows="4" placeholder="Ваш рекомендуемый вариант"></textarea></div></div>${batch&&nextContent?`<div class="sh-manual-review-next"><span>Следующая работа</span><b>${esc(nextContent.title||'Ручной тренажёр')}</b></div>`:''}<div class="actions review-actions"><button class="btn secondary" onclick="reviewManualAnswer('${r.id}','revision_requested')">↩ На доработку</button><button class="btn primary" onclick="reviewManualAnswer('${r.id}','accepted')">✓ Принято</button></div>${history.length>1?`<details class="sh-manual-history-details"><summary>Предыдущие версии (${history.length-1})</summary>${history.filter(x=>x.id!==r.id).map(x=>`<div class="manual-history-item"><div class="actions" style="justify-content:space-between"><b>Версия ${x.version}</b><span class="pill ${manualStatusClass(x.status)}">${manualStatusText(x.status)}</span></div><div class="manual-answer-text">${esc(x.answer)}</div>${x.mentor_comment?`<div class="review-note"><b>Ваш комментарий:</b> ${esc(x.mentor_comment)}</div>`:''}</div>`).join('')}</details>`:''}`);
+};
+
+reviewManualAnswer=async function(answerId,decision){
+  const comment=$('manualReviewComment')?.value.trim()||'',suggestion=$('manualReviewSuggestion')?.value.trim()||'';
+  if(decision==='revision_requested'&&!comment){toast('Для доработки добавьте комментарий');return}
+  const batchActive=!!shManualReviewBatch.login,batchIds=shManualReviewBatch.ids.slice(),currentPos=batchIds.indexOf(answerId);
+  const {error}=await S.sb.rpc('review_manual_answer',{p_answer_id:answerId,p_decision:decision,p_comment:comment||null,p_suggestion:suggestion||null});
+  if(error){toast(error.message||String(error));return}
+  closeModal();await syncAll();
+  if(batchActive){
+    let nextPos=currentPos+1,nextId=null;
+    while(nextPos<batchIds.length){const candidate=(S.manualAnswers||[]).find(x=>x.id===batchIds[nextPos]);if(candidate?.status==='submitted'){nextId=candidate.id;break}nextPos++}
+    if(nextId){shManualReviewBatch.pos=nextPos;openManualReview(nextId);toast(decision==='accepted'?'Принято · открыта следующая работа':'На доработку · открыта следующая работа');return}
+    const login=shManualReviewBatch.login;shManualReviewBatch={login:null,ids:[],pos:0,total:0};renderMentor();toast(`Готово — все работы ${login} из этой очереди проверены`);return;
+  }
+  renderMentor();toast(decision==='accepted'?'Работа принята':'Отправлено на доработку');
+};
+
+// Keep the main RG dashboard compact: one attention row per employee, not one row per manual case.
+renderManagerMentor=function(){
+  renderManagerMentorV718();
+  const page=$('page-mentor');if(!page)return;
+  const groups=shManualPendingGroups(),u=teamRows(S.profile.login),overdueUsers=u.filter(x=>x.overdue),attentionCard=page.querySelector('.sh74-manager-main .sh74-light-card');
+  if(attentionCard){
+    const items=[];
+    for(const g of groups.slice(0,4))items.push(`<div class="sh74-attention-row">${sh74AvatarHtml(g.login,g.name)}<div><b>${esc(g.name)}</b><div class="meta">${g.count} ${shManualWorkWord(g.count)} на проверке · ${esc(shManualRangeText(g.rows))}</div></div><button class="sh74-attention-status" onclick="openManualReviewGroup('${jsq(g.login)}')">Проверить ${g.count}</button></div>`);
+    for(const x of overdueUsers.slice(0,Math.max(0,4-items.length)))items.push(`<div class="sh74-attention-row">${sh74AvatarHtml(x.login,x.name||x.login)}<div><b>${esc(x.name||x.login)}</b><div class="meta">Просрочено назначений: ${x.overdue}</div></div><button class="sh74-attention-status bad" onclick="openUserAttempts('${jsq(x.login)}')">Просрочено</button></div>`);
+    attentionCard.innerHTML=`<div class="sh74-card-head"><h3>Требуют внимания</h3><small>${items.length?'Актуальные задачи':'Всё спокойно'}</small></div>${items.join('')||'<div class="muted">Новых работ и просрочек сейчас нет 🎉</div>'}`;
+  }
+  const kpis=page.querySelector('.sh74-kpis');
+  if(kpis)kpis.insertAdjacentHTML('afterend',manualReviewPanelHtml());
+  else page.insertAdjacentHTML('afterbegin',manualReviewPanelHtml());
+};
+/* ===== end grouped RG manual review queue v8.6 ===== */
+
+/* ===== SkillHub 2026-09-24 — RG self-practice sandbox v8.7 ===== */
+titles.rgpractice=['Демо','Пройдите путь сотрудника и руководителя на ручном кейсе'];
+function sh816DemoRoleShort(){return S.profile?.role==='rs'?'РС':'РГ'}
+function sh816DemoRoleLong(){return S.profile?.role==='rs'?'РУКОВОДИТЕЛЯ СЕКТОРА':'РУКОВОДИТЕЛЯ ГРУППЫ'}
+function sh816DemoAllowed(){return ['mentor','rs'].includes(S.profile?.role)}
+
+function rgDemoKey(){return 'skillhub_rg_demo_'+String(S.profile?.login||'mentor')}
+function rgDemoLoad(){try{const v=JSON.parse(localStorage.getItem(rgDemoKey())||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+function rgDemoSave(rows){localStorage.setItem(rgDemoKey(),JSON.stringify(rows||[]))}
+function rgDemoLatest(contentId){return rgDemoLoad().filter(x=>x.content_id===contentId).sort((a,b)=>Number(b.version||0)-Number(a.version||0))[0]||null}
+function rgDemoManualContent(){return (S.content||[]).filter(x=>x.status==='published'&&x.type==='manual'&&x.section==='soft')}
+function rgDemoStatusText(s){return s==='submitted'?'На проверке':s==='revision_requested'?'На доработке':s==='accepted'?'Принято':'Не начато'}
+function rgDemoStatusClass(s){return s==='accepted'?'good':s==='revision_requested'?'warn':s==='submitted'?'bad':''}
+function rgDemoRowsByStatus(s){return rgDemoLoad().filter(x=>x.status===s).sort((a,b)=>Date.parse(b.updated_at||b.created_at||0)-Date.parse(a.updated_at||a.created_at||0))}
+function rgDemoReset(){const role=sh816DemoRoleShort();if(!confirm(`Сбросить тестовые ответы в разделе «Демо ${role}»? Рабочие данные сотрудников не изменятся.`))return;localStorage.removeItem(rgDemoKey());renderRgPractice();toast('Демо очищено')}
+
+function rgDemoOwnAttempts(sec){return (S.attempts||[]).filter(x=>x.login===S.profile?.login&&x.section===sec)}
+function rgDemoAvg(sec){const a=rgDemoOwnAttempts(sec);return a.length?Math.round(a.reduce((s,x)=>s+Number(x.score||0),0)/a.length):null}
+function rgDemoLast(sec){return rgDemoOwnAttempts(sec).slice().sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0))[0]||null}
+function rgDemoTypingStats(){const a=rgDemoOwnAttempts('typing');if(!a.length)return{count:0,bestCpm:null,lastAcc:null,last:null};const bySpeed=a.slice().sort((x,y)=>Number(y.cpm||0)-Number(x.cpm||0));const last=a.slice().sort((x,y)=>Date.parse(y.created_at||0)-Date.parse(x.created_at||0))[0];return{count:a.length,bestCpm:Number(bySpeed[0]?.cpm||0)||null,lastAcc:last?Number(last.score||0):null,last}}
+function rgDemoResultsHtml(){
+  const rows=(S.attempts||[]).filter(x=>x.login===S.profile?.login&&['soft','hard','typing'].includes(x.section)).slice().sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0));
+  const soft=rows.filter(x=>x.section==='soft'),hard=rows.filter(x=>x.section==='hard'),typing=rows.filter(x=>x.section==='typing');
+  const avg=a=>a.length?Math.round(a.reduce((s,x)=>s+Number(x.score||0),0)/a.length):null;
+  const last=a=>a[0]||null;
+  const bestTyping=typing.length?typing.slice().sort((a,b)=>Number(b.cpm||0)-Number(a.cpm||0))[0]:null;
+  const role=sh816DemoRoleShort();
+  const name=S.profile?.name||S.profile?.login||(role==='РС'?'Руководитель сектора':'Руководитель группы');
+  const login=S.profile?.login||'';
+  const attempts=rows.length;
+  const lastAt=rows[0]?.created_at?new Date(rows[0].created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+  return `<section class="rg-demo-results">
+    <div class="rg-demo-results-head"><div><h3>📊 Как ${role} увидит результаты сотрудника</h3><p>Здесь вы сами выступаете как сотрудник. После прохождения Soft / Hard / Печати откройте карточку и посмотрите попытки, ответы и ошибки.</p></div></div>
+    <div class="rg-demo-self-card">
+      <div class="rg-demo-self-main">
+        ${sh74AvatarHtml(login,name)}
+        <div class="rg-demo-self-person"><b>${esc(name)}</b><small>${esc(login)} · Демо ${role}</small><span>${attempts?`${attempts} попыток · последняя ${lastAt}`:'Попыток пока нет'}</span></div>
+        <button class="btn primary rg-demo-open-card" onclick="openRgDemoSelfAttempts()">Открыть карточку →</button>
+      </div>
+      <div class="rg-demo-self-metrics">
+        <div><span>Soft Skills</span><strong>${soft.length?avg(soft)+'%':'—'}</strong><small>${soft.length?`${soft.length} попыток · последняя ${Number(last(soft)?.score||0)}%`:'нет попыток'}</small></div>
+        <div><span>Hard Skills</span><strong>${hard.length?avg(hard)+'%':'—'}</strong><small>${hard.length?`${hard.length} попыток · последняя ${Number(last(hard)?.score||0)}%`:'нет попыток'}</small></div>
+        <div><span>Печать</span><strong>${bestTyping?Number(bestTyping.cpm||0)+' зн/мин':'—'}</strong><small>${typing.length?`${typing.length} попыток · последняя точность ${Number(last(typing)?.score||0)}%`:'нет попыток'}</small></div>
+      </div>
+      <div class="rg-demo-self-actions"><span>Сначала пройдите как сотрудник:</span><button class="btn secondary" onclick="openSoftHub()">Soft</button><button class="btn secondary" onclick="openSection('hard')">Hard</button><button class="btn secondary" onclick="startTyping()">Печать</button></div>
+    </div>
+  </section>`;
+}
+function openRgDemoSelfAttempts(){
+  if(!sh816DemoAllowed())return;
+  const role=sh816DemoRoleShort();
+  const rows=(S.attempts||[]).filter(x=>x.login===S.profile.login&&['soft','hard','typing'].includes(x.section)).slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const name=S.profile?.name||S.profile?.login||(role==='РС'?'Руководитель сектора':'Руководитель группы');
+  const avg=sec=>{const a=rows.filter(x=>x.section===sec);return a.length?Math.round(a.reduce((s,x)=>s+Number(x.score||0),0)/a.length):null};
+  const typing=rows.filter(x=>x.section==='typing'),bestTyping=typing.length?typing.slice().sort((a,b)=>Number(b.cpm||0)-Number(a.cpm||0))[0]:null;
+  showModal(`<div class="modal-head"><div><span class="rg-demo-kicker">ДЕМО ${role} · КАК КАРТОЧКА СОТРУДНИКА</span><h2>${esc(name)}</h2><div class="meta">${esc(S.profile.login)} · история попыток</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
+    <div class="rg-demo-modal-kpis"><div><small>Soft</small><strong>${avg('soft')===null?'—':avg('soft')+'%'}</strong></div><div><small>Hard</small><strong>${avg('hard')===null?'—':avg('hard')+'%'}</strong></div><div><small>Печать</small><strong>${bestTyping?Number(bestTyping.cpm||0)+' зн/мин':'—'}</strong></div><div><small>Попыток</small><strong>${rows.length}</strong></div></div>
+    <div class="hint rg-demo-card-hint">Нажмите «Ответы» у попытки — увидите, какой вариант «сотрудник» выбрал, какой был правильным и где была ошибка. Это тот же просмотр, который руководитель использует в карточке сотрудника.</div>
+    <div class="card table-wrap"><table class="table"><thead><tr><th>Дата</th><th>Раздел</th><th>Тема</th><th>Результат</th><th>Детали</th></tr></thead><tbody>${rows.length?rows.map(a=>`<tr><td>${new Date(a.created_at).toLocaleString('ru-RU')}</td><td>${secName(a.section)}</td><td>${esc(a.topic||'—')}</td><td>${a.type==='typing'?`<span class="pill good">${Number(a.cpm||0)} зн/мин</span><div class="muted small">точность ${Number(a.score||0)}%</div>`:`<span class="pill ${Number(a.score)>=90?'good':Number(a.score)>=75?'warn':'bad'}">${a.score}%</span>`}</td><td>${a.type==='typing'?'<span class="muted small">скорость / точность</span>':attemptDetails(a).length?`<button class="btn secondary" onclick="openAttemptReview('${a.id}')">Ответы</button>`:'<span class="muted small">нет детализации</span>'}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">Сначала пройдите Soft Skills, Hard Skills или Печать в «Демо ${role}».</td></tr>'}</tbody></table></div>`);
+}
+function renderRgPractice(){
+  if(!sh816DemoAllowed()){go('mentor');return}
+  const role=sh816DemoRoleShort(),roleLong=sh816DemoRoleLong();
+  $('pageTitle').textContent=`Демо ${role}`;$('pageSub').textContent='Пройдите путь сотрудника и руководителя на ручном кейсе';
+  const page=$('page-rgpractice'),manual=rgDemoManualContent(),pending=rgDemoRowsByStatus('submitted'),revision=rgDemoRowsByStatus('revision_requested'),accepted=rgDemoRowsByStatus('accepted');
+  const pendingCard=pending.length?pending.map(r=>{const c=S.content.find(x=>x.id===r.content_id);return `<button class="rg-demo-review-row" onclick="openRgDemoReview('${r.id}')"><span><b>${esc(c?.title||'Ручной тренажёр')}</b><small>версия ${r.version} · ${new Date(r.updated_at||r.created_at).toLocaleString('ru-RU')}</small></span><span>Проверить →</span></button>`}).join(''):'<div class="rg-demo-empty">Пока нет тестовых работ на проверке.</div>';
+  const revisionCard=revision.length?revision.map(r=>{const c=S.content.find(x=>x.id===r.content_id);return `<button class="rg-demo-review-row" onclick="startRgDemoManual('${r.content_id}')"><span><b>${esc(c?.title||'Ручной тренажёр')}</b><small>${r.mentor_comment?'Комментарий: '+esc(r.mentor_comment):'Верните кейс в работу и отправьте новую версию'}</small></span><span>Доработать →</span></button>`}).join(''):'';
+  page.innerHTML=`<div class="rg-demo-intro"><div><span class="rg-demo-kicker">ТОЛЬКО ДЛЯ ${roleLong}</span><h2>Попробуйте весь цикл ручного тренажёра</h2><p>Ручной демо-кейс безопасный и хранится только в вашем браузере. Автоматические Soft, Hard и Печать сохраняют только ваши личные результаты ${role} и не смешиваются со статистикой сотрудников.</p></div><button class="btn secondary" onclick="rgDemoReset()">Сбросить демо</button></div>
+  ${rgDemoResultsHtml()}
+  <div class="rg-demo-steps"><div><b>1</b><span>Пройдите ручной кейс</span></div><div><b>2</b><span>Отправьте себе на проверку</span></div><div><b>3</b><span>Оставьте комментарий / верните на доработку</span></div></div>
+  <div class="rg-demo-grid"><section class="card"><div class="rg-demo-card-head"><div><h3>✍️ Ручные кейсы</h3><p>Выберите любой опубликованный кейс Soft Skills</p></div><span class="pill">${manual.length}</span></div><div class="rg-demo-case-list">${manual.slice(0,12).map(c=>{const last=rgDemoLatest(c.id);return `<button class="rg-demo-case" onclick="startRgDemoManual('${c.id}')"><span><b>${esc(c.title||c.question||'Ручной кейс')}</b><small>${esc(c.topic||'Soft Skills')}</small></span>${last?`<em class="pill ${rgDemoStatusClass(last.status)}">${rgDemoStatusText(last.status)}</em>`:'<em>Открыть →</em>'}</button>`}).join('')||'<div class="rg-demo-empty">Ручные кейсы пока не опубликованы.</div>'}</div></section>
+  <section class="card"><div class="rg-demo-card-head"><div><h3>📥 На проверке у меня</h3><p>То, что вы только что отправили как «сотрудник»</p></div><span class="pill ${pending.length?'warn':'good'}">${pending.length}</span></div><div class="rg-demo-case-list">${pendingCard}</div>${revisionCard?`<div class="rg-demo-subhead">↩ На доработке</div><div class="rg-demo-case-list">${revisionCard}</div>`:''}${accepted.length?`<div class="rg-demo-subhead">✓ Уже принято: ${accepted.length}</div>`:''}</section></div>`;
+}
+
+function startRgDemoManual(contentId){
+  if(!sh816DemoAllowed())return;
+  const role=sh816DemoRoleShort();
+  const c=S.content.find(x=>x.id===contentId);if(!c||c.type!=='manual'){toast('Ручной кейс не найден');return}
+  const last=rgDemoLatest(contentId),editable=!last||last.status==='revision_requested',prefill=last?.status==='revision_requested'?last.answer:'';
+  goRun();$('pageTitle').textContent=`Демо ${role}`;$('pageSub').textContent='Сейчас вы в роли сотрудника';
+  $('page-run').innerHTML=`<div class="card manual-run-card rg-demo-run"><div class="actions" style="justify-content:space-between"><button class="btn secondary" onclick="go('rgpractice')">← Назад</button><span class="pill">Демо · роль сотрудника</span></div><div class="meta" style="margin-top:14px">${esc(c.topic||'Soft Skills')}</div><h2>${esc(c.title||'Ручной тренажёр')}</h2><p class="muted">${esc(c.instruction||'Сформулируйте ответ своими словами.')}</p><div class="manual-prompt">${esc(c.question||c.title||'')}</div>${last&&last.status==='revision_requested'?`<div class="manual-status-box warn"><b>Руководитель вернул работу на доработку</b><div>${esc(last.mentor_comment||'Попробуйте улучшить формулировку.')}</div>${last.mentor_suggestion?`<div class="review-note suggestion"><b>Пример:</b> ${esc(last.mentor_suggestion)}</div>`:''}</div>`:''}${last&&last.status==='accepted'?`<div class="manual-status-box good"><b>Работа уже принята</b><div class="muted small">Для нового цикла нажмите «Сбросить демо» в разделе Демо ${role}.</div></div>`:''}${last&&last.status==='submitted'?`<div class="manual-status-box"><b>Работа уже отправлена вам на проверку</b><div class="muted small">Вернитесь в «Демо ${role}» и откройте её в блоке «На проверке у меня».</div></div>`:''}${editable?`<div class="field manual-answer-field"><label>${last?'Исправленный вариант':'Ваш ответ'}</label><textarea id="rgDemoAnswer" rows="7" placeholder="Напишите ответ так, как сказали бы его клиенту...">${esc(prefill)}</textarea></div><div class="actions" style="justify-content:flex-end"><button class="btn primary" onclick="submitRgDemoManual('${contentId}')">Отправить себе на проверку →</button></div>`:`<div class="actions" style="justify-content:flex-end"><button class="btn primary" onclick="go('rgpractice')">Перейти к проверке →</button></div>`}</div>`;
+}
+
+function submitRgDemoManual(contentId){
+  const answer=$('rgDemoAnswer')?.value.trim()||'';if(answer.length<3){toast('Напишите тестовый ответ');return}
+  const rows=rgDemoLoad(),prev=rows.filter(x=>x.content_id===contentId).sort((a,b)=>Number(b.version||0)-Number(a.version||0))[0],version=prev?Number(prev.version||1)+1:1,now=new Date().toISOString();
+  rows.push({id:'rgdemo-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),content_id:contentId,version,answer,status:'submitted',mentor_comment:null,mentor_suggestion:null,created_at:now,updated_at:now});rgDemoSave(rows);go('rgpractice');toast('Отправлено себе на проверку')
+}
+
+function openRgDemoReview(id){
+  const rows=rgDemoLoad(),r=rows.find(x=>x.id===id);if(!r||r.status!=='submitted'){renderRgPractice();return}const c=S.content.find(x=>x.id===r.content_id);
+  showModal(`<div class="modal-head"><div><span class="rg-demo-kicker">ДЕМО · РОЛЬ РУКОВОДИТЕЛЯ</span><h2>${esc(c?.title||'Ручной тренажёр')}</h2><div class="meta">Ваш тестовый ответ · версия ${r.version}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="review-prompt"><b>Задание</b><div>${esc(c?.question||'')}</div>${c?.instruction?`<small>${esc(c.instruction)}</small>`:''}</div><div class="review-current-answer"><b>Ответ «сотрудника»</b><div>${esc(r.answer)}</div></div><div class="form-grid"><div class="field full"><label>Комментарий руководителя</label><textarea id="rgDemoComment" rows="4" placeholder="Например: добавьте больше присоединения к эмоции клиента"></textarea></div><div class="field full"><label>Как можно было сформулировать <span class="muted">(необязательно)</span></label><textarea id="rgDemoSuggestion" rows="3" placeholder="Ваш пример"></textarea></div></div><div class="actions review-actions"><button class="btn secondary" onclick="saveRgDemoReview('${id}','revision_requested')">↩ На доработку</button><button class="btn primary" onclick="saveRgDemoReview('${id}','accepted')">✓ Принято</button></div>`)
+}
+
+function saveRgDemoReview(id,decision){
+  const rows=rgDemoLoad(),i=rows.findIndex(x=>x.id===id);if(i<0)return;const comment=$('rgDemoComment')?.value.trim()||'',suggestion=$('rgDemoSuggestion')?.value.trim()||'';if(decision==='revision_requested'&&!comment){toast('Для доработки напишите комментарий');return}rows[i]={...rows[i],status:decision,mentor_comment:comment||null,mentor_suggestion:suggestion||null,updated_at:new Date().toISOString()};rgDemoSave(rows);closeModal();go('rgpractice');toast(decision==='accepted'?'Тестовая работа принята':'Тестовая работа возвращена на доработку')
+}
+
+const sh87RenderBase=render;
+render=function(p){if(p==='rgpractice')return renderRgPractice();return sh87RenderBase(p)};
+const sh87EnterBase=enterApp;
+enterApp=function(){sh87EnterBase();document.querySelectorAll('.rg-only').forEach(x=>x.classList.toggle('hidden',S.profile?.role!=='mentor'))};
+/* ===== end RG self-practice sandbox v8.7 ===== */
+
+
+/* ===== SkillHub V8.14 — simplified RG / RS workspaces ===== */
+function sh814SetNavLabel(page,label){
+  const el=document.querySelector(`.nav-btn[data-page="${page}"] .nav-text`);if(el)el.textContent=label;
+}
+function sh814ConfigureRoleNavigation(){
+  if(!S.profile)return;
+  const nav=document.querySelector('.sidebar nav');if(!nav)return;
+  const buttons=[...nav.querySelectorAll('.nav-btn')];
+  const byPage=page=>nav.querySelector(`.nav-btn[data-page="${page}"]`);
+  const apply=(order,labels={})=>{
+    buttons.forEach(b=>b.classList.add('hidden'));
+    for(const page of order){const b=byPage(page);if(!b)continue;b.classList.remove('hidden');nav.appendChild(b);}
+    Object.entries(labels).forEach(([page,label])=>sh814SetNavLabel(page,label));
+  };
+  if(S.profile.role==='mentor'){
+    apply(['mentor','employees','training','assignments','content','rgpractice'],{
+      mentor:'Моя группа',employees:'Сотрудники',training:'Тренировки',assignments:'Назначения',content:'Контент',rgpractice:'Демо РГ'
+    });
+  }else if(S.profile.role==='rs'){
+    apply(['mentor','employees','training','content','progress','rgpractice'],{
+      mentor:'Мой сектор',employees:'Руководители',training:'Тренировки',content:'Контент',progress:'Отчёты',rgpractice:'Демо РС'
+    });
+  }
+}
+
+function sh814MentorPendingGroups(){
+  return typeof shManualPendingGroups==='function'?shManualPendingGroups():[];
+}
+function sh814AttentionEmployees(users,pendingGroups){
+  const ids=new Set();
+  for(const g of pendingGroups)ids.add(g.login);
+  for(const u of users){if((u.overdue||0)>0||(u.gaps?.length||0)>0)ids.add(u.login)}
+  return ids.size;
+}
+function sh814ManagerPendingCount(managerLogin){
+  const team=new Set(employeesForManager(managerLogin).map(x=>x.login));
+  return (S.manualAnswers||[]).filter(x=>x.status==='submitted'&&team.has(x.login)).length;
+}
+function sh814TeamCompactSummary(users){
+  const soft=sh74Avg(users.map(x=>x.soft)),hard=sh74Avg(users.map(x=>x.hard)),prog=sh74TeamAssignmentProgress(users);
+  return `<div class="sh74-kpis"><div class="sh74-kpi"><small>Soft Skills</small><strong>${soft||'—'}${soft?'%':''}</strong></div><div class="sh74-kpi"><small>Hard Skills</small><strong>${hard||'—'}${hard?'%':''}</strong></div><div class="sh74-kpi"><small>Выполнение назначений</small><strong>${prog.pct}%</strong></div><div class="sh74-kpi"><small>Завершено</small><strong>${prog.done}/${prog.total}</strong></div></div>`;
+}
+
+renderManagerMentor=function(){
+  const users=teamRows(S.profile.login),pendingGroups=sh814MentorPendingGroups(),pendingCount=pendingGroups.reduce((n,g)=>n+Number(g.count||0),0),overdueUsers=users.filter(x=>(x.overdue||0)>0),attentionCount=sh814AttentionEmployees(users,pendingGroups);
+  $('pageTitle').textContent='Моя группа';$('pageSub').textContent=`${S.profile.group_name||S.profile.name} · главное по команде`;
+  const attention=[];const used=new Set();
+  for(const g of pendingGroups.slice(0,4)){
+    used.add(g.login);attention.push(`<div class="sh74-attention-row">${sh74AvatarHtml(g.login,g.name)}<div><b>${esc(g.name)}</b><div class="meta">${g.count} ${shManualWorkWord(g.count)} на проверке · ${esc(shManualRangeText(g.rows))}</div></div><button class="sh74-attention-status" onclick="openManualReviewGroup('${jsq(g.login)}')">Проверить ${g.count}</button></div>`);
+  }
+  for(const u of overdueUsers){if(attention.length>=5||used.has(u.login))continue;used.add(u.login);attention.push(`<div class="sh74-attention-row">${sh74AvatarHtml(u.login,u.name||u.login)}<div><b>${esc(u.name||u.login)}</b><div class="meta">Просрочено назначений: ${u.overdue}</div></div><button class="sh74-attention-status bad" onclick="openUserAttempts('${jsq(u.login)}')">Открыть</button></div>`)}
+  for(const u of users.filter(x=>(x.gaps?.length||0)>0)){if(attention.length>=5||used.has(u.login))continue;used.add(u.login);attention.push(`<div class="sh74-attention-row">${sh74AvatarHtml(u.login,u.name||u.login)}<div><b>${esc(u.name||u.login)}</b><div class="meta">Зон развития: ${u.gaps.length}</div></div><button class="sh74-attention-status" onclick="openUserAttempts('${jsq(u.login)}')">Карточка</button></div>`)}
+  $('page-mentor').innerHTML=`<div class="sh74-manager"><div class="sh74-manager-top"><div><h2>Моя группа</h2><p>Только то, что требует внимания прямо сейчас</p></div><div class="actions"><button class="btn secondary" onclick="openMentorExport('','${jsq(S.profile.login)}','')">Отчёт Excel</button><button class="btn primary" onclick="openAssignmentEditor()">+ Назначить</button></div></div>
+  <div class="sh74-kpis"><div class="sh74-kpi"><small>Сотрудники</small><strong>${users.length}</strong></div><div class="sh74-kpi warn"><small>На проверке</small><strong>${pendingCount}</strong></div><div class="sh74-kpi bad"><small>Просрочено</small><strong>${overdueUsers.reduce((n,x)=>n+Number(x.overdue||0),0)}</strong></div><div class="sh74-kpi ${attentionCount?'warn':'good'}"><small>Нужна помощь</small><strong>${attentionCount}</strong></div></div>
+  <div class="sh74-light-card"><div class="sh74-card-head"><h3>Требуют внимания</h3><small>${attention.length?'Актуальные задачи':'Всё спокойно'}</small></div>${attention.join('')||'<div class="muted">Новых работ, просрочек и явных зон развития сейчас нет 🎉</div>'}</div>
+  <div class="sh74-section-head"><h2>Моя группа</h2><button class="sh74-link" onclick="go('employees')">Смотреть всех</button></div>${sh74TeamRowsHtml(users.slice(0,6))}
+  <div class="sh74-section-head"><h2>Команда в целом</h2></div>${sh814TeamCompactSummary(users)}</div>`;
+};
+
+renderSectorAdmin=function(){
+  const sector=S.profile.sector_name||'Основной сектор',managers=managersInSector(sector),groups=managers.map(m=>managerMetrics(m.login)),employees=scopeEmployees();
+  const pendingByManager=new Map(managers.map(m=>[m.login,sh814ManagerPendingCount(m.login)]));
+  const attentionGroups=groups.filter(g=>(g.overdue||0)>0||(g.gaps||0)>0||(pendingByManager.get(g.manager?.login)||0)>0)
+    .sort((a,b)=>((b.overdue||0)+(b.gaps||0)+(pendingByManager.get(b.manager?.login)||0))-((a.overdue||0)+(a.gaps||0)+(pendingByManager.get(a.manager?.login)||0)));
+  const pendingTotal=[...pendingByManager.values()].reduce((a,b)=>a+b,0);
+  $('pageTitle').textContent='Мой сектор';$('pageSub').textContent=`${sector} · обзор групп и руководителей`;
+  $('page-mentor').innerHTML=`<div class="sh74-manager"><div class="sh74-manager-top"><div><h2>Мой сектор</h2><p>Сначала группы — затем конкретный сотрудник</p></div><div class="actions"><button class="btn secondary" onclick="go('progress')">Отчёты</button></div></div>
+  <div class="sh74-kpis"><div class="sh74-kpi"><small>Руководители</small><strong>${managers.length}</strong></div><div class="sh74-kpi"><small>Сотрудники</small><strong>${employees.length}</strong></div><div class="sh74-kpi warn"><small>На проверке у РГ</small><strong>${pendingTotal}</strong></div><div class="sh74-kpi ${attentionGroups.length?'warn':'good'}"><small>Группы внимания</small><strong>${attentionGroups.length}</strong></div></div>
+  <div class="sh74-light-card"><div class="sh74-card-head"><h3>Группы, которые требуют внимания</h3><small>${attentionGroups.length?attentionGroups.length+' групп':'Всё спокойно'}</small></div>${attentionGroups.slice(0,5).map(g=>{const login=g.manager?.login||'',p=pendingByManager.get(login)||0;const details=[p?`${p} на проверке`:'',g.overdue?`${g.overdue} просрочено`:'',g.gaps?`${g.gaps} зон развития`:''].filter(Boolean).join(' · ');return `<div class="sh74-attention-row">${sh74AvatarHtml(login,g.manager?.name||login)}<div><b>${esc(g.manager?.name||login||'РГ')}</b><div class="meta">${g.count} сотрудников${details?' · '+esc(details):''}</div></div><button class="sh74-attention-status ${g.overdue?'bad':''}" onclick="openManagerDashboard('${jsq(login)}')">Открыть</button></div>`}).join('')||'<div class="muted">Сейчас нет групп с просрочками, работами на проверке или подтверждёнными зонами развития.</div>'}</div>
+  <div class="sh74-section-head"><h2>Руководители</h2><button class="sh74-link" onclick="go('employees')">Смотреть всех</button></div><div class="sh74-manager-list">${groups.slice(0,6).map(g=>{const login=g.manager?.login||'';return `<div class="sh74-team-row">${sh74AvatarHtml(login,g.manager?.name||login)}<div><b>${esc(g.manager?.name||login||'РГ')}</b><small>${esc(g.manager?.group_name||'Команда')} · ${g.count} сотрудников</small></div><span class="sh74-score">${g.attempts||0}</span><button class="btn secondary" onclick="openManagerDashboard('${jsq(login)}')">Команда</button></div>`}).join('')||'<div class="muted">Руководителей пока нет.</div>'}</div></div>`;
+};
+
+function sh814RenderRSManagers(){
+  const sector=S.profile.sector_name||'Основной сектор',managers=managersInSector(sector),groups=managers.map(m=>managerMetrics(m.login));
+  $('pageTitle').textContent='Руководители';$('pageSub').textContent=`${sector} · группы и нагрузка`;
+  $('page-employees').innerHTML=`<div class="sh74-manager"><div class="sh74-manager-top"><div><h2>Руководители групп</h2><p>${groups.length} руководителей в секторе</p></div></div><div class="sh74-manager-list">${groups.map(g=>{const login=g.manager?.login||'',p=sh814ManagerPendingCount(login);return `<div class="sh74-team-row">${sh74AvatarHtml(login,g.manager?.name||login)}<div><b>${esc(g.manager?.name||login||'РГ')}</b><small>${esc(g.manager?.group_name||'Команда')} · ${g.count} сотрудников · ${g.attempts||0} попыток${p?' · '+p+' на проверке':''}${g.overdue?' · '+g.overdue+' просрочено':''}</small></div><span class="sh74-score">${g.gaps||0}</span><button class="btn secondary" onclick="openManagerDashboard('${jsq(login)}')">Открыть группу</button></div>`}).join('')||'<div class="muted">Руководителей пока нет.</div>'}</div></div>`;
+}
+const sh814RenderEmployeesBase=renderEmployees;
+renderEmployees=function(){if(isRS())return sh814RenderRSManagers();return sh814RenderEmployeesBase()};
+
+function sh814RenderRSReports(){
+  const sector=S.profile.sector_name||'Основной сектор',managers=managersInSector(sector),employees=scopeEmployees(),attempts=S.attempts.filter(a=>employees.some(u=>u.login===a.login));
+  const avg=attempts.length?Math.round(attempts.reduce((s,a)=>s+Number(a.score||0),0)/attempts.length):null;
+  $('pageTitle').textContent='Отчёты';$('pageSub').textContent=`${sector} · выгрузки по сектору и группам`;
+  $('page-progress').innerHTML=`<div class="sh74-manager"><div class="sh74-manager-top"><div><h2>Отчёты сектора</h2><p>Детальные Excel-выгрузки без операционных действий</p></div><button class="btn primary" onclick="openMentorExport('${jsq(sector)}','','')">⬇ Полный отчёт сектора</button></div><div class="sh74-kpis"><div class="sh74-kpi"><small>Руководители</small><strong>${managers.length}</strong></div><div class="sh74-kpi"><small>Сотрудники</small><strong>${employees.length}</strong></div><div class="sh74-kpi"><small>Попытки</small><strong>${attempts.length}</strong></div><div class="sh74-kpi"><small>Средний результат</small><strong>${avg===null?'—':avg+'%'}</strong></div></div><div class="sh74-section-head"><h2>Отчёты по группам</h2></div><div class="sh74-manager-list">${managers.map(m=>{const g=managerMetrics(m.login);return `<div class="sh74-team-row">${sh74AvatarHtml(m.login,m.name||m.login)}<div><b>${esc(m.name||m.login)}</b><small>${esc(m.group_name||'Команда')} · ${g.count} сотрудников</small></div><span class="sh74-score">${g.attempts||0}</span><button class="btn secondary" onclick="openMentorExport('${jsq(sector)}','${jsq(m.login)}','')">Excel</button></div>`}).join('')||'<div class="muted">Руководителей пока нет.</div>'}</div></div>`;
+}
+const sh814RenderProgressBase=renderProgress;
+renderProgress=function(){if(isRS())return sh814RenderRSReports();return sh814RenderProgressBase()};
+
+const sh814OpenAssignmentEditorBase=openAssignmentEditor;
+openAssignmentEditor=function(prefill={}){if(isRS()){toast('Назначения сотрудникам выполняет руководитель группы');return}return sh814OpenAssignmentEditorBase(prefill)};
+
+const sh814GoBase=go;
+go=function(page){if(isRS()&&page==='assignments')page='mentor';sh814GoBase(page);sh814ConfigureRoleNavigation()};
+
+const sh814EnterAppBase=enterApp;
+enterApp=function(){sh814EnterAppBase();sh814ConfigureRoleNavigation()};
+/* ===== end SkillHub V8.14 ===== */
+
+/* ===== SkillHub V8.15 — RG/RS navigation + modal back step ===== */
+let sh815EmployeeContext={login:'',managerLogin:''};
+
+function sh815ConfigureRoleNavigation(){
+  if(!S.profile)return;
+  const nav=document.querySelector('.sidebar nav');if(!nav)return;
+  const buttons=[...nav.querySelectorAll('.nav-btn')];
+  const byPage=page=>nav.querySelector(`.nav-btn[data-page="${page}"]`);
+  const apply=(order,labels={})=>{
+    buttons.forEach(b=>b.classList.add('hidden'));
+    for(const page of order){const b=byPage(page);if(!b)continue;b.classList.remove('hidden');nav.appendChild(b)}
+    Object.entries(labels).forEach(([page,label])=>sh814SetNavLabel(page,label));
+  };
+  if(S.profile.role==='mentor'){
+    apply(['mentor','employees','training','assignments','content','rgpractice','notifications','profile'],{
+      mentor:'Моя группа',employees:'Сотрудники',training:'Тренировки',assignments:'Назначения',content:'Контент',rgpractice:'Демо РГ',notifications:'Уведомления',profile:'Профиль'
+    });
+  }else if(S.profile.role==='rs'){
+    apply(['mentor','employees','training','content','progress','rgpractice','notifications','profile'],{
+      mentor:'Мой сектор',employees:'Руководители',training:'Тренировки',content:'Контент',progress:'Отчёты',rgpractice:'Демо РС',notifications:'Уведомления',profile:'Профиль'
+    });
+  }
+}
+
+function sh815TeamTableHtml(users,managerLogin=''){
+  return `<div class="card table-wrap"><table class="table"><thead><tr><th>Сотрудник</th><th>Soft</th><th>Hard</th><th>Потребность</th><th>Пробелов</th><th>Назначения</th><th>Попыток</th><th></th></tr></thead><tbody>${users.map(x=>`<tr><td><b>${esc(x.name||x.login)}</b><div class="meta">${esc(x.login)}</div></td><td>${x.soft===null?'—':x.soft+'%'}</td><td>${x.hard===null?'—':x.hard+'%'}</td><td>${x.needs===null?'—':x.needs+'%'}</td><td>${x.gaps.length?`<span class="pill bad">${x.gaps.length}</span>`:'—'}</td><td>${x.overdue?`<span class="pill bad">${x.overdue} проср.</span>`:`${x.completed} вып.`}</td><td>${x.attempts}</td><td><button class="btn secondary" onclick="openUserAttempts('${jsq(x.login)}','${jsq(managerLogin)}')">Карточка</button></td></tr>`).join('')||'<tr><td colspan="8" class="muted">Сотрудников нет.</td></tr>'}</tbody></table></div>`;
+}
+
+openManagerDashboard=function(login){
+  const g=managerMetrics(login);
+  sh815EmployeeContext={login:'',managerLogin:login};
+  showModal(`<div class="modal-head"><div><h2>${esc(g.manager?.name||login)}</h2><div class="meta">${esc(g.manager?.group_name||'Команда')} · ${g.count} сотрудников</div></div><div class="actions"><button class="btn secondary" onclick="openMentorExport('','${jsq(login)}','')">⬇ Excel</button><button class="btn secondary" onclick="closeModal()">✕</button></div></div>${sh815TeamTableHtml(g.u,login)}`);
+};
+
+openUserAttempts=function(login,managerLogin=''){
+  sh815EmployeeContext={login,managerLogin:managerLogin||''};
+  const rows=S.attempts.filter(x=>x.login===login).slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),u=S.allowed.find(x=>x.login===login);
+  const back=managerLogin?`<button class="btn secondary sh815-back-btn" onclick="openManagerDashboard('${jsq(managerLogin)}')">← К группе</button>`:'';
+  showModal(`<div class="modal-head"><div><div class="sh815-modal-nav">${back}</div><h2>${esc(u?.name||login)}</h2><div class="meta">${esc(login)} · карточка сотрудника</div></div><div class="actions">${isManager()?`<button class="btn secondary" onclick="openMentorExport('', '${jsq(login)}')">⬇ Excel</button>`:''}<button class="btn secondary" onclick="closeModal()">✕</button></div></div><div class="sh74-section-head"><h2>Автоматические тренировки</h2></div><div class="card table-wrap"><table class="table"><thead><tr><th>Дата</th><th>Раздел</th><th>Тема</th><th>Результат</th><th>Детали</th></tr></thead><tbody>${rows.length?rows.map(a=>`<tr><td>${new Date(a.created_at).toLocaleString('ru-RU')}</td><td>${secName(a.section)}</td><td>${esc(a.topic)}</td><td><span class="pill ${Number(a.score)>=90?'good':Number(a.score)>=75?'warn':'bad'}">${a.score}%</span></td><td>${a.type==='typing'?'Скорость печати':attemptDetails(a).length?`<button class="btn secondary" onclick="openAttemptReview('${a.id}','${jsq(login)}','${jsq(managerLogin||'')}')">Ответы</button>`:'<span class="muted small">без детализации</span>'}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">Автоматических попыток пока нет.</td></tr>'}</tbody></table></div>${sh742ManualReportHtml(login)}`);
+};
+
+openAttemptReview=function(id,returnLogin='',managerLogin=''){
+  const a=S.attempts.find(x=>x.id===id);if(!a)return;
+  const d=attemptDetails(a),correct=d.filter(x=>x.is_correct).length;
+  const employeeLogin=returnLogin||((isManager()&&sh815EmployeeContext.login===a.login)?sh815EmployeeContext.login:'');
+  const parentManager=managerLogin||((employeeLogin&&sh815EmployeeContext.login===employeeLogin)?sh815EmployeeContext.managerLogin:'');
+  const body=d.length?d.map((q,idx)=>{
+    const opts=Array.isArray(q.options)?q.options:[];
+    return `<div class="review-item"><div class="review-head"><b>${q.kind==='dialogue'?'Шаг ':'Вопрос '}${q.step||idx+1}</b><span class="pill ${q.is_correct?'good':'bad'}">${q.is_correct?'Верно':'Ошибка'}</span></div>${q.title?`<div class="meta">${esc(q.title)}</div>`:''}<div class="review-question">${esc(q.question||'')}</div><div class="review-options">${opts.map((o,i)=>`<div class="review-option ${i===Number(q.correct)?'right':''} ${i===Number(q.selected)&&i!==Number(q.correct)?'picked-wrong':''}"><span class="review-num">${i+1}</span><span>${esc(o)}</span><span class="review-tag">${i===Number(q.selected)?'Выбрано':''}${i===Number(q.selected)&&i===Number(q.correct)?' · ':''}${i===Number(q.correct)?'Правильный':''}</span></div>`).join('')}</div>${q.explanation?`<div class="explain">${esc(q.explanation)}</div>`:''}</div>`;
+  }).join(''):`<div class="hint">Эта попытка была сделана до обновления SkillHub 6.2, поэтому выбранные варианты тогда ещё не сохранялись. Процент и тема попытки сохранены.</div>`;
+  const back=employeeLogin?`<button class="btn secondary sh815-back-btn" onclick="openUserAttempts('${jsq(employeeLogin)}','${jsq(parentManager||'')}')">← К карточке сотрудника</button>`:'';
+  showModal(`<div class="modal-head"><div><div class="sh815-modal-nav">${back}</div><h2>Ответы сотрудника</h2><div class="meta">${esc(a.login)} · ${secName(a.section)} · ${esc(a.topic)} · ${new Date(a.created_at).toLocaleString('ru-RU')}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="review-summary"><span class="pill ${Number(a.score)>=90?'good':Number(a.score)>=75?'warn':'bad'}">${a.score}%</span><b>${attemptTypeName(a.type)}</b>${d.length?`<span class="muted small">${correct} из ${d.length} верно</span>`:''}</div>${body}`);
+};
+
+const sh815ManualHistoryBase=sh742OpenManualHistory;
+sh742OpenManualHistory=function(contentId,login){
+  const c=S.content.find(x=>x.id===contentId),rows=manualHistory(contentId,login),parent=(sh815EmployeeContext.login===login?sh815EmployeeContext.managerLogin:'');
+  const back=`<button class="btn secondary sh815-back-btn" onclick="openUserAttempts('${jsq(login)}','${jsq(parent||'')}')">← К карточке сотрудника</button>`;
+  showModal(`<div class="modal-head"><div><div class="sh815-modal-nav">${back}</div><h2>${esc(c?.title||'Ручная практика')}</h2><div class="meta">${esc(login)} · все версии</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>${rows.map(r=>`<div class="manual-history-item"><div class="actions" style="justify-content:space-between"><b>Версия ${r.version}</b><span class="pill ${manualStatusClass(r.status)}">${manualStatusText(r.status)}</span></div><div class="manual-answer-text">${esc(r.answer)}</div>${r.mentor_comment?`<div class="review-note"><b>Комментарий РГ</b><div>${esc(r.mentor_comment)}</div></div>`:''}${r.mentor_suggestion?`<div class="review-note suggestion"><b>Рекомендуемый вариант</b><div>${esc(r.mentor_suggestion)}</div></div>`:''}</div>`).join('')||'<div class="muted">Истории пока нет.</div>'}`);
+};
+
+const sh815GoBase=go;
+go=function(page){sh815EmployeeContext={login:'',managerLogin:''};sh815GoBase(page);sh815ConfigureRoleNavigation()};
+
+const sh815EnterAppBase=enterApp;
+enterApp=function(){sh815EnterAppBase();sh815ConfigureRoleNavigation()};
+/* ===== end SkillHub V8.15 ===== */
+
+/* ===== SkillHub V8.16 — RS Training + Demo RS; RG layout unchanged ===== */
+
+/* ===== SkillHub V8.17 — restore original RG workspace; keep RS V8.16 + back navigation ===== */
+function sh817RestoreOriginalRgNavigation(){
+  if(S.profile?.role!=='mentor')return;
+  const nav=document.querySelector('.sidebar nav');if(!nav)return;
+  const order=['home','training','progress','notifications','mentor','rgpractice','content','assignments','profile','employees'];
+  const labels={home:'Главная',training:'Тренировки',progress:'Прогресс',notifications:'Уведомления',mentor:'Моя группа',rgpractice:'Демо РГ',content:'Контент',assignments:'Назначения',employees:'Сотрудники',profile:'Профиль'};
+  const buttons=[...nav.querySelectorAll('.nav-btn')];
+  buttons.forEach(b=>b.classList.add('hidden'));
+  for(const page of order){const b=nav.querySelector(`.nav-btn[data-page="${page}"]`);if(!b)continue;b.classList.remove('hidden');nav.appendChild(b);const t=b.querySelector('.nav-text');if(t&&labels[page])t.textContent=labels[page]}
+  const admin=nav.querySelector('.nav-btn[data-page="admin"]');if(admin)admin.classList.add('hidden');
+}
+
+function sh817RenderOriginalRgWorkspace(){
+  renderManagerMentorV718();
+  const page=$('page-mentor');if(!page)return;
+  const groups=shManualPendingGroups(),u=teamRows(S.profile.login),overdueUsers=u.filter(x=>x.overdue),attentionCard=page.querySelector('.sh74-manager-main .sh74-light-card');
+  if(attentionCard){
+    const items=[];
+    for(const g of groups.slice(0,4))items.push(`<div class="sh74-attention-row">${sh74AvatarHtml(g.login,g.name)}<div><b>${esc(g.name)}</b><div class="meta">${g.count} ${shManualWorkWord(g.count)} на проверке · ${esc(shManualRangeText(g.rows))}</div></div><button class="sh74-attention-status" onclick="openManualReviewGroup('${jsq(g.login)}')">Проверить ${g.count}</button></div>`);
+    for(const x of overdueUsers.slice(0,Math.max(0,4-items.length)))items.push(`<div class="sh74-attention-row">${sh74AvatarHtml(x.login,x.name||x.login)}<div><b>${esc(x.name||x.login)}</b><div class="meta">Просрочено назначений: ${x.overdue}</div></div><button class="sh74-attention-status bad" onclick="openUserAttempts('${jsq(x.login)}')">Просрочено</button></div>`);
+    attentionCard.innerHTML=`<div class="sh74-card-head"><h3>Требуют внимания</h3><small>${items.length?'Актуальные задачи':'Всё спокойно'}</small></div>${items.join('')||'<div class="muted">Новых работ и просрочек сейчас нет 🎉</div>'}`;
+  }
+  const kpis=page.querySelector('.sh74-kpis');
+  if(kpis)kpis.insertAdjacentHTML('afterend',manualReviewPanelHtml());
+  else page.insertAdjacentHTML('afterbegin',manualReviewPanelHtml());
+}
+
+renderManagerMentor=function(){return sh817RenderOriginalRgWorkspace()};
+
+const sh817GoBase=go;
+go=function(page){sh817GoBase(page);if(S.profile?.role==='mentor')sh817RestoreOriginalRgNavigation()};
+
+const sh817EnterAppBase=enterApp;
+enterApp=function(){sh817EnterAppBase();if(S.profile?.role==='mentor')sh817RestoreOriginalRgNavigation()};
+/* ===== end SkillHub V8.17 ===== */
+
+/* ===== SkillHub V8.18 — RG home restored + access-code action last ===== */
+function sh818RestoreRgNavigation(){
+  if(S.profile?.role!=='mentor')return;
+  const nav=document.querySelector('.sidebar nav');if(!nav)return;
+  const order=['home','training','progress','notifications','mentor','rgpractice','content','assignments','profile','employees'];
+  const labels={home:'Главная',training:'Тренировки',progress:'Прогресс',notifications:'Уведомления',mentor:'Моя группа',rgpractice:'Демо РГ',content:'Контент',assignments:'Назначения',employees:'Сотрудники',profile:'Профиль'};
+  const buttons=[...nav.querySelectorAll('.nav-btn')];
+  buttons.forEach(b=>b.classList.add('hidden'));
+  for(const page of order){
+    const b=nav.querySelector(`.nav-btn[data-page="${page}"]`);if(!b)continue;
+    b.classList.remove('hidden');nav.appendChild(b);
+    const t=b.querySelector('.nav-text');if(t&&labels[page])t.textContent=labels[page];
+  }
+  const admin=nav.querySelector('.nav-btn[data-page="admin"]');if(admin)admin.classList.add('hidden');
+}
+
+function sh818MoveMentorCodesToEnd(){
+  if(S.profile?.role!=='mentor')return;
+  const actions=$('page-employees')?.querySelector('.toolbar .actions');if(!actions)return;
+  const codeBtn=[...actions.querySelectorAll('button')].find(b=>/Коды новым/i.test(b.textContent||''));
+  if(codeBtn)actions.appendChild(codeBtn);
+}
+
+const sh818RenderEmployeesBase=renderEmployees;
+renderEmployees=function(){
+  sh818RenderEmployeesBase();
+  sh818MoveMentorCodesToEnd();
+};
+
+const sh818GoBase=go;
+go=function(page){
+  sh818GoBase(page);
+  if(S.profile?.role==='mentor'){
+    sh818RestoreRgNavigation();
+    if(page==='employees')sh818MoveMentorCodesToEnd();
+  }
+};
+
+const sh818EnterAppBase=enterApp;
+enterApp=function(){
+  sh818EnterAppBase();
+  if(S.profile?.role==='mentor'){
+    sh818RestoreRgNavigation();
+    go('home');
+  }
+};
+/* ===== end SkillHub V8.18 ===== */
+/* SkillHub V8.21 — structured explanations + full theme contrast */
+(function(){
+  function norm(text){return String(text||'').replace(/\\+n/g,'\n').replace(/\r/g,'').trim()}
+  function softSignals(text){
+    const s=String(text||'').toLowerCase();
+    return {
+      emotion:/(понима|слышу|вижу|похоже|раздраж|тревог|пережив|неприят|устал|растер|разочар|эмоци)/i.test(s),
+      action:/(провер|уточн|посмотр|предлага|зафикс|следующ|шаг|план|действ|сейчас|разбер)/i.test(s),
+      need:/(важно|нужн|результат|понятн|чтобы|ожид|контрол|опора|маршрут)/i.test(s),
+      question:/[?]|(уточн|расскаж|какой|что для вас|правильно понимаю)/i.test(s),
+      vague:/(постараюсь|давайте разбер[её]мся|чем могу помочь|что можно сделать|вернусь к вам)/i.test(s),
+      promise:/(обещ|гарант|точно|обязательно|ускорить|буду контролировать)/i.test(s)
+    };
+  }
+  function correctReason(topic,answer,psych){
+    const sig=softSignals(answer),t=String(topic||'').toLowerCase();
+    const emotion=psych?.emotion||'состояние клиента',need=psych?.need||'его реальную задачу';
+    let core='';
+    if(t.includes('ожид')) core='Ответ делает ожидание управляемым: клиент понимает, что происходит сейчас, какой будет следующий шаг и где появится точка контроля.';
+    else if(t.includes('негатив')) core='Ответ признаёт негатив без спора и не пытается успокоить клиента общими словами. Разговор переводится к конкретному действию.';
+    else if(t.includes('присоедин')) core=`Ответ точно присоединяется к состоянию клиента — ${emotion} — и связывает его с потребностью: ${need}.`;
+    else if(t.includes('извин')) core='Извинение связано с конкретной ситуацией клиента, а не звучит формально. После признания неудобства сотрудник показывает, что будет сделано дальше.';
+    else if(t.includes('претенз')) core='Ответ не защищается и не спорит с претензией, а фиксирует суть проблемы и переводит её в проверяемый следующий шаг.';
+    else if(t.includes('обещ')) core='Ответ не даёт непроверяемого обещания и обозначает только то, что сотрудник действительно может проверить или сделать сейчас.';
+    else if(t.includes('повтор')) core='Ответ учитывает, что клиент уже обращался раньше: не заставляет начинать всё заново и продолжает решение с текущей точки.';
+    else if(t.includes('конфликт')) core='Ответ снижает напряжение за счёт спокойной фиксации фактов и следующего действия, не усиливая конфликт спором.';
+    else core='Ответ лучше всего попадает в ситуацию клиента и ведёт разговор к понятному следующему действию.';
+    const plus=[];
+    if(sig.emotion) plus.push('эмоция клиента не пропущена');
+    if(sig.action) plus.push('есть конкретный следующий шаг');
+    if(sig.question) plus.push('уточнение связано с задачей, а не заставляет клиента повторять всё заново');
+    if(sig.need) plus.push('ответ опирается на реальную потребность клиента');
+    return `${core} ${plus.length?'Здесь '+plus.slice(0,2).join(' и ')+'.':''}`.trim();
+  }
+  function altReason(answer,correct){
+    const a=softSignals(answer),c=softSignals(correct);
+    let good=a.emotion?'Вариант звучит бережно и показывает, что состояние клиента замечено.':a.action?'Вариант быстро ведёт к действию и не затягивает разговор.':a.question?'Вариант пытается уточнить ситуацию до ответа.':'Вариант звучит профессионально и не конфликтует с клиентом.';
+    let weak='';
+    if(a.promise) weak='Но появляется обещание или ожидание результата, которое пока нельзя подтвердить.';
+    else if(a.vague) weak='Но формулировка остаётся слишком общей: клиент не понимает, что именно произойдёт дальше.';
+    else if(a.action&&!a.emotion&&c.emotion) weak='Но ответ слишком быстро перескакивает к действию и почти не присоединяется к эмоции клиента.';
+    else if(a.emotion&&!a.action&&c.action) weak='Но одной эмпатии недостаточно: не хватает конкретного следующего шага.';
+    else if(a.question&&!a.need) weak='Но вопрос слишком широкий и может заставить клиента снова объяснять уже понятный контекст.';
+    else if(!a.need&&c.need) weak='Но вариант хуже попадает в реальную потребность клиента и поэтому выглядит менее точным.';
+    else weak='Но по сравнению с правильным ответом он хуже связывает контекст клиента с проверяемым следующим шагом.';
+    return {good,weak};
+  }
+  function softReviewHtml(options,correct,topic,psych){
+    const correctText=String(options?.[correct]||'');
+    const others=(options||[]).map((text,i)=>({text:String(text||''),i})).filter(x=>x.i!==Number(correct)).map(x=>({...x,...altReason(x.text,correctText)}));
+    const signals=[];
+    if(psych?.emotion&&String(psych.emotion).trim()&&String(psych.emotion).trim()!=='—')signals.push(['Эмоция клиента',psych.emotion]);
+    if(psych?.need&&String(psych.need).trim()&&String(psych.need).trim()!=='—')signals.push(['Что ему важно',psych.need]);
+    const signalHtml=signals.length?`<div class="sh-soft-signals">${signals.map(([label,value])=>`<div class="sh-soft-signal"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')}</div>`:'';
+    return `<div class="sh-soft-review sh-soft-review-v821">
+      <div class="sh-soft-review-head"><span>Разбор ответа</span>${psych?.skill?`<b>🎯 ${esc(psych.skill)}</b>`:''}</div>
+      ${signalHtml}
+      <div class="sh-soft-best"><div class="sh-soft-card-title">✅ Почему правильный ответ лучший</div><div class="sh-soft-answer-quote">${esc(correctText)}</div><p>${esc(correctReason(topic,correctText,psych||{}))}</p></div>
+      <div class="sh-soft-alt-grid">${others.map(x=>`<div class="sh-soft-alt-card"><div class="sh-soft-alt-title">Вариант ${x.i+1}</div><div class="sh-soft-alt-quote">${esc(x.text)}</div><div class="sh-soft-alt-good"><b>Что в нём хорошо</b><span>${esc(x.good)}</span></div><div class="sh-soft-alt-weak"><b>Почему слабее</b><span>${esc(x.weak)}</span></div></div>`).join('')}</div>
+    </div>`;
+  }
+  function hardPlainHtml(text){
+    const src=norm(text); if(!src)return '';
+    const clean=src.replace(/^✅\s*ПРАВИЛЬНЫЙ ОТВЕТ\s*/i,'').trim();
+    const parts=clean.split(/\n{2,}/).map(x=>x.trim()).filter(Boolean); if(!parts.length)return '';
+    const first=parts.shift();
+    const cards=parts.map((p,idx)=>{let title='Почему',icon='🧩';if(/[=−+\-×÷]\s*\d|₽|остаток|расч[её]т/i.test(p)){title='Расчёт';icon='🧮'}else if(/важно|исключен|обратите|нельзя ориентироваться/i.test(p)){title='Важно';icon='⚠️'}else if(idx>0){title='Логика решения';icon='📌'}return `<div class="sh-hard-review-step"><div class="sh-hard-review-step-title">${icon} ${title}</div><p>${esc(p).replace(/\n/g,'<br>')}</p></div>`}).join('');
+    return `<div class="sh-hard-review"><div class="sh-hard-review-answer"><span>✅ Правильный ответ</span><strong>${esc(first).replace(/\n/g,'<br>')}</strong></div>${cards}</div>`;
+  }
+  function hardDialogueHtml(text){
+    const src=norm(text); if(!src)return '';
+    const wrongMarker=/(?:⚠️|⚖️)\s*ПОЧЕМУ\s+(?:ОСТАЛЬНЫЕ\s+ВАРИАНТЫ\s+СЛАБЕЕ|ДРУГИЕ\s+ВАРИАНТЫ[^\n]*)/i;
+    const sourceMarker=/📍\s*ГДЕ\s+ПРОВЕРИТЬ/i;
+    const keyMarker=/🎯\s*КЛЮЧЕВОЙ\s+НАВЫК/i;
+    const header=/✅\s*(?:ПОЧЕМУ\s+ЭТО\s+ЛУЧШИЙ\s+ВАРИАНТ|ПРАВИЛЬНЫЙ\s+ОТВЕТ)/i;
+    const hasStructure=header.test(src)||wrongMarker.test(src)||sourceMarker.test(src);
+    if(!hasStructure)return hardPlainHtml(src);
+
+    const sourceMatch=src.match(/📍\s*ГДЕ\s+ПРОВЕРИТЬ\s*([\s\S]*?)(?=(?:⚠️|⚖️)\s*ПОЧЕМУ|🎯\s*КЛЮЧЕВОЙ\s+НАВЫК|$)/i);
+    const source=(sourceMatch?.[1]||'').trim();
+    const wrongMatch=src.match(/(?:⚠️|⚖️)\s*ПОЧЕМУ\s+(?:ОСТАЛЬНЫЕ\s+ВАРИАНТЫ\s+СЛАБЕЕ|ДРУГИЕ\s+ВАРИАНТЫ[^\n]*)\s*([\s\S]*?)(?=🎯\s*КЛЮЧЕВОЙ\s+НАВЫК|📍\s*ГДЕ\s+ПРОВЕРИТЬ|$)/i);
+    const wrongChunk=(wrongMatch?.[1]||'').trim();
+
+    let correct=src.replace(/^([\s\S]*?)✅\s*(?:ПОЧЕМУ\s+ЭТО\s+ЛУЧШИЙ\s+ВАРИАНТ|ПРАВИЛЬНЫЙ\s+ОТВЕТ)\s*/i,'').trim();
+    const cuts=[correct.search(sourceMarker),correct.search(wrongMarker),correct.search(keyMarker)].filter(i=>i>=0);
+    if(cuts.length)correct=correct.slice(0,Math.min(...cuts)).trim();
+
+    const numbered=[];
+    const nr=/(?:^|\s)(\d+)\.\s+([\s\S]*?)(?=(?:\s+\d+\.\s+)|$)/g;
+    let nm; while((nm=nr.exec(correct))){numbered.push({n:nm[1],text:nm[2].trim()})}
+    const correctCards=(numbered.length?numbered:[{n:'',text:correct}]).filter(x=>x.text).map((x,idx)=>`<div class="sh-hard-review-step"><div class="sh-hard-review-step-title">${idx===0?'🧩':'📌'} ${x.n?`${esc(x.n)}. `:''}${idx===0?'Почему это верно':'Логика решения'}</div><p>${esc(x.text)}</p></div>`).join('');
+
+    const wrong=[];
+    const vr=/Вариант\s+(\d+)\s*([\s\S]*?)(?=\s*Вариант\s+\d+|$)/gi;
+    let vm; while((vm=vr.exec(wrongChunk))){
+      const body=vm[2].trim();
+      const good=(body.match(/Что\s+хорошо:\s*([\s\S]*?)(?=Где\s+(?:ошибка|слабое\s+место):|Риск:|$)/i)||[])[1]?.trim()||'';
+      const mistake=(body.match(/Где\s+(?:ошибка|слабое\s+место):\s*([\s\S]*?)(?=Риск:|$)/i)||[])[1]?.trim()||'';
+      const risk=(body.match(/Риск:\s*([\s\S]*)$/i)||[])[1]?.trim()||'';
+      wrong.push({n:vm[1],good,mistake,risk,body});
+    }
+    const wrongHtml=wrong.length?`<div class="sh-hard-review-section-title bad">⚠️ Почему остальные варианты слабее</div><div class="sh-hard-wrong-grid">${wrong.map(w=>`<div class="sh-hard-wrong-card"><b>Вариант ${esc(w.n)}</b>${w.good?`<div><span>Что хорошо</span><p>${esc(w.good)}</p></div>`:''}${w.mistake?`<div><span>Где ошибка</span><p>${esc(w.mistake)}</p></div>`:''}${w.risk?`<div><span>Риск</span><p>${esc(w.risk)}</p></div>`:''}${(!w.good&&!w.mistake&&!w.risk)?`<p>${esc(w.body)}</p>`:''}</div>`).join('')}</div>`:'';
+    const sourceHtml=source?`<div class="sh-hard-source-card"><span>📚 Где проверить</span><strong>Процедура / база знаний</strong><small>${esc(source)}</small></div>`:'';
+    return `<div class="sh-hard-review sh-hard-dialogue-review">${correctCards?`<div class="sh-hard-review-section-title good">✅ Почему правильный ответ</div>${correctCards}`:''}${wrongHtml}${sourceHtml}</div>`;
+  }
+  function attemptExplanation(q,a){
+    const text=String(q?.explanation||'');if(!text)return '';
+    if(String(a?.section||'')==='soft'&&Array.isArray(q.options)&&q.options.length){const p=parseDialogueExplanation(text);return softReviewHtml(q.options,Number(q.correct),a.topic,p?.softPsych||{})}
+    if(String(a?.section||'')==='hard')return /ПОЧЕМУ ЭТО ЛУЧШИЙ ВАРИАНТ|ПОЧЕМУ ОСТАЛЬНЫЕ ВАРИАНТЫ СЛАБЕЕ|ГДЕ ПРОВЕРИТЬ/i.test(norm(text))?hardDialogueHtml(text):hardPlainHtml(text);
+    return `<div class="explain">${esc(norm(text)).replace(/\n/g,'<br>')}</div>`;
+  }
+
+  const baseAnswerDialogue=window.answerDialogue;
+  window.answerDialogue=function(i){
+    baseAnswerDialogue(i);
+    try{
+      const r=S.currentRun,detail=r?.details?.[r.details.length-1],section=String(r?.x?.section||'').toLowerCase();
+      const softBox=document.querySelector('#runFeedback .sh-soft-review');
+      if(section==='soft'&&softBox&&detail?.options?.length){
+        const p=parseDialogueExplanation(detail.explanation||'');
+        softBox.outerHTML=softReviewHtml(detail.options,Number(detail.correct),r.x.topic,p?.softPsych||{});
+      }else if(section==='hard'&&detail?.explanation){
+        const hardTarget=softBox||document.querySelector('#runFeedback .explain');
+        if(hardTarget)hardTarget.outerHTML=hardDialogueHtml(detail.explanation);
+      }
+    }catch(e){console.warn('V8.21 dialogue review patch',e)}
+  };
+
+  const baseAnswerQuiz=window.answerQuiz;
+  window.answerQuiz=function(i){
+    baseAnswerQuiz(i);
+    try{
+      const r=S.currentRun,detail=r?.details?.[r.details.length-1];
+      if(String(r?.sec||'').toLowerCase()==='hard'&&detail?.explanation){
+        const old=document.querySelector('#runFeedback .explain');
+        if(old)old.outerHTML=hardDialogueHtml(detail.explanation);
+      }
+    }catch(e){console.warn('V8.21 hard quiz review patch',e)}
+  };
+
+  const baseHardNumeric=window.renderHardNumeric;
+  window.renderHardNumeric=function(){baseHardNumeric();try{const el=document.querySelector('.sh-hard-num-explain');if(el)el.outerHTML=hardDialogueHtml(el.textContent||'')}catch(e){console.warn(e)}};
+  const baseHardScenario=window.renderHardScenario;
+  window.renderHardScenario=function(){baseHardScenario();try{const el=document.querySelector('.sh-hard-sc-explain');if(el)el.outerHTML=hardDialogueHtml(el.textContent||'')}catch(e){console.warn(e)}};
+
+  const baseAttemptReview=window.openAttemptReview;
+  window.openAttemptReview=function(id,returnLogin='',managerLogin=''){
+    baseAttemptReview(id,returnLogin,managerLogin);
+    try{
+      const a=S.attempts.find(x=>x.id===id),d=attemptDetails(a),items=[...document.querySelectorAll('.modal-card .review-item')];
+      items.forEach((item,idx)=>{const q=d[idx],old=item.querySelector('.explain');if(q?.explanation&&old)old.outerHTML=attemptExplanation(q,a)});
+    }catch(e){console.warn('V8.20 attempt review patch',e)}
+  };
+})();
+/* SkillHub V8.25 — curated Soft + Tech Admin RG demo access */
+(function(){
+  'use strict';
+
+  function clone(v){
+    try{return structuredClone(v)}catch(e){return JSON.parse(JSON.stringify(v))}
+  }
+  function hash(s){
+    let h=2166136261;
+    for(const ch of String(s||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}
+    return h>>>0;
+  }
+  function shuffleSoftDialogue(x){
+    if(!x || String(x.section||'').toLowerCase()!=='soft' || !Array.isArray(x.steps)) return x;
+    const y=clone(x);
+    y.steps=y.steps.map((step,si)=>{
+      if(!Array.isArray(step.options) || step.options.length<2) return step;
+      const pairs=step.options.map((text,i)=>({text,correct:i===Number(step.correct)}));
+      let state=hash(`${y.id||y.title||'soft'}|${si}|${Date.now()}|${Math.random()}`)||1;
+      const rnd=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
+      for(let i=pairs.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[pairs[i],pairs[j]]=[pairs[j],pairs[i]]}
+      step.options=pairs.map(p=>p.text);
+      step.correct=pairs.findIndex(p=>p.correct);
+      return step;
+    });
+    return y;
+  }
+
+  // Preserve carefully curated answer wording from Supabase; only randomize answer order.
+  if(typeof window.startDialogue==='function'){
+    const baseStartDialogue=window.startDialogue;
+    window.startDialogue=function(x){return baseStartDialogue(shuffleSoftDialogue(x))};
+  }
+
+  // Tech admin must be able to walk through the same safe RG demo flow before a presentation.
+  window.sh816DemoAllowed=function(){return ['mentor','rs','tech_admin'].includes(S?.profile?.role)};
+  window.sh816DemoRoleShort=function(){return S?.profile?.role==='rs'?'РС':'РГ'};
+  window.sh816DemoRoleLong=function(){
+    const role=S?.profile?.role;
+    return role==='rs'?'РУКОВОДИТЕЛЯ СЕКТОРА':role==='tech_admin'?'ТЕХАДМИНА · ДЕМО РГ':'РУКОВОДИТЕЛЯ ГРУППЫ';
+  };
+
+  function applyTechAdminDemoAccess(){
+    if(S?.profile?.role!=='tech_admin') return;
+    document.querySelectorAll('.rg-only').forEach(el=>el.classList.remove('hidden'));
+    const btn=document.querySelector('.nav-btn[data-page="rgpractice"]');
+    if(btn){
+      btn.classList.remove('hidden');
+      const label=btn.querySelector('.nav-text');
+      if(label) label.textContent='Демо РГ';
+      const nav=btn.closest('nav');
+      const training=nav?.querySelector('.nav-btn[data-page="training"]');
+      if(nav && training && training.nextSibling!==btn) training.insertAdjacentElement('afterend',btn);
+    }
+  }
+
+  if(typeof window.go==='function'){
+    const baseGo=window.go;
+    window.go=function(page){const r=baseGo(page);applyTechAdminDemoAccess();return r};
+  }
+  if(typeof window.enterApp==='function'){
+    const baseEnterApp=window.enterApp;
+    window.enterApp=function(){const r=baseEnterApp();applyTechAdminDemoAccess();return r};
+  }
+
+  // Expose a tiny diagnostic hook for pre-release checks.
+  window.__skillhubV825={shuffleSoftDialogue,applyTechAdminDemoAccess};
+  console.info('SkillHub V8.25: curated Soft preserved; Tech Admin RG demo enabled');
+})();

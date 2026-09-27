@@ -1,5 +1,22 @@
-const CACHE='skillhub-20260926-contrast-source-v8-23';
-const SHELL=['./','./index.html','./styles-20260925-theme-contrast-v8.19.css','./patch-v8.21.css?v=20260926_v821','./patch-v8.23.css?v=20260926_v823','./app-20260925-theme-contrast-v8.19.js','./patch-v8.21.js?v=20260926_v821','./patch-v8.22.js?v=20260926_v822','./manifest.webmanifest?v=20260926_soft_advanced_v822','./icon-192-v718.png','./icon-512-v718.png','./master-line-icon.png'];
+const CACHE='skillhub-20260927-v8-28-clean';
+const SHELL=[
+  './',
+  './index.html',
+  './styles.css?v=20260927_v828_clean',
+  './app.js?v=20260927_v828_clean',
+  './manifest.webmanifest?v=20260926_prerelease_v825',
+  './icon-192-v718.png',
+  './icon-512-v718.png',
+  './master-line-icon.png',
+  './skillhub_users_template.xlsx',
+  './skillhub_cases_template.xlsx'
+];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('skillhub-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.hostname.includes('supabase.co'))return;const fresh=/\/app(?:-[^/]+)?\.js$/.test(u.pathname)||/\/styles(?:-[^/]+)?\.css$/.test(u.pathname)||u.pathname.endsWith('/index.html')||u.pathname.endsWith('/');e.respondWith(fetch(e.request,{cache:fresh?'reload':'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(c=>c||caches.match('./index.html'))));});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const u=new URL(e.request.url);
+  if(u.hostname.includes('supabase.co'))return;
+  const fresh=u.pathname.endsWith('/app.js')||u.pathname.endsWith('/styles.css')||u.pathname.endsWith('/index.html')||u.pathname.endsWith('/');
+  e.respondWith(fetch(e.request,{cache:fresh?'reload':'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(c=>c||caches.match('./index.html'))));
+});
