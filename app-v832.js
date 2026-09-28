@@ -2875,7 +2875,7 @@ enterApp=function(){
   console.info('SkillHub V8.25: curated Soft preserved; Tech Admin RG demo enabled');
 })();
 
-/* ===== SkillHub V8.32 — Soft continuous chat + feedback only at the end ===== */
+/* ===== SkillHub V8.31 — Soft continuous chat + feedback only at the end ===== */
 (function(){
   'use strict';
 
@@ -2993,24 +2993,11 @@ enterApp=function(){
     }).join('');
   }
 
-  function nextSoftCase832(current){
-    const all=(S.content||[]).filter(x=>x.status==='published'&&x.section==='soft'&&x.type==='dialogue'&&x.id!==current?.id);
-    if(!all.length)return null;
-    const seen=seenContentMap(S.profile?.login);
-    const sameTopic=all.filter(x=>x.topic===current?.topic);
-    const unseenSame=sameTopic.filter(x=>!seen.has(x.id));
-    if(unseenSame.length)return unseenSame[0];
-    const unseenAny=all.filter(x=>!seen.has(x.id));
-    if(unseenAny.length)return unseenAny[0];
-    return sameTopic[0]||all[0];
-  }
-
   function finishSoftDialogue831(){
     const r=S.currentRun;if(!r||r.finished)return;
     r.finished=true;r.transitioning=false;
     const total=softTotal831(r.x),p=Math.round(r.score/Math.max(1,total)*100);
     recordAttempt({section:r.x.section,topic:r.x.topic,score:p,type:'dialogue',cpm:0,details:r.details||[]});
-    const nextCase=nextSoftCase832(r.x);
     const criteria=[];
     for(const d of (r.details||[])){
       const parsed=parseDialogueExplanation(d.explanation||'');
@@ -3025,7 +3012,7 @@ enterApp=function(){
         <div class="sh831-result-section"><h3>Ваш диалог и обратная связь</h3>${(r.details||[]).map(d=>feedbackCards831(d,r.x.topic)).join('')}</div>
         ${criteria.length?`<div class="card sh831-criteria"><h3>📌 Критерии оценки качества</h3><div class="sh831-criteria-list">${criteria.map(c=>`<span>✓ ${esc(c)}</span>`).join('')}</div></div>`:''}
         <details class="card sh831-strong-dialog"><summary>Показать сильный диалог целиком</summary><div class="sh831-chat-thread">${strongDialogue831(r)}</div></details>
-        <div class="actions sh831-result-actions"><button class="btn secondary" onclick="go('training')">К тренировкам</button><button class="btn secondary" onclick="startContent('${jsq(r.x.id||'')}')">Пройти ещё раз</button>${nextCase?`<button class="btn primary" onclick="startContent('${jsq(nextCase.id)}')">Следующий кейс →</button>`:''}</div>
+        <div class="actions sh831-result-actions"><button class="btn secondary" onclick="go('training')">К тренировкам</button><button class="btn primary" onclick="startContent('${jsq(r.x.id||'')}')">Пройти ещё раз</button></div>
       </div>`;
   }
 
@@ -3039,6 +3026,117 @@ enterApp=function(){
   window.answerDialogue=function(i){return isSoftRun831()?answerSoftDialogue831(i):baseAnswerDialogue831(i)};
   window.finishDialogue=function(){return isSoftRun831()?finishSoftDialogue831():baseFinishDialogue831()};
   window.__skillhubV831={renderSoftDialogue831,finishSoftDialogue831};
-  console.info('SkillHub V8.32: Soft continuous chat + next-case action after final feedback.');
+  console.info('SkillHub V8.31: Soft is a continuous chat; feedback appears only after the dialogue.');
+})();
+/* ===== end SkillHub V8.31 ===== */
+
+/* ===== SkillHub V8.32 — Tech Admin complete demo hub ===== */
+(function(){
+  'use strict';
+
+  // Tech admin gets the same safe self-demo flow as RG/RS, but with an explicit
+  // four-part launchpad: Soft, Hard, Typing and Manual trainer.
+  const baseRoleShort832=window.sh816DemoRoleShort;
+  const baseRoleLong832=window.sh816DemoRoleLong;
+  window.sh816DemoRoleShort=function(){
+    if(S?.profile?.role==='tech_admin')return 'Техадмин';
+    return typeof baseRoleShort832==='function'?baseRoleShort832():'РГ';
+  };
+  window.sh816DemoRoleLong=function(){
+    if(S?.profile?.role==='tech_admin')return 'ТЕХНИЧЕСКОГО АДМИНИСТРАТОРА';
+    return typeof baseRoleLong832==='function'?baseRoleLong832():'РУКОВОДИТЕЛЯ ГРУППЫ';
+  };
+
+  function ensureTechDemoNav832(){
+    if(S?.profile?.role!=='tech_admin')return;
+    document.querySelectorAll('.rg-only').forEach(el=>el.classList.remove('hidden'));
+    const btn=document.querySelector('.nav-btn[data-page="rgpractice"]');
+    if(!btn)return;
+    btn.classList.remove('hidden');
+    const label=btn.querySelector('.nav-text');
+    if(label)label.textContent='Демо техадмина';
+    const nav=btn.closest('nav');
+    const training=nav?.querySelector('.nav-btn[data-page="training"]');
+    if(nav&&training&&training.nextSibling!==btn)training.insertAdjacentElement('afterend',btn);
+  }
+
+  window.openTechDemoSoft832=function(){
+    if(S?.profile?.role!=='tech_admin')return;
+    openSection('soft','auto');
+  };
+  window.openTechDemoHard832=function(){
+    if(S?.profile?.role!=='tech_admin')return;
+    openSection('hard');
+  };
+  window.openTechDemoTyping832=function(){
+    if(S?.profile?.role!=='tech_admin')return;
+    startTyping();
+  };
+  window.openTechDemoManual832=function(){
+    if(S?.profile?.role!=='tech_admin')return;
+    const arr=rgDemoManualContent();
+    const topics=[...new Set(arr.map(x=>x.topic||'Soft Skills'))];
+    showModal(`<div class="modal-head"><div><h2>Ручной тренажёр · демо техадмина</h2><div class="muted small">Выберите кейс. Ответ хранится только в вашем браузере и можно пройти полный цикл: сотрудник → проверка → доработка / принятие.</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>${topics.map(topic=>`<div class="card sh832-manual-topic"><div class="sh832-manual-topic-head"><b>${esc(topic)}</b><span class="pill">${arr.filter(x=>(x.topic||'Soft Skills')===topic).length}</span></div><div class="rg-demo-case-list">${arr.filter(x=>(x.topic||'Soft Skills')===topic).map(c=>{const last=rgDemoLatest(c.id);return `<button class="rg-demo-case" onclick="closeModal();startRgDemoManual('${c.id}')"><span><b>${esc(c.title||c.question||'Ручной кейс')}</b><small>${esc(c.topic||'Soft Skills')}</small></span>${last?`<em class="pill ${rgDemoStatusClass(last.status)}">${rgDemoStatusText(last.status)}</em>`:'<em>Открыть →</em>'}</button>`}).join('')}</div></div>`).join('')||'<div class="muted">Ручные кейсы пока не опубликованы.</div>'}`);
+  };
+
+  // In tech-admin mode, opening any manual content must enter the safe demo
+  // manual flow rather than a read-only preview (and never Typing).
+  const baseStartManualContent832=window.startManualContent;
+  window.startManualContent=function(id){
+    if(S?.profile?.role==='tech_admin'){
+      const x=(S.content||[]).find(c=>c.id===id);
+      if(!x||x.type!=='manual'){toast('Ручной кейс не найден');return;}
+      return startRgDemoManual(id);
+    }
+    return baseStartManualContent832(id);
+  };
+
+  const baseRenderRgPractice832=window.renderRgPractice;
+  window.renderRgPractice=function(){
+    if(S?.profile?.role!=='tech_admin')return baseRenderRgPractice832();
+    baseRenderRgPractice832();
+    const page=$('page-rgpractice');if(!page)return;
+    $('pageTitle').textContent='Демо техадмина';
+    $('pageSub').textContent='Проверьте все тренажёры глазами сотрудника';
+    const intro=page.querySelector('.rg-demo-intro');
+    if(intro){
+      const kicker=intro.querySelector('.rg-demo-kicker');if(kicker)kicker.textContent='ТОЛЬКО ДЛЯ ТЕХНИЧЕСКОГО АДМИНИСТРАТОРА';
+      const h=intro.querySelector('h2');if(h)h.textContent='Демо всех типов тренировок';
+      const p=intro.querySelector('p');if(p)p.textContent='Здесь можно безопасно проверить Soft Skills, Hard Skills, скорость печати и полный цикл ручного тренажёра. Результаты автоматических тренировок сохраняются только как ваши личные попытки техадмина, а ручное демо хранится локально в браузере.';
+    }
+    const oldLaunch=page.querySelector('.sh832-tech-demo-launch');
+    if(oldLaunch)oldLaunch.remove();
+    const launch=document.createElement('section');
+    launch.className='sh832-tech-demo-launch';
+    launch.innerHTML=`<div class="sh832-tech-demo-head"><div><h3>Выберите, что проверить</h3><p>Четыре независимых демо-режима</p></div></div><div class="sh832-tech-demo-grid">
+      <button class="sh832-tech-demo-card" onclick="openTechDemoSoft832()"><span class="sh832-tech-demo-icon">💬</span><b>Soft Skills</b><small>Обычные диалоги и автоматическая оценка</small><em>Открыть →</em></button>
+      <button class="sh832-tech-demo-card" onclick="openTechDemoHard832()"><span class="sh832-tech-demo-icon">🧠</span><b>Hard Skills</b><small>Продукты, процессы и клиентские кейсы</small><em>Открыть →</em></button>
+      <button class="sh832-tech-demo-card" onclick="openTechDemoTyping832()"><span class="sh832-tech-demo-icon">⌨️</span><b>Печать</b><small>Скорость и точность набора</small><em>Начать →</em></button>
+      <button class="sh832-tech-demo-card" onclick="openTechDemoManual832()"><span class="sh832-tech-demo-icon">✍️</span><b>Ручной тренажёр</b><small>Ответ → проверка → доработка / принятие</small><em>Открыть →</em></button>
+    </div>`;
+    const results=page.querySelector('.rg-demo-results');
+    if(results)results.insertAdjacentElement('beforebegin',launch);
+    else if(intro)intro.insertAdjacentElement('afterend',launch);
+    else page.prepend(launch);
+    // The generic RG result widget has its own Soft/Hard/Typing shortcut row.
+    // Remove it for tech admin so the four explicit cards above are the only launcher.
+    page.querySelectorAll('.rg-demo-self-actions').forEach(el=>el.remove());
+    const resultTitle=page.querySelector('.rg-demo-results-head h3');
+    if(resultTitle)resultTitle.textContent='📊 Как техадмин увидит результаты тестового прохождения';
+    const resultText=page.querySelector('.rg-demo-results-head p');
+    if(resultText)resultText.textContent='После прохождения Soft, Hard или Печати здесь можно открыть свою тестовую карточку и посмотреть попытки, ответы и ошибки.';
+    const steps=page.querySelector('.rg-demo-steps');
+    if(steps)steps.insertAdjacentHTML('beforebegin','<div class="sh832-manual-demo-title"><h3>✍️ Полный цикл ручного тренажёра</h3><p>Ниже остаётся отдельное демо ручной проверки — оно не смешивается с Печатью.</p></div>');
+    ensureTechDemoNav832();
+  };
+
+  const baseGo832=window.go;
+  window.go=function(page){const r=baseGo832(page);ensureTechDemoNav832();return r;};
+  const baseEnterApp832=window.enterApp;
+  window.enterApp=function(){const r=baseEnterApp832();ensureTechDemoNav832();return r;};
+
+  ensureTechDemoNav832();
+  window.__skillhubV832={ensureTechDemoNav832};
+  console.info('SkillHub V8.32: Tech Admin full demo hub enabled');
 })();
 /* ===== end SkillHub V8.32 ===== */

@@ -1,9 +1,9 @@
-const CACHE='skillhub-20260927-v8-32';
+const CACHE='skillhub-20260928-v8-32';
 const SHELL=[
   './',
   './index.html',
-  './styles-v832.css?v=20260927_v832',
-  './app-v832.js?v=20260927_v832',
+  './styles-v832.css?v=20260928_v832',
+  './app-v832.js?v=20260928_v832',
   './manifest.webmanifest?v=20260926_prerelease_v825',
   './icon-192-v718.png',
   './icon-512-v718.png',
