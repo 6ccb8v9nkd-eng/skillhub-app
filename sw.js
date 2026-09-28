@@ -1,9 +1,9 @@
-const CACHE='skillhub-20260928-v8-35';
+const CACHE='skillhub-20260928-v8-38';
 const SHELL=[
   './',
   './index.html',
-  './styles-v835.css?v=20260928_v835',
-  './app-v835.js?v=20260928_v835',
+  './styles-v838.css?v=20260928_v838',
+  './app-v838.js?v=20260928_v838',
   './manifest.webmanifest?v=20260926_prerelease_v825',
   './icon-192-v718.png',
   './icon-512-v718.png',
@@ -17,6 +17,6 @@ self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
   const u=new URL(e.request.url);
   if(u.hostname.includes('supabase.co'))return;
-  const fresh=u.pathname.endsWith('/app-v835.js')||u.pathname.endsWith('/styles-v835.css')||u.pathname.endsWith('/index.html')||u.pathname.endsWith('/');
+  const fresh=u.pathname.endsWith('/app-v838.js')||u.pathname.endsWith('/styles-v838.css')||u.pathname.endsWith('/index.html')||u.pathname.endsWith('/');
   e.respondWith(fetch(e.request,{cache:fresh?'reload':'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(c=>c||caches.match('./index.html'))));
 });
