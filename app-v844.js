@@ -3760,7 +3760,7 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
       description:'Пошаговые инструкции и сценарии для работы с клиентскими обращениями',
       pages:53,
       files:{light:'./knowledge/reglament-light.pdf',dark:'./knowledge/reglament-dark.pdf'},
-      previews:{light:'./knowledge/previews/reglament-light.webp',dark:'./knowledge/previews/reglament-dark.webp'},
+      previews:{light:'./reglament-light-cover.webp',dark:'./reglament-dark-cover.webp'},
       contentsPage:2,
       updated:'10.09.2026'
     },
@@ -3770,7 +3770,7 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
       description:'Рабочие процессы, системы, коммуникация и развитие',
       pages:49,
       files:{light:'./knowledge/handbook-light.pdf',dark:'./knowledge/handbook-dark.pdf'},
-      previews:{light:'./knowledge/previews/handbook-light.webp',dark:'./knowledge/previews/handbook-dark.webp'},
+      previews:{light:'./handbook-light-cover.webp',dark:'./handbook-dark-cover.webp'},
       contentsPage:2,
       updated:'11.09.2026'
     }
