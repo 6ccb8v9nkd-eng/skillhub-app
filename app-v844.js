@@ -4006,3 +4006,97 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
   console.info('SkillHub V8.45: Knowledge Base uses the tested PDF.js viewer inside SkillHub.');
 })();
  /* ===== end SkillHub V8.45 ===== */
+
+/* ===== SkillHub V8.46 — reliable first-page covers ===== */
+(function(){
+  'use strict';
+
+  const coverDocs=[
+    {key:'reglament',title:'Регламент работы в чате',file:{light:'./reglament-light.pdf',dark:'./reglament-dark.pdf'}},
+    {key:'handbook',title:'Настольная книга',file:{light:'./handbook-light.pdf',dark:'./handbook-dark.pdf'}}
+  ];
+
+  function currentTheme(){
+    return document.documentElement.dataset.theme==='light'?'light':'dark';
+  }
+
+  function loadPdfJs(){
+    if(window.pdfjsLib){
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return Promise.resolve(window.pdfjsLib);
+    }
+    if(window.__sh846PdfJsPromise)return window.__sh846PdfJsPromise;
+    window.__sh846PdfJsPromise=new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=()=>{
+        if(!window.pdfjsLib)return reject(new Error('PDFJS_NOT_AVAILABLE'));
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      s.onerror=()=>reject(new Error('PDFJS_LOAD_FAILED'));
+      document.head.appendChild(s);
+    });
+    return window.__sh846PdfJsPromise;
+  }
+
+  function fallbackCover(host,doc){
+    host.innerHTML=`<div style="height:100%;width:100%;display:flex;flex-direction:column;justify-content:space-between;padding:14px;background:#0b0b0c;color:#fff;text-align:left">
+      <small style="font-size:8px;letter-spacing:.12em;opacity:.72">S-СЕГМЕНТ</small>
+      <b style="font-size:18px;line-height:1.08">${doc.key==='reglament'?'Регламент':'Настольная книга'}</b>
+      <span style="height:5px;width:46px;border-radius:999px;background:#ffd429"></span>
+    </div>`;
+  }
+
+  async function renderCover(host,doc){
+    try{
+      const pdfjs=await loadPdfJs();
+      if(!document.body.contains(host))return;
+      const url=doc.file[currentTheme()];
+      const pdf=await pdfjs.getDocument({url,disableAutoFetch:false,disableStream:false}).promise;
+      const page=await pdf.getPage(1);
+      if(!document.body.contains(host))return;
+
+      const base=page.getViewport({scale:1});
+      const targetHeight=460;
+      const viewport=page.getViewport({scale:targetHeight/base.height});
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.round(viewport.width);
+      canvas.height=Math.round(viewport.height);
+      canvas.style.height='100%';
+      canvas.style.width='auto';
+      canvas.style.maxWidth='100%';
+      canvas.style.display='block';
+      canvas.style.margin='0 auto';
+      canvas.style.background=currentTheme()==='dark'?'#0b0b0c':'#fff';
+      canvas.setAttribute('aria-label',doc.title+' — первая страница');
+      host.replaceChildren(canvas);
+      await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    }catch(err){
+      console.warn('Knowledge cover preview failed',doc.key,err);
+      if(document.body.contains(host))fallbackCover(host,doc);
+    }
+  }
+
+  function renderKnowledgeCovers(){
+    const cards=[...document.querySelectorAll('#page-knowledge .sh842-kb-card')];
+    coverDocs.forEach((doc,i)=>{
+      const host=cards[i]?.querySelector('.sh842-kb-preview');
+      if(!host)return;
+      host.innerHTML='<div style="font-size:12px;color:var(--muted)">Загружаем обложку…</div>';
+      renderCover(host,doc);
+    });
+  }
+
+  const base=window.sh842RenderKnowledge;
+  if(typeof base==='function'){
+    window.sh842RenderKnowledge=function(){
+      const r=base();
+      setTimeout(renderKnowledgeCovers,0);
+      return r;
+    };
+  }
+
+  console.info('SkillHub V8.46: knowledge cards render the real first PDF page via PDF.js.');
+})();
+ /* ===== end SkillHub V8.46 ===== */
