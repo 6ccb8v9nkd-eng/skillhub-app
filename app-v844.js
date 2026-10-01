@@ -3727,7 +3727,7 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
 /* ===== end SkillHub V8.41 ===== */
 
 
-/* ===== SkillHub V8.44 — Knowledge Base: reliable image renderer for original PDF projects ===== */
+/* ===== SkillHub V8.44 — Knowledge Base: compact native PDF viewer ===== */
 (function(){
   'use strict';
 
@@ -3737,8 +3737,8 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
       short:'Регламент',
       description:'Пошаговые инструкции и сценарии для работы с клиентскими обращениями',
       pages:53,
-      files:{light:'./knowledge/reglament-light.pdf',dark:'./knowledge/reglament-dark.pdf'},
-      previews:{light:'./knowledge/previews/reglament-light.webp',dark:'./knowledge/previews/reglament-dark.webp'},
+      files:{light:'./reglament-light.pdf',dark:'./reglament-dark.pdf'},
+      previews:{light:'./reglament-light-cover.webp',dark:'./reglament-dark-cover.webp'},
       contentsPage:2,
       updated:'10.09.2026'
     },
@@ -3747,25 +3747,34 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
       short:'Настольная книга',
       description:'Рабочие процессы, системы, коммуникация и развитие',
       pages:49,
-      files:{light:'./knowledge/handbook-light.pdf',dark:'./knowledge/handbook-dark.pdf'},
-      previews:{light:'./knowledge/previews/handbook-light.webp',dark:'./knowledge/previews/handbook-dark.webp'},
+      files:{light:'./handbook-light.pdf',dark:'./handbook-dark.pdf'},
+      previews:{light:'./handbook-light-cover.webp',dark:'./handbook-dark-cover.webp'},
       contentsPage:2,
       updated:'11.09.2026'
     }
   };
 
-  const K={docKey:null,index:null,observer:null,loaded:new Set(),zoom:1,currentPage:1,searchToken:0,baseWidth:930};
+  const K={docKey:null,index:null,zoom:1,currentPage:1};
 
   try{titles.knowledge=['База знаний','Регламент и настольная книга'];}catch(e){}
 
   function theme(){try{return shThemeCurrent()}catch(e){return document.documentElement.dataset.theme==='light'?'light':'dark'}}
   function meta(){return DOCS[K.docKey]||null}
   function lastKey(){return `sh844_kb_last_${K.docKey||'doc'}`}
-  function rememberPage(n){if(!K.docKey)return;K.currentPage=n;try{localStorage.setItem(lastKey(),String(n))}catch(e){};const el=document.getElementById('sh842PageIndicator');if(el)el.textContent=`${n} / ${K.index?.pageCount||meta()?.pages||'—'}`}
+  function rememberPage(n){
+    if(!K.docKey)return;
+    K.currentPage=n;
+    try{localStorage.setItem(lastKey(),String(n))}catch(e){}
+    const el=document.getElementById('sh842PageIndicator');
+    if(el)el.textContent=`${n} / ${K.index?.pageCount||meta()?.pages||'—'}`;
+  }
   function rememberedPage(){try{return Math.max(1,Number(localStorage.getItem(lastKey())||1)||1)}catch(e){return 1}}
-  function pad(n){return String(n).padStart(3,'0')}
-  function imgPath(n){return `./knowledge/rendered/${K.docKey}-${theme()}/page-${pad(n)}.webp`}
-  function indexPath(){return `./knowledge/index/${K.docKey}.json`}
+  function indexPath(){return `./${K.docKey}.json`}
+  function pdfPath(){const d=meta();return d?.files?.[theme()]||'#'}
+  function pdfUrl(page=K.currentPage){
+    const p=Math.max(1,Number(page)||1),z=Math.max(70,Math.min(180,Math.round(K.zoom*100)));
+    return `${pdfPath()}#page=${p}&zoom=${z}`;
+  }
 
   function navCard(docKey){
     const d=DOCS[docKey],t=theme();
@@ -3776,13 +3785,13 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
   }
 
   window.sh842RenderKnowledge=function(){
-    cleanupObserver();K.docKey=null;K.index=null;K.loaded.clear();
+    K.docKey=null;K.index=null;
     const page=document.getElementById('page-knowledge');if(!page)return;
     page.classList.remove('sh842-reader-page');
     page.innerHTML=`<div class="sh842-kb-home">
-      <section class="sh842-kb-hero"><div class="sh842-kb-kicker">БАЗА ЗНАНИЙ</div><h2>Основные рабочие документы — прямо в SkillHub</h2><p>Оригинальные проекты автора открываются внутри приложения. Светлая и тёмная версии переключаются автоматически.</p></section>
+      <section class="sh842-kb-hero"><div class="sh842-kb-kicker">БАЗА ЗНАНИЙ</div><h2>Основные рабочие документы — прямо в SkillHub</h2><p>Регламент и настольная книга открываются из файлов проекта. Светлая и тёмная версии переключаются автоматически.</p></section>
       <div class="sh842-kb-grid">${navCard('reglament')}${navCard('handbook')}</div>
-      <div class="sh842-kb-note"><span>💡</span><div><b>Исходные PDF не меняются</b><small>SkillHub использует их как оригинал, а для быстрого просмотра показывает точные изображения страниц с сохранёнными переходами и поиском.</small></div></div>
+      <div class="sh842-kb-note"><span>💡</span><div><b>Исходные PDF не меняются</b><small>SkillHub открывает оригинальные PDF внутри приложения. При необходимости документ можно открыть отдельной вкладкой.</small></div></div>
     </div>`;
   };
 
@@ -3799,13 +3808,18 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
         <div class="sh842-toolbar-right"><button onclick="sh842Zoom(-0.1)" aria-label="Уменьшить">−</button><span id="sh842ZoomLabel">100%</span><button onclick="sh842Zoom(0.1)" aria-label="Увеличить">+</button><button onclick="sh842Fullscreen()" aria-label="На весь экран">⛶</button></div>
       </div>
       <div id="sh842PdfSearchResults" class="sh842-search-results hidden"></div>
-      <div class="sh842-pdf-stage" id="sh842PdfScroller"><div class="sh842-pdf-pages" id="sh842PdfPages"><div class="sh842-pdf-loading"><span class="sh842-loader"></span><b>Открываем документ…</b><small>Загружаем ${theme()==='dark'?'тёмную':'светлую'} версию</small></div></div></div>
+      <div class="sh842-pdf-stage" id="sh842PdfScroller" style="padding:0;overflow:hidden">
+        <div id="sh844NativePdfWrap" style="width:100%;min-height:68vh;display:flex;flex-direction:column">
+          <iframe id="sh844NativePdf" title="${esc(d.title)}" style="width:100%;height:72vh;min-height:540px;border:0;background:transparent" loading="eager"></iframe>
+          <div style="padding:14px;text-align:center"><a class="sh844-source-link" id="sh844SourceLink" href="${pdfPath()}" target="_blank" rel="noopener">Открыть PDF отдельно</a></div>
+        </div>
+      </div>
     </div>`;
   }
 
   window.sh842OpenKnowledgeDoc=async function(docKey,opts={}){
     if(!DOCS[docKey])return;
-    cleanupObserver();K.docKey=docKey;K.zoom=1;K.currentPage=Math.max(1,Number(opts.page||rememberedPage())||1);K.loaded.clear();K.index=null;
+    K.docKey=docKey;K.zoom=1;K.currentPage=Math.max(1,Number(opts.page||rememberedPage())||1);K.index=null;
     S.currentPage='knowledge';document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
     const page=document.getElementById('page-knowledge');if(!page)return;
     page.classList.remove('hidden');page.classList.add('sh842-reader-page');
@@ -3815,76 +3829,41 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
     await sh842LoadDocument(K.currentPage);
   };
 
-  window.sh842BackToKnowledge=function(){cleanupObserver();K.docKey=null;K.index=null;K.loaded.clear();sh842RenderKnowledge();document.getElementById('pageTitle').textContent='База знаний';document.getElementById('pageSub').textContent='Регламент и настольная книга'};
-
-  function cleanupObserver(){if(K.observer){try{K.observer.disconnect()}catch(e){}K.observer=null}}
+  window.sh842BackToKnowledge=function(){K.docKey=null;K.index=null;sh842RenderKnowledge();document.getElementById('pageTitle').textContent='База знаний';document.getElementById('pageSub').textContent='Регламент и настольная книга'};
 
   async function sh842LoadDocument(targetPage=1){
-    const host=document.getElementById('sh842PdfPages');if(!host)return;
     try{
       const res=await fetch(indexPath(),{cache:'no-store'});if(!res.ok)throw new Error(`INDEX_${res.status}`);
       K.index=await res.json();if(!K.index?.pages?.length)throw new Error('EMPTY_INDEX');
-      targetPage=Math.min(Math.max(1,targetPage),K.index.pageCount);K.currentPage=targetPage;
-      buildPageShells();setTimeout(()=>sh842ScrollPage(targetPage,false),90);
+      targetPage=Math.min(Math.max(1,targetPage),K.index.pageCount);rememberPage(targetPage);refreshPdf();
     }catch(err){
-      console.error('Knowledge document load failed',err);
-      host.innerHTML=`<div class="sh842-pdf-fallback"><b>Не удалось открыть документ</b><small>Проверьте соединение и попробуйте ещё раз.</small><button class="btn primary" onclick="sh842OpenKnowledgeDoc('${K.docKey}',{page:${targetPage}})">Повторить</button><a class="sh844-source-link" href="${meta()?.files?.[theme()]||'#'}" target="_blank" rel="noopener">Открыть исходный PDF</a></div>`;
+      console.error('Knowledge index load failed',err);
+      K.index={pageCount:meta()?.pages||1,pages:[]};
+      rememberPage(Math.min(Math.max(1,targetPage),K.index.pageCount));refreshPdf();
     }
   }
 
-  function computeBaseWidth(){const sc=document.getElementById('sh842PdfScroller');return Math.max(280,Math.min(930,(sc?.clientWidth||954)-24))}
-  function pageWidth(){return Math.max(260,Math.round(K.baseWidth*K.zoom))}
-  function applyPageWidths(){K.baseWidth=computeBaseWidth();const w=pageWidth();document.querySelectorAll('.sh842-pdf-page').forEach(el=>el.style.width=w+'px')}
-
-  function buildPageShells(){
-    const host=document.getElementById('sh842PdfPages');if(!host||!K.index)return;
-    cleanupObserver();K.loaded.clear();host.innerHTML='';K.baseWidth=computeBaseWidth();const frag=document.createDocumentFragment();
-    for(const p of K.index.pages){
-      const wrap=document.createElement('div');wrap.className='sh842-pdf-page';wrap.id=`sh842PdfPage${p.n}`;wrap.dataset.page=String(p.n);wrap.style.setProperty('--ratio',String(p.height/p.width));wrap.style.width=pageWidth()+'px';
-      wrap.innerHTML=`<div class="sh842-page-placeholder"><span>${p.n}</span></div>`;frag.appendChild(wrap);
-    }
-    host.appendChild(frag);rememberPage(K.currentPage);setupObserver();
+  function refreshPdf(){
+    const frame=document.getElementById('sh844NativePdf');if(frame)frame.src=pdfUrl(K.currentPage);
+    const link=document.getElementById('sh844SourceLink');if(link)link.href=pdfPath();
+    const lab=document.getElementById('sh842ZoomLabel');if(lab)lab.textContent=Math.round(K.zoom*100)+'%';
   }
 
-  function setupObserver(){
-    cleanupObserver();const root=document.getElementById('sh842PdfScroller');if(!root)return;
-    K.observer=new IntersectionObserver(entries=>{
-      let best=null;
-      for(const e of entries){const n=Number(e.target.dataset.page||0);if(e.isIntersecting){sh842RenderPage(n);if(!best||e.intersectionRatio>best.ratio)best={n,ratio:e.intersectionRatio}}}
-      if(best&&best.ratio>.16)rememberPage(best.n);
-    },{root,rootMargin:'1100px 0px 1100px 0px',threshold:[0,.16,.4,.7]});
-    document.querySelectorAll('.sh842-pdf-page').forEach(el=>K.observer.observe(el));
-  }
-
-  function linkLayer(pageMeta){
-    const layer=document.createElement('div');layer.className='sh842-annotation-layer';
-    for(const a of (pageMeta.links||[])){
-      const link=document.createElement('a');link.className='sh842-pdf-link';link.style.left=(a.x*100)+'%';link.style.top=(a.y*100)+'%';link.style.width=(a.w*100)+'%';link.style.height=(a.h*100)+'%';link.setAttribute('aria-label','Переход в документе');
-      if(a.page){link.href='#';link.onclick=ev=>{ev.preventDefault();sh842ScrollPage(a.page)}}
-      else if(a.url){link.href=a.url;link.target='_blank';link.rel='noopener noreferrer'}
-      layer.appendChild(link);
-    }
-    return layer;
-  }
-
-  function sh842RenderPage(n){
-    if(!K.index||K.loaded.has(n))return;const wrap=document.getElementById(`sh842PdfPage${n}`),p=K.index.pages[n-1];if(!wrap||!p)return;K.loaded.add(n);wrap.innerHTML='';
-    const img=document.createElement('img');img.className='sh844-page-image';img.alt=`${meta()?.title||'Документ'}, страница ${n}`;img.loading='lazy';img.decoding='async';img.src=imgPath(n);
-    img.onerror=()=>{K.loaded.delete(n);wrap.innerHTML=`<div class="sh842-page-error"><div><b>Не удалось загрузить страницу ${n}</b><br><button onclick="sh844RetryPage(${n})">Повторить</button></div></div>`};
-    wrap.appendChild(img);if(p.links?.length)wrap.appendChild(linkLayer(p));
-  }
-  window.sh844RetryPage=function(n){const w=document.getElementById(`sh842PdfPage${n}`);if(w){K.loaded.delete(n);sh842RenderPage(n)}};
-
-  window.sh842ScrollPage=function(n,smooth=true){if(!K.index)return;n=Math.min(Math.max(1,Number(n)||1),K.index.pageCount);rememberPage(n);const el=document.getElementById(`sh842PdfPage${n}`);if(el){sh842RenderPage(n);el.scrollIntoView({behavior:smooth?'smooth':'auto',block:'start'})}};
+  window.sh842ScrollPage=function(n){
+    const total=K.index?.pageCount||meta()?.pages||1;
+    n=Math.min(Math.max(1,Number(n)||1),total);rememberPage(n);refreshPdf();
+  };
   window.sh842GoContents=function(){const d=meta();if(d)sh842ScrollPage(d.contentsPage||2)};
   window.sh842PrevPage=function(){sh842ScrollPage(Math.max(1,K.currentPage-1))};
-  window.sh842NextPage=function(){sh842ScrollPage(Math.min(K.index?.pageCount||999,K.currentPage+1))};
-  window.sh842Zoom=function(delta){if(!K.index)return;const next=Math.min(1.8,Math.max(.7,Math.round((K.zoom+delta)*10)/10));if(next===K.zoom)return;K.zoom=next;const lab=document.getElementById('sh842ZoomLabel');if(lab)lab.textContent=Math.round(K.zoom*100)+'%';applyPageWidths()};
+  window.sh842NextPage=function(){sh842ScrollPage(Math.min(K.index?.pageCount||meta()?.pages||1,K.currentPage+1))};
+  window.sh842Zoom=function(delta){
+    const next=Math.min(1.8,Math.max(.7,Math.round((K.zoom+delta)*10)/10));if(next===K.zoom)return;K.zoom=next;refreshPdf();
+  };
   window.sh842Fullscreen=function(){const el=document.getElementById('sh842ReaderRoot');if(!el)return;if(document.fullscreenElement){document.exitFullscreen?.()}else el.requestFullscreen?.()};
 
   function searchSnippet(text,q){const low=(text||'').toLocaleLowerCase('ru-RU'),i=low.indexOf(q);if(i<0)return '';const from=Math.max(0,i-70),to=Math.min(text.length,i+q.length+110);return `${from?'…':''}${text.slice(from,to).replace(/\s+/g,' ')}${to<text.length?'…':''}`}
   window.sh842SearchKnowledge=function(){
-    if(!K.index)return;const inp=document.getElementById('sh842PdfSearch'),box=document.getElementById('sh842PdfSearchResults');if(!inp||!box)return;const raw=inp.value.trim(),q=raw.toLocaleLowerCase('ru-RU');if(q.length<2){box.classList.add('hidden');box.innerHTML='';return}
+    if(!K.index?.pages?.length)return;const inp=document.getElementById('sh842PdfSearch'),box=document.getElementById('sh842PdfSearchResults');if(!inp||!box)return;const raw=inp.value.trim(),q=raw.toLocaleLowerCase('ru-RU');if(q.length<2){box.classList.add('hidden');box.innerHTML='';return}
     const found=[];for(const p of K.index.pages){if((p.text||'').toLocaleLowerCase('ru-RU').includes(q)){found.push({page:p.n,snippet:searchSnippet(p.text,q)});if(found.length>=40)break}}
     box.classList.remove('hidden');box.innerHTML=found.length?`<div class="sh842-search-head"><b>Найдено: ${found.length}${found.length===40?'+':''}</b><button onclick="document.getElementById('sh842PdfSearchResults').classList.add('hidden')">✕</button></div><div class="sh842-search-list">${found.map(r=>`<button onclick="sh842ScrollPage(${r.page});document.getElementById('sh842PdfSearchResults').classList.add('hidden')"><b>Страница ${r.page}</b><span>${esc(r.snippet)}</span></button>`).join('')}</div>`:`<div class="sh842-search-head"><b>Совпадений нет</b><button onclick="document.getElementById('sh842PdfSearchResults').classList.add('hidden')">✕</button></div><div class="sh842-search-empty">Попробуйте другое слово или формулировку.</div>`;
   };
@@ -3899,10 +3878,9 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
   const baseRenderHome=renderHome;renderHome=function(){const r=baseRenderHome();setTimeout(injectHomeQuick,0);return r};
   const baseGo=go;go=function(page){if(page==='knowledge'){S.currentPage='knowledge';document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById('page-knowledge')?.classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page==='knowledge'));document.getElementById('pageTitle').textContent='База знаний';document.getElementById('pageSub').textContent='Регламент и настольная книга';sh842RenderKnowledge();placeNav();return}const r=baseGo(page);placeNav();return r};
   const baseEnterApp=enterApp;enterApp=function(){const r=baseEnterApp();setTimeout(placeNav,0);return r};
-  const baseApplyTheme=applyTheme;applyTheme=function(t,save=true){const r=baseApplyTheme(t,save);if(S.currentPage==='knowledge'){if(K.docKey){const p=K.currentPage;K.loaded.clear();document.querySelectorAll('.sh842-pdf-page').forEach(w=>{w.innerHTML=`<div class="sh842-page-placeholder"><span>${w.dataset.page}</span></div>`});setTimeout(()=>{setupObserver();sh842ScrollPage(p,false)},0)}else setTimeout(()=>sh842RenderKnowledge(),0)}return r};
-  window.addEventListener('resize',()=>{if(S.currentPage==='knowledge'&&K.docKey&&K.index)applyPageWidths()},{passive:true});
+  const baseApplyTheme=applyTheme;applyTheme=function(t,save=true){const r=baseApplyTheme(t,save);if(S.currentPage==='knowledge'){if(K.docKey){refreshPdf()}else setTimeout(()=>sh842RenderKnowledge(),0)}return r};
 
   setTimeout(()=>{placeNav();if(S.currentPage==='home')injectHomeQuick()},0);
-  console.info('SkillHub V8.44: Knowledge Base uses local pre-rendered pages, local search index and preserved internal PDF links; no external PDF runtime dependency.');
+  console.info('SkillHub V8.44: Knowledge Base uses compact same-origin PDF files with local search indexes; all other SkillHub logic is unchanged.');
 })();
 /* ===== end SkillHub V8.44 ===== */
