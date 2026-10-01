@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>SkillHub — тест Регламента и Настольной книги</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:#0b0f14;color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  body.light{background:#f4f6f8;color:#12161c}
+  .app{min-height:100vh;display:flex;flex-direction:column}
+  .top{position:sticky;top:0;z-index:20;padding:10px 12px calc(10px + env(safe-area-inset-top));background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
+  body.light .top{background:rgba(244,246,248,.94);border-bottom-color:rgba(0,0,0,.08)}
+  .title{font-size:17px;font-weight:800;margin:0 0 8px}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  select,button{font:inherit;border:1px solid rgba(255,255,255,.16);background:#171c23;color:#fff;border-radius:12px;padding:10px 12px;min-height:42px}
+  body.light select,body.light button{background:#fff;color:#111;border-color:rgba(0,0,0,.14)}
+  button:active{transform:scale(.98)}
+  .subcontrols{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .subcontrols button{flex:1}
+  .pageinfo{min-width:72px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+  .viewer{flex:1;display:flex;justify-content:center;padding:14px 10px 28px}
+  .pagewrap{position:relative;width:min(100%,900px);align-self:flex-start}
+  canvas{display:block;width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.35);background:white}
+  .links{position:absolute;inset:0;pointer-events:none}
+  .link{position:absolute;display:block;pointer-events:auto;border-radius:4px;background:rgba(255,214,10,0);-webkit-tap-highlight-color:rgba(255,214,10,.25)}
+  .link:active{background:rgba(255,214,10,.22);outline:2px solid rgba(255,214,10,.55)}
+  .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:700;color:#dbe2ea;background:#111820;border-radius:10px}
+  body.light .status{color:#333;background:#e9edf1}
+  .status.hidden{display:none}
+  .hint{font-size:12px;opacity:.66;margin-top:7px;text-align:center}
+  .error{max-width:700px;margin:24px auto;padding:16px;border:1px solid #e57373;border-radius:12px;background:rgba(229,115,115,.08)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title">Тест базы знаний SkillHub</div>
+    <div class="controls">
+      <select id="docSelect" aria-label="Документ">
+        <option value="reglament">Регламент</option>
+        <option value="handbook">Настольная книга</option>
+      </select>
+      <select id="themeSelect" aria-label="Тема документа">
+        <option value="light">Светлая версия</option>
+        <option value="dark">Тёмная версия</option>
+      </select>
+    </div>
+    <div class="subcontrols">
+      <button id="prevBtn">← Назад</button>
+      <div class="pageinfo" id="pageInfo">1 / —</div>
+      <button id="nextBtn">Вперёд →</button>
+    </div>
+    <div class="hint">Нажимай прямо на кнопки и карточки внутри страницы — внутренние и внешние ссылки должны работать.</div>
+  </header>
+
+  <main class="viewer">
+    <div class="pagewrap" id="pageWrap">
+      <canvas id="pdfCanvas"></canvas>
+      <div class="links" id="links"></div>
+      <div class="status" id="status">Загружаю документ…</div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function(){
+  const FILES={
+    reglament:{light:'reglament-light.pdf',dark:'reglament-dark.pdf',meta:'reglament.json'},
+    handbook:{light:'handbook-light.pdf',dark:'handbook-dark.pdf',meta:'handbook.json'}
+  };
+  const $=id=>document.getElementById(id);
+  const canvas=$('pdfCanvas'), ctx=canvas.getContext('2d');
+  const linksEl=$('links'), statusEl=$('status'), wrap=$('pageWrap');
+  const docSelect=$('docSelect'), themeSelect=$('themeSelect'), pageInfo=$('pageInfo');
+  let pdf=null, meta=null, pageNum=1, renderSeq=0, docKey='reglament', theme='light';
+
+  if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+    theme='dark';
+    themeSelect.value='dark';
+  }
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  function setStatus(text, show=true){
+    statusEl.textContent=text;
+    statusEl.classList.toggle('hidden',!show);
+  }
+
+  function syncBodyTheme(){
+    document.body.classList.toggle('light',theme==='light');
+  }
+
+  function getPageMeta(n){
+    return meta && meta.pages ? meta.pages.find(p=>Number(p.n)===Number(n)) : null;
+  }
+
+  function renderLinks(pm){
+    linksEl.innerHTML='';
+    if(!pm || !Array.isArray(pm.links)) return;
+    pm.links.forEach(l=>{
+      const a=document.createElement('a');
+      a.className='link';
+      a.style.left=(l.x*100)+'%';
+      a.style.top=(l.y*100)+'%';
+      a.style.width=(l.w*100)+'%';
+      a.style.height=(l.h*100)+'%';
+      a.setAttribute('aria-label', l.page ? ('Перейти на страницу '+l.page) : 'Открыть ссылку');
+      if(l.page){
+        a.href='#page-'+l.page;
+        a.addEventListener('click',ev=>{
+          ev.preventDefault();
+          goToPage(Number(l.page));
+        });
+      }else if(l.url){
+        a.href=l.url;
+        a.target='_blank';
+        a.rel='noopener noreferrer';
+      }
+      linksEl.appendChild(a);
+    });
+  }
+
+  async function renderPage(){
+    if(!pdf || !meta) return;
+    const seq=++renderSeq;
+    setStatus('Открываю страницу '+pageNum+'…',true);
+    try{
+      const page=await pdf.getPage(pageNum);
+      if(seq!==renderSeq) return;
+      const base=page.getViewport({scale:1});
+      const cssWidth=Math.max(280,Math.min(wrap.clientWidth || window.innerWidth-20,900));
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      const scale=(cssWidth/base.width)*dpr;
+      const vp=page.getViewport({scale});
+      canvas.width=Math.floor(vp.width);
+      canvas.height=Math.floor(vp.height);
+      canvas.style.width=(vp.width/dpr)+'px';
+      canvas.style.height=(vp.height/dpr)+'px';
+      wrap.style.width=(vp.width/dpr)+'px';
+      linksEl.style.width=canvas.style.width;
+      linksEl.style.height=canvas.style.height;
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      if(seq!==renderSeq) return;
+      renderLinks(getPageMeta(pageNum));
+      pageInfo.textContent=pageNum+' / '+pdf.numPages;
+      $('prevBtn').disabled=pageNum<=1;
+      $('nextBtn').disabled=pageNum>=pdf.numPages;
+      setStatus('',false);
+      history.replaceState(null,'','#page-'+pageNum);
+    }catch(err){
+      console.error(err);
+      setStatus('Не удалось открыть страницу. Обнови страницу и попробуй ещё раз.',true);
+    }
+  }
+
+  async function loadDocument(){
+    renderSeq++;
+    setStatus('Загружаю документ…',true);
+    linksEl.innerHTML='';
+    pageNum=1;
+    try{
+      const cfg=FILES[docKey];
+      const metaResp=await fetch(cfg.meta,{cache:'no-store'});
+      if(!metaResp.ok) throw new Error('meta '+metaResp.status);
+      meta=await metaResp.json();
+      const task=pdfjsLib.getDocument({url:cfg[theme],disableAutoFetch:false,disableStream:false});
+      pdf=await task.promise;
+      const hash=location.hash.match(/page-(\d+)/);
+      if(hash){
+        const p=Number(hash[1]);
+        if(p>=1 && p<=pdf.numPages) pageNum=p;
+      }
+      await renderPage();
+    }catch(err){
+      console.error(err);
+      setStatus('Не удалось загрузить PDF. Проверь интернет и обнови страницу.',true);
+    }
+  }
+
+  function goToPage(n){
+    if(!pdf) return;
+    pageNum=Math.max(1,Math.min(pdf.numPages,Number(n)||1));
+    renderPage();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  $('prevBtn').addEventListener('click',()=>goToPage(pageNum-1));
+  $('nextBtn').addEventListener('click',()=>goToPage(pageNum+1));
+
+  docSelect.addEventListener('change',()=>{
+    docKey=docSelect.value;
+    location.hash='';
+    loadDocument();
+  });
+
+  themeSelect.addEventListener('change',()=>{
+    theme=themeSelect.value;
+    syncBodyTheme();
+    const keep=pageNum;
+    loadDocument().then(()=>{ if(pdf && keep<=pdf.numPages){ pageNum=keep; renderPage(); } });
+  });
+
+  let resizeTimer;
+  addEventListener('resize',()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(()=>renderPage(),180);
+  });
+
+  let touchX=0,touchY=0;
+  wrap.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){touchX=e.touches[0].clientX;touchY=e.touches[0].clientY;}
+  },{passive:true});
+  wrap.addEventListener('touchend',e=>{
+    if(!e.changedTouches.length) return;
+    const dx=e.changedTouches[0].clientX-touchX;
+    const dy=e.changedTouches[0].clientY-touchY;
+    if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.4){
+      if(dx<0) goToPage(pageNum+1); else goToPage(pageNum-1);
+    }
+  },{passive:true});
+
+  syncBodyTheme();
+  loadDocument();
+})();
+</script>
+</body>
+</html>
