@@ -3928,3 +3928,81 @@ console.info('SkillHub V8.33: Soft result now includes Next case button.');
   console.info('SkillHub V8.44: Knowledge Base uses local pre-rendered pages, local search index and preserved internal PDF links; no external PDF runtime dependency.');
 })();
 /* ===== end SkillHub V8.44 ===== */
+
+/* ===== SkillHub V8.45 — final Knowledge Base PDF.js viewer ===== */
+(function(){
+  'use strict';
+
+  const kbDocs={
+    reglament:{title:'Регламент работы в чате'},
+    handbook:{title:'Настольная книга'}
+  };
+
+  function kbTheme(){
+    try{return shThemeCurrent()}catch(e){
+      return document.documentElement.dataset.theme==='light'?'light':'dark';
+    }
+  }
+
+  const baseKbRender=window.sh842RenderKnowledge;
+  if(typeof baseKbRender==='function'){
+    window.sh842RenderKnowledge=function(){
+      window.__sh845KbDoc=null;
+      return baseKbRender();
+    };
+  }
+
+  window.sh842OpenKnowledgeDoc=function(docKey,opts={}){
+    const doc=kbDocs[docKey];
+    if(!doc)return;
+    window.__sh845KbDoc=docKey;
+    S.currentPage='knowledge';
+
+    document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
+    const page=document.getElementById('page-knowledge');
+    if(!page)return;
+
+    page.classList.remove('hidden');
+    page.classList.add('sh842-reader-page');
+    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page==='knowledge'));
+
+    const title=document.getElementById('pageTitle');
+    const sub=document.getElementById('pageSub');
+    if(title)title.textContent='База знаний';
+    if(sub)sub.textContent=doc.title;
+
+    const theme=kbTheme();
+    const src='./knowledge-viewer.html?doc='+encodeURIComponent(docKey)+'&theme='+encodeURIComponent(theme)+'&embed=1';
+    page.innerHTML=`
+      <div style="height:calc(100dvh - 118px);min-height:620px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--panel);">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--panel);">
+          <button class="sh842-back" onclick="sh842BackToKnowledge()">← База знаний</button>
+          <div style="min-width:0">
+            <b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(doc.title)}</b>
+            <small style="color:var(--muted)">Документ открыт внутри SkillHub</small>
+          </div>
+        </div>
+        <iframe
+          title="${esc(doc.title)}"
+          src="${src}"
+          style="display:block;width:100%;flex:1;border:0;background:var(--panel2)"
+          loading="eager"
+          allow="fullscreen"
+        ></iframe>
+      </div>`;
+  };
+
+  window.sh842BackToKnowledge=function(){
+    window.__sh845KbDoc=null;
+    const page=document.getElementById('page-knowledge');
+    if(page)page.classList.remove('sh842-reader-page');
+    if(typeof window.sh842RenderKnowledge==='function')window.sh842RenderKnowledge();
+    const title=document.getElementById('pageTitle');
+    const sub=document.getElementById('pageSub');
+    if(title)title.textContent='База знаний';
+    if(sub)sub.textContent='Регламент и настольная книга';
+  };
+
+  console.info('SkillHub V8.45: Knowledge Base uses the tested PDF.js viewer inside SkillHub.');
+})();
+ /* ===== end SkillHub V8.45 ===== */
