@@ -1,10 +1,10 @@
-const CACHE='skillhub-20260930-v8-44';
+const CACHE='skillhub-20261005-restore-v1';
 const SHELL=[
   './',
   './index.html',
   './styles-v844.css?v=20260930_v844',
-  './app-v844.js?v=20260930_v844',
-  './manifest.webmanifest?v=20260930_v843',
+  './app-v844.js?v=20261005_restore_live_v1',
+  './manifest.webmanifest?v=20260930_v844',
   './icon-192-v718.png',
   './icon-512-v718.png',
   './master-line-icon.png',
