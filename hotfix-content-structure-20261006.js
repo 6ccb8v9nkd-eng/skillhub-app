@@ -18,8 +18,11 @@
   window.shContentSetTab=setTab;
 
   window.shContentSetFilter=function(key,value){
-    if(!['q','section','type','status'].includes(key))return;
+    if(!['section','type','status'].includes(key))return;
     state[key]=String(value||'');state.page=1;renderContentLibrary();
+  };
+  window.shContentSearch=function(value){
+    state.q=String(value||'').trim();state.page=1;renderContentLibrary();
   };
   window.shContentSetPage=function(page){
     state.page=Math.max(1,Number(page)||1);renderContentLibrary();
@@ -50,8 +53,9 @@
     const all=Array.isArray(S?.content)?S.content:[];
     const published=all.filter(x=>x.status==='published').length;
     const drafts=all.length-published;
-    const sections=[...new Set(all.map(x=>String(x.section||'').trim()).filter(Boolean))];
-    const types=[...new Set(all.map(x=>String(x.type||'').trim()).filter(Boolean))];
+    const sectionOrder={soft:1,hard:2,needs:3,typing:4};
+    const sections=[...new Set(all.map(x=>String(x.section||'').trim()).filter(Boolean))].sort((a,b)=>(sectionOrder[a]||99)-(sectionOrder[b]||99)||sectionLabel(a).localeCompare(sectionLabel(b),'ru'));
+    const types=[...new Set(all.map(x=>String(x.type||'').trim()).filter(Boolean))].sort((a,b)=>typeName(a).localeCompare(typeName(b),'ru'));
     const q=state.q.trim().toLocaleLowerCase('ru-RU');
 
     let rows=all.filter(x=>{
@@ -91,7 +95,7 @@
           <details class="sh-content-more"><summary aria-label="Другие действия">•••</summary><div class="sh-content-more-menu"><button onclick="deleteContent('${x.id}')">Удалить материал</button></div></details>
         </div>
       </article>`;
-    }).join('')||`<div class="sh-content-empty"><b>Материалы не найдены</b><span>Измените фильтры или поиск.</span><button class="btn secondary" onclick="shContentClearFilters()">Сбросить фильтры</button></div>`;
+    }).join('')||`<div class="sh-content-empty"><b>Материалы не найдены</b><span>Попробуйте изменить поиск или фильтры.</span><button class="btn secondary" onclick="shContentClearFilters()">Сбросить фильтры</button></div>`;
 
     const pager=totalFiltered>state.pageSize?`<div class="sh-content-pager">
       <button class="btn secondary" ${state.page<=1?'disabled':''} onclick="shContentSetPage(${state.page-1})">← Назад</button>
@@ -101,7 +105,7 @@
 
     pane.innerHTML=`
       <section class="sh-content-head">
-        <div><h2>Материалы</h2><p>Поиск, фильтры и компактный список вместо длинного полотна.</p></div>
+        <div><h2>Материалы</h2><p>Быстро находите материалы по разделу, типу и статусу.</p></div>
         <button class="btn primary" onclick="shContentSetTab('create')">+ Создать материал</button>
       </section>
       <div class="sh-content-summary">
@@ -111,7 +115,7 @@
       </div>
       <div class="sh-content-sections">${sectionChips}</div>
       <div class="sh-content-filters">
-        <label class="sh-content-search"><span>Поиск</span><input value="${esc(state.q)}" placeholder="Название, тема, вопрос..." oninput="shContentSetFilter('q',this.value)"></label>
+        <label class="sh-content-search"><span>Поиск</span><div class="sh-content-search-row"><input id="shContentSearchInput" value="${esc(state.q)}" placeholder="Название, тема, вопрос..." onkeydown="if(event.key==='Enter')shContentSearch(this.value)"><button class="btn secondary" onclick="shContentSearch(document.getElementById('shContentSearchInput')?.value||'')">Найти</button></div></label>
         <label><span>Тип</span><select onchange="shContentSetFilter('type',this.value)"><option value="all">Все типы</option>${types.map(t=>`<option value="${esc(t)}" ${state.type===t?'selected':''}>${esc(typeName(t))}</option>`).join('')}</select></label>
         <label><span>Статус</span><select onchange="shContentSetFilter('status',this.value)"><option value="all">Все статусы</option><option value="published" ${state.status==='published'?'selected':''}>Опубликовано</option><option value="draft" ${state.status==='draft'?'selected':''}>Черновик</option></select></label>
         ${(state.q||state.section!=='all'||state.type!=='all'||state.status!=='all')?'<button class="sh-content-reset" onclick="shContentClearFilters()">Сбросить</button>':''}
@@ -130,29 +134,29 @@
       .sh-content-summary>div{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
       .sh-content-summary small{color:var(--muted)}.sh-content-summary strong{font-size:22px}
       .sh-content-sections{display:flex;gap:8px;overflow:auto;padding:2px 0 10px;scrollbar-width:none}.sh-content-sections::-webkit-scrollbar{display:none}
-      .sh-content-chip{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:8px 12px;font:inherit}
-      .sh-content-chip b{font-size:12px;color:var(--muted)}.sh-content-chip.active{border-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 13%,var(--panel))}.sh-content-chip.active span{color:var(--yellow);font-weight:800}
-      .sh-content-filters{display:grid;grid-template-columns:minmax(240px,1fr) 190px 190px auto;gap:10px;align-items:end;margin:4px 0 12px}
-      .sh-content-filters label{display:grid;gap:5px}.sh-content-filters label>span{font-size:12px;color:var(--muted);font-weight:700}
-      .sh-content-filters input,.sh-content-filters select{width:100%;min-height:42px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:9px 11px;font:inherit}
-      .sh-content-reset{min-height:42px;border:0;background:transparent;color:var(--yellow);font-weight:800;cursor:pointer;padding:0 8px}
+      .sh-content-chip{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit}
+      .sh-content-chip b{font-size:12px;color:var(--muted)}.sh-content-chip.active{border-color:var(--primary);background:var(--panel2)}.sh-content-chip.active span{color:var(--primary);font-weight:850}
+      .sh-content-filters{display:grid;grid-template-columns:minmax(280px,1fr) 190px 190px auto;gap:10px;align-items:end;margin:4px 0 12px}
+      .sh-content-filters label{display:grid;gap:5px}.sh-content-filters label>span{font-size:12px;color:var(--muted);font-weight:850}
+      .sh-content-filters input,.sh-content-filters select{width:100%;min-height:42px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:12px;padding:9px 11px;font:inherit}
+      .sh-content-search-row{display:grid;grid-template-columns:1fr auto;gap:7px}.sh-content-search-row .btn{min-width:76px}
+      .sh-content-reset{min-height:42px;border:0;background:transparent;color:var(--primary);font-weight:850;cursor:pointer;padding:0 8px}
       .sh-content-count{font-size:13px;color:var(--muted);margin:4px 2px 8px}
       .sh-content-list{display:grid;gap:9px}
       .sh-content-item{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:14px 16px}
-      .sh-content-item-main{min-width:0}.sh-content-item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.sh-content-type{font-size:12px;color:var(--muted);font-weight:700}
+      .sh-content-item-main{min-width:0}.sh-content-item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.sh-content-type{font-size:12px;color:var(--muted);font-weight:750}
       .sh-content-item h3{margin:0 0 5px;font-size:17px;line-height:1.3}.sh-content-item .meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .sh-content-item-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
-      .sh-content-more{position:relative}.sh-content-more summary{list-style:none;cursor:pointer;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-weight:900;letter-spacing:2px}.sh-content-more summary::-webkit-details-marker{display:none}
+      .sh-content-more{position:relative}.sh-content-more summary{list-style:none;cursor:pointer;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);font-weight:900;letter-spacing:2px}.sh-content-more summary::-webkit-details-marker{display:none}
       .sh-content-more-menu{position:absolute;right:0;top:48px;z-index:30;min-width:180px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
-      .sh-content-more-menu button{width:100%;border:0;background:transparent;color:var(--bad);text-align:left;padding:10px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}
-      .sh-content-more-menu button:hover{background:rgba(255,80,80,.08)}
-      .sh-content-empty{border:1px dashed var(--line);border-radius:16px;padding:28px;text-align:center;display:grid;justify-items:center;gap:8px;color:var(--muted)}.sh-content-empty b{color:var(--text);font-size:18px}
+      .sh-content-more-menu button{width:100%;border:0;background:transparent;color:var(--red);text-align:left;padding:10px;border-radius:8px;font:inherit;font-weight:800;cursor:pointer}.sh-content-more-menu button:hover{background:rgba(248,113,113,.08)}
+      .sh-content-empty{border:1px dashed var(--line);border-radius:16px;padding:28px;text-align:center;display:grid;justify-items:center;gap:8px;color:var(--muted)}.sh-content-empty b{color:var(--ink);font-size:18px}
       .sh-content-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:var(--muted);font-size:13px}.sh-content-pager .btn:disabled{opacity:.35;pointer-events:none}
       @media(max-width:760px){
         .sh-content-head{align-items:stretch;flex-direction:column}.sh-content-head .btn{width:100%}
         .sh-content-summary{grid-template-columns:repeat(3,1fr)}.sh-content-summary>div{display:grid;gap:3px;padding:11px}.sh-content-summary strong{font-size:20px}
         .sh-content-filters{grid-template-columns:1fr 1fr}.sh-content-search{grid-column:1/-1}.sh-content-reset{justify-self:start}
-        .sh-content-item{align-items:flex-start}.sh-content-item-actions .btn{display:none}.sh-content-item h3{font-size:16px}
+        .sh-content-item{align-items:flex-start;padding:13px}.sh-content-item-actions{gap:5px}.sh-content-item-actions .btn{padding:9px 10px;font-size:12px}.sh-content-item h3{font-size:16px}
         .sh-content-pager{display:grid;grid-template-columns:1fr 1fr}.sh-content-pager span{grid-column:1/-1;grid-row:1;text-align:center}.sh-content-pager button{grid-row:2}
       }
     `;document.head.appendChild(s);
