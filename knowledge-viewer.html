@@ -7,230 +7,254 @@
 <title>SkillHub — База знаний</title>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:#0b0f14;color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-  body.light{background:#f4f6f8;color:#12161c}
-  .app{min-height:100vh;display:flex;flex-direction:column}
-  .top{position:sticky;top:0;z-index:20;padding:10px 12px calc(10px + env(safe-area-inset-top));background:rgba(11,15,20,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
-  body.light .top{background:rgba(244,246,248,.94);border-bottom-color:rgba(0,0,0,.08)}
-  .title{font-size:17px;font-weight:800;margin:0 0 8px}
-  .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  select,button{font:inherit;border:1px solid rgba(255,255,255,.16);background:#171c23;color:#fff;border-radius:12px;padding:10px 12px;min-height:42px}
-  body.light select,body.light button{background:#fff;color:#111;border-color:rgba(0,0,0,.14)}
-  button:active{transform:scale(.98)}
-  .subcontrols{display:flex;gap:8px;margin-top:8px;align-items:center}
-  .subcontrols button{flex:1}
-  .pageinfo{min-width:72px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
-  .viewer{flex:1;display:flex;justify-content:center;padding:14px 10px 28px}
-  .pagewrap{position:relative;width:min(100%,900px);align-self:flex-start}
-  canvas{display:block;width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.35);background:white}
-  .links{position:absolute;inset:0;pointer-events:none}
-  .link{position:absolute;display:block;pointer-events:auto;border-radius:4px;background:rgba(255,214,10,0);-webkit-tap-highlight-color:rgba(255,214,10,.25)}
-  .link:active{background:rgba(255,214,10,.22);outline:2px solid rgba(255,214,10,.55)}
-  .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:700;color:#dbe2ea;background:#111820;border-radius:10px}
-  body.light .status{color:#333;background:#e9edf1}
-  .status.hidden{display:none}
-  .hint{font-size:12px;opacity:.66;margin-top:7px;text-align:center}
-  .error{max-width:700px;margin:24px auto;padding:16px;border:1px solid #e57373;border-radius:12px;background:rgba(229,115,115,.08)}
+  :root{
+    --bg:#0b0f14;--panel:#11171f;--panel2:#161d27;--text:#f6f8fb;--muted:#9ca8b6;
+    --line:rgba(255,255,255,.09);--accent:#ffd80a;--shadow:0 16px 44px rgba(0,0,0,.28);
+  }
+  body.light{--bg:#f3f5f7;--panel:#fff;--panel2:#f7f8fa;--text:#151a21;--muted:#697382;--line:rgba(17,24,39,.10);--shadow:0 12px 34px rgba(25,34,47,.11)}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  body{overflow-x:hidden}
+  button,input{font:inherit}
+  button{color:inherit}
+  .app{min-height:100vh;background:var(--bg)}
+
+  .reader-head{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+  .head-back,.icon-btn{border:1px solid var(--line);background:var(--panel);border-radius:12px;height:42px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s ease}
+  .head-back{padding:0 12px;gap:7px;font-weight:750;white-space:nowrap}
+  .icon-btn{width:42px;padding:0;font-size:18px}
+  .head-back:hover,.icon-btn:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));transform:translateY(-1px)}
+  .head-back:active,.icon-btn:active{transform:translateY(0) scale(.98)}
+  .head-title{min-width:0}
+  .head-title small{display:block;color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+  .head-title h1{font-size:17px;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .head-actions{display:flex;gap:8px}
+
+  .pages{width:100%;padding:18px 16px 44px;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .page{position:relative;width:min(100%,940px);aspect-ratio:var(--ratio, .707);border-radius:12px;overflow:hidden;background:#fff;box-shadow:var(--shadow);isolation:isolate}
+  .page canvas{display:block;width:100%;height:100%}
+  .page-placeholder,.page-status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-weight:700}
+  .page-status{z-index:4;flex-direction:column;gap:8px;padding:20px;text-align:center}
+  .page-status button{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px;color:var(--text)}
+  .page-no{position:absolute;right:10px;bottom:8px;z-index:3;background:rgba(0,0,0,.48);color:#fff;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:750;pointer-events:none;opacity:.58}
+  .links{position:absolute;inset:0;z-index:2;pointer-events:none}
+  .link{position:absolute;display:block;pointer-events:auto;border-radius:4px;background:transparent;-webkit-tap-highlight-color:rgba(255,216,10,.28)}
+  .link:hover{outline:2px solid rgba(255,216,10,.44);background:rgba(255,216,10,.07)}
+  .link:active{outline:2px solid rgba(255,216,10,.72);background:rgba(255,216,10,.17)}
+
+  .drawer-backdrop{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.36);opacity:0;pointer-events:none;transition:.2s ease}
+  .drawer{position:fixed;z-index:80;top:0;right:0;width:min(430px,92vw);height:100dvh;background:var(--panel);border-left:1px solid var(--line);box-shadow:-22px 0 60px rgba(0,0,0,.28);transform:translateX(102%);transition:.24s ease;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+  body.drawer-open .drawer-backdrop{opacity:1;pointer-events:auto}
+  body.drawer-open .drawer{transform:translateX(0)}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-bottom:1px solid var(--line)}
+  .drawer-head h2{font-size:18px;margin:0}
+  .drawer-close{width:38px;height:38px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);cursor:pointer}
+  .drawer-body{padding:14px 16px 24px;overflow:auto;flex:1}
+  .searchbox{display:flex;gap:8px;position:sticky;top:0;background:var(--panel);padding-bottom:12px;z-index:2}
+  .searchbox input{width:100%;min-width:0;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);padding:0 13px;outline:none}
+  .searchbox input:focus{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 0 0 3px rgba(255,216,10,.09)}
+  .searchbox button{height:44px;border:0;border-radius:12px;background:var(--accent);color:#171717;font-weight:800;padding:0 14px;cursor:pointer}
+  .drawer-list{display:flex;flex-direction:column;gap:8px}
+  .drawer-item{width:100%;text-align:left;border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:11px 12px;cursor:pointer;color:var(--text)}
+  .drawer-item b{display:block;font-size:13px;margin-bottom:3px}
+  .drawer-item span{display:block;color:var(--muted);font-size:12px;line-height:1.42}
+  .drawer-item:hover{border-color:color-mix(in srgb,var(--accent) 38%,var(--line))}
+  .drawer-empty{padding:22px 8px;color:var(--muted);text-align:center;font-size:13px;line-height:1.5}
+  .contents-quick{display:block;width:100%;border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 13%,var(--panel2)),var(--panel2));border-radius:14px;padding:14px;text-align:left;color:var(--text);cursor:pointer;margin-bottom:14px}
+  .contents-quick b{display:block;font-size:14px}.contents-quick span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+  .outline-section{margin:16px 0 8px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+
+  .loading-screen{min-height:65vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .fatal{max-width:620px;margin:40px auto;padding:20px;border:1px solid rgba(239,100,100,.35);background:rgba(239,100,100,.07);border-radius:16px;text-align:center}
+  .fatal b{display:block;margin-bottom:6px}.fatal span{display:block;color:var(--muted);font-size:13px}
+
+  @media(max-width:700px){
+    .reader-head{gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-top))}
+    .head-back{width:42px;padding:0;font-size:0}.head-back span{font-size:21px}
+    .head-title small{display:none}.head-title h1{font-size:15px}
+    .icon-btn{width:40px;height:40px}.head-back{height:40px}
+    .pages{padding:10px 6px 30px;gap:10px}
+    .page{border-radius:7px;width:100%}
+    .page-no{display:none}
+  }
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="top">
-    <div class="title">База знаний SkillHub</div>
-    <div class="controls">
-      <select id="docSelect" aria-label="Документ">
-        <option value="reglament">Регламент</option>
-        <option value="handbook">Настольная книга</option>
-      </select>
-      <select id="themeSelect" aria-label="Тема документа">
-        <option value="light">Светлая версия</option>
-        <option value="dark">Тёмная версия</option>
-      </select>
+  <header class="reader-head">
+    <button class="head-back" id="backBtn" aria-label="Вернуться в базу знаний"><span>←</span><em style="font-style:normal">База знаний</em></button>
+    <div class="head-title"><small>База знаний</small><h1 id="docTitle">Документ</h1></div>
+    <div class="head-actions">
+      <button class="icon-btn" id="contentsBtn" aria-label="Содержание" title="Содержание">☰</button>
+      <button class="icon-btn" id="searchBtn" aria-label="Поиск" title="Поиск">⌕</button>
     </div>
-    <div class="subcontrols">
-      <button id="prevBtn">← Назад</button>
-      <div class="pageinfo" id="pageInfo">1 / —</div>
-      <button id="nextBtn">Вперёд →</button>
-    </div>
-    <div class="hint">Нажимай прямо на кнопки и карточки внутри страницы — внутренние и внешние ссылки должны работать.</div>
   </header>
 
-  <main class="viewer">
-    <div class="pagewrap" id="pageWrap">
-      <canvas id="pdfCanvas"></canvas>
-      <div class="links" id="links"></div>
-      <div class="status" id="status">Загружаю документ…</div>
-    </div>
-  </main>
+  <main id="mainView"><div class="loading-screen"><span class="spinner"></span><b>Открываем документ…</b></div></main>
 </div>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2 id="drawerTitle">Содержание</h2><button class="drawer-close" id="drawerClose" aria-label="Закрыть">✕</button></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 (function(){
+  'use strict';
   const FILES={
-    reglament:{light:'reglament-light.pdf',dark:'reglament-dark.pdf',meta:'reglament.json'},
-    handbook:{light:'handbook-light.pdf',dark:'handbook-dark.pdf',meta:'handbook.json'}
+    reglament:{title:'Регламент работы в чате',light:'reglament-light.pdf',dark:'reglament-dark.pdf',meta:'reglament.json',contentsPage:2},
+    handbook:{title:'Настольная книга',light:'handbook-light.pdf',dark:'handbook-dark.pdf',meta:'handbook.json',contentsPage:2}
   };
   const $=id=>document.getElementById(id);
-  const canvas=$('pdfCanvas'), ctx=canvas.getContext('2d');
-  const linksEl=$('links'), statusEl=$('status'), wrap=$('pageWrap');
-  const docSelect=$('docSelect'), themeSelect=$('themeSelect'), pageInfo=$('pageInfo');
-  let pdf=null, meta=null, pageNum=1, renderSeq=0, docKey='reglament', theme='light';
-
   const params=new URLSearchParams(location.search);
-  const requestedDoc=params.get('doc');
+  const docKey=FILES[params.get('doc')]?params.get('doc'):'reglament';
+  const cfg=FILES[docKey];
+  const embed=params.get('embed')==='1';
   const requestedTheme=params.get('theme');
-  if(requestedDoc && FILES[requestedDoc]) docKey=requestedDoc;
-  if(requestedTheme==='light' || requestedTheme==='dark'){
-    theme=requestedTheme;
-  }else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-    theme='dark';
-  }
-  docSelect.value=docKey;
-  themeSelect.value=theme;
+  const theme=(requestedTheme==='light'||requestedTheme==='dark')?requestedTheme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  document.body.classList.toggle('light',theme==='light');
+  $('docTitle').textContent=cfg.title;
+  document.title='SkillHub — '+cfg.title;
 
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  function setStatus(text, show=true){
-    statusEl.textContent=text;
-    statusEl.classList.toggle('hidden',!show);
-  }
+  let pdf=null,meta=null,outline=[],observer=null,currentPage=1,rendering=new Map(),rendered=new Set();
+  const maxRendered=12;
 
-  function syncBodyTheme(){
-    document.body.classList.toggle('light',theme==='light');
+  function back(){
+    if(embed && window.parent && window.parent!==window && typeof window.parent.sh842BackToKnowledge==='function'){
+      window.parent.sh842BackToKnowledge();
+      return;
+    }
+    history.back();
   }
+  $('backBtn').addEventListener('click',back);
 
-  function getPageMeta(n){
-    return meta && meta.pages ? meta.pages.find(p=>Number(p.n)===Number(n)) : null;
+  function closeDrawer(){document.body.classList.remove('drawer-open');$('drawer').setAttribute('aria-hidden','true')}
+  function openDrawer(kind){
+    $('drawerTitle').textContent=kind==='search'?'Поиск по документу':'Содержание';
+    $('drawerBody').innerHTML=kind==='search'?searchMarkup():contentsMarkup();
+    document.body.classList.add('drawer-open');$('drawer').setAttribute('aria-hidden','false');
+    if(kind==='search')setTimeout(()=>$('kbSearch')?.focus(),80);
   }
+  $('contentsBtn').addEventListener('click',()=>openDrawer('contents'));
+  $('searchBtn').addEventListener('click',()=>openDrawer('search'));
+  $('drawerClose').addEventListener('click',closeDrawer);$('drawerBackdrop').addEventListener('click',closeDrawer);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 
-  function renderLinks(pm){
-    linksEl.innerHTML='';
-    if(!pm || !Array.isArray(pm.links)) return;
-    pm.links.forEach(l=>{
-      const a=document.createElement('a');
-      a.className='link';
-      a.style.left=(l.x*100)+'%';
-      a.style.top=(l.y*100)+'%';
-      a.style.width=(l.w*100)+'%';
-      a.style.height=(l.h*100)+'%';
-      a.setAttribute('aria-label', l.page ? ('Перейти на страницу '+l.page) : 'Открыть ссылку');
-      if(l.page){
-        a.href='#page-'+l.page;
-        a.addEventListener('click',ev=>{
-          ev.preventDefault();
-          goToPage(Number(l.page));
-        });
-      }else if(l.url){
-        a.href=l.url;
-        a.target='_blank';
-        a.rel='noopener noreferrer';
-      }
-      linksEl.appendChild(a);
-    });
+  function searchMarkup(){return `<div class="searchbox"><input id="kbSearch" placeholder="Что найти?" autocomplete="off"><button id="kbSearchGo">Найти</button></div><div id="kbSearchResults" class="drawer-list"><div class="drawer-empty">Введите слово или фразу из документа.</div></div>`}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+  function snippet(text,q){const src=String(text||''),low=src.toLocaleLowerCase('ru-RU'),i=low.indexOf(q);if(i<0)return '';const a=Math.max(0,i-68),b=Math.min(src.length,i+q.length+110);return `${a?'…':''}${src.slice(a,b).replace(/\s+/g,' ')}${b<src.length?'…':''}`}
+  function runSearch(){
+    const inp=$('kbSearch'),out=$('kbSearchResults');if(!inp||!out||!meta)return;
+    const raw=inp.value.trim(),q=raw.toLocaleLowerCase('ru-RU');
+    if(q.length<2){out.innerHTML='<div class="drawer-empty">Введите минимум два символа.</div>';return}
+    const found=[];for(const p of (meta.pages||[])){if(String(p.text||'').toLocaleLowerCase('ru-RU').includes(q)){found.push({n:p.n,text:snippet(p.text,q)});if(found.length>=50)break}}
+    out.innerHTML=found.length?found.map(r=>`<button class="drawer-item" data-page="${r.n}"><b>Страница ${r.n}</b><span>${esc(r.text)}</span></button>`).join(''):'<div class="drawer-empty">Ничего не найдено. Попробуйте другую формулировку.</div>';
+    out.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{closeDrawer();scrollToPage(Number(b.dataset.page))}));
   }
+  document.addEventListener('click',e=>{if(e.target?.id==='kbSearchGo')runSearch()});
+  document.addEventListener('keydown',e=>{if(e.target?.id==='kbSearch'&&e.key==='Enter')runSearch()});
 
-  async function renderPage(){
-    if(!pdf || !meta) return;
-    const seq=++renderSeq;
-    setStatus('Открываю страницу '+pageNum+'…',true);
+  function contentsMarkup(){
+    let html=`<button class="contents-quick" data-contents-page="${cfg.contentsPage}"><b>Открыть содержание документа</b><span>Перейти к странице содержания</span></button>`;
+    if(outline.length){html+='<div class="outline-section">Разделы</div><div class="drawer-list">'+outline.map((x,i)=>`<button class="drawer-item" data-outline="${i}"><b>${esc(x.title||'Раздел')}</b></button>`).join('')+'</div>'}
+    else html+='<div class="drawer-empty">Навигация внутри самого документа остаётся кликабельной: нажимайте на пункты содержания и кнопки прямо на страницах.</div>';
+    return html;
+  }
+  document.addEventListener('click',e=>{
+    const c=e.target.closest?.('[data-contents-page]');if(c){closeDrawer();scrollToPage(Number(c.dataset.contentsPage));return}
+    const o=e.target.closest?.('[data-outline]');if(o){goOutline(Number(o.dataset.outline))}
+  });
+
+  async function goOutline(i){
+    const item=outline[i];if(!item||!pdf)return;
     try{
-      const page=await pdf.getPage(pageNum);
-      if(seq!==renderSeq) return;
-      const base=page.getViewport({scale:1});
-      const cssWidth=Math.max(280,Math.min(wrap.clientWidth || window.innerWidth-20,900));
-      const dpr=Math.min(window.devicePixelRatio||1,2);
-      const scale=(cssWidth/base.width)*dpr;
-      const vp=page.getViewport({scale});
-      canvas.width=Math.floor(vp.width);
-      canvas.height=Math.floor(vp.height);
-      canvas.style.width=(vp.width/dpr)+'px';
-      canvas.style.height=(vp.height/dpr)+'px';
-      wrap.style.width=(vp.width/dpr)+'px';
-      linksEl.style.width=canvas.style.width;
-      linksEl.style.height=canvas.style.height;
-      await page.render({canvasContext:ctx,viewport:vp}).promise;
-      if(seq!==renderSeq) return;
-      renderLinks(getPageMeta(pageNum));
-      pageInfo.textContent=pageNum+' / '+pdf.numPages;
-      $('prevBtn').disabled=pageNum<=1;
-      $('nextBtn').disabled=pageNum>=pdf.numPages;
-      setStatus('',false);
-      history.replaceState(null,'','#page-'+pageNum);
-    }catch(err){
-      console.error(err);
-      setStatus('Не удалось открыть страницу. Обнови страницу и попробуй ещё раз.',true);
-    }
+      const dest=typeof item.dest==='string'?await pdf.getDestination(item.dest):item.dest;
+      if(!dest?.[0])return;
+      const idx=await pdf.getPageIndex(dest[0]);closeDrawer();scrollToPage(idx+1);
+    }catch(e){console.warn('Outline navigation failed',e)}
   }
 
-  async function loadDocument(){
-    renderSeq++;
-    setStatus('Загружаю документ…',true);
-    linksEl.innerHTML='';
-    pageNum=1;
+  function pageMeta(n){return (meta?.pages||[]).find(p=>Number(p.n)===Number(n))}
+  function ratioFor(pm){const w=Number(pm?.width||1),h=Number(pm?.height||1);return w>0&&h>0?(w/h):.707}
+
+  function buildShells(){
+    const main=$('mainView');main.innerHTML='<div class="pages" id="pages"></div>';const host=$('pages');
+    const frag=document.createDocumentFragment();
+    for(let n=1;n<=pdf.numPages;n++){
+      const pm=pageMeta(n);const el=document.createElement('section');el.className='page';el.id='kbPage'+n;el.dataset.page=String(n);el.style.setProperty('--ratio',String(ratioFor(pm)));
+      el.innerHTML=`<div class="page-placeholder">Страница ${n}</div>`;frag.appendChild(el);
+    }
+    host.appendChild(frag);setupObserver();
+  }
+
+  function setupObserver(){
+    observer?.disconnect();observer=new IntersectionObserver(entries=>{
+      let best=null;
+      for(const e of entries){const n=Number(e.target.dataset.page);if(e.isIntersecting){renderPage(n);if(!best||e.intersectionRatio>best.r)best={n,r:e.intersectionRatio}}}
+      if(best&&best.r>.12)currentPage=best.n;
+    },{root:null,rootMargin:'1100px 0px 1100px 0px',threshold:[0,.12,.35,.65]});
+    document.querySelectorAll('.page').forEach(el=>observer.observe(el));
+  }
+
+  function renderLinks(pm,el){
+    if(!pm||!Array.isArray(pm.links)||!pm.links.length)return;
+    const layer=document.createElement('div');layer.className='links';
+    for(const l of pm.links){
+      const a=document.createElement('a');a.className='link';a.style.left=(Number(l.x||0)*100)+'%';a.style.top=(Number(l.y||0)*100)+'%';a.style.width=(Number(l.w||0)*100)+'%';a.style.height=(Number(l.h||0)*100)+'%';
+      if(l.page){a.href='#page-'+l.page;a.setAttribute('aria-label','Перейти к разделу');a.addEventListener('click',ev=>{ev.preventDefault();scrollToPage(Number(l.page))})}
+      else if(l.url){a.href=l.url;a.target='_blank';a.rel='noopener noreferrer';a.setAttribute('aria-label','Открыть ссылку')}
+      else continue;
+      layer.appendChild(a);
+    }
+    el.appendChild(layer);
+  }
+
+  async function renderPage(n){
+    if(rendered.has(n)||rendering.has(n)||!pdf)return;
+    const el=$('kbPage'+n);if(!el)return;
+    const job=(async()=>{
+      try{
+        const page=await pdf.getPage(n);const base=page.getViewport({scale:1});const cssW=Math.max(280,Math.min(el.clientWidth||940,940));const dpr=Math.min(devicePixelRatio||1,1.7);const vp=page.getViewport({scale:(cssW/base.width)*dpr});
+        const canvas=document.createElement('canvas');canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);canvas.setAttribute('aria-label',cfg.title+', страница '+n);
+        el.innerHTML='';el.appendChild(canvas);await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;renderLinks(pageMeta(n),el);
+        const badge=document.createElement('span');badge.className='page-no';badge.textContent=String(n);el.appendChild(badge);rendered.add(n);trimRendered(n);
+      }catch(err){console.error('Page render failed',n,err);el.innerHTML=`<div class="page-status"><b>Не удалось открыть страницу ${n}</b><button data-retry="${n}">Повторить</button></div>`}
+      finally{rendering.delete(n)}
+    })();rendering.set(n,job);return job;
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-retry]');if(b){const n=Number(b.dataset.retry);rendered.delete(n);renderPage(n)}});
+
+  function trimRendered(anchor){
+    if(rendered.size<=maxRendered)return;
+    const ordered=[...rendered].sort((a,b)=>Math.abs(b-anchor)-Math.abs(a-anchor));
+    while(rendered.size>maxRendered&&ordered.length){const n=ordered.shift();if(Math.abs(n-anchor)<3)continue;const el=$('kbPage'+n);if(el){el.innerHTML=`<div class="page-placeholder">Страница ${n}</div>`;rendered.delete(n)}}
+  }
+
+  function scrollToPage(n){
+    n=Math.max(1,Math.min(pdf?.numPages||1,Number(n)||1));currentPage=n;const el=$('kbPage'+n);if(!el)return;renderPage(n);el.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  async function load(){
     try{
-      const cfg=FILES[docKey];
-      const metaResp=await fetch(cfg.meta,{cache:'no-store'});
-      if(!metaResp.ok) throw new Error('meta '+metaResp.status);
-      meta=await metaResp.json();
-      const task=pdfjsLib.getDocument({url:cfg[theme],disableAutoFetch:false,disableStream:false});
-      pdf=await task.promise;
-      const hash=location.hash.match(/page-(\d+)/);
-      if(hash){
-        const p=Number(hash[1]);
-        if(p>=1 && p<=pdf.numPages) pageNum=p;
-      }
-      await renderPage();
-    }catch(err){
-      console.error(err);
-      setStatus('Не удалось загрузить PDF. Проверь интернет и обнови страницу.',true);
-    }
+      const [metaResp,pdfDoc]=await Promise.all([
+        fetch(cfg.meta,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('metadata '+r.status);return r.json()}),
+        pdfjsLib.getDocument({url:cfg[theme],disableAutoFetch:false,disableStream:false}).promise
+      ]);
+      meta=metaResp;pdf=pdfDoc;
+      try{outline=(await pdf.getOutline())||[]}catch(_){outline=[]}
+      buildShells();
+      const start=Math.max(1,Math.min(pdf.numPages,Number(params.get('page')||1)||1));
+      currentPage=start;renderPage(start);if(start>1)setTimeout(()=>scrollToPage(start),80);
+    }catch(err){console.error(err);$('mainView').innerHTML='<div class="fatal"><b>Не удалось открыть документ</b><span>Проверьте соединение и попробуйте обновить страницу.</span></div>'}
   }
 
-  function goToPage(n){
-    if(!pdf) return;
-    pageNum=Math.max(1,Math.min(pdf.numPages,Number(n)||1));
-    renderPage();
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-
-  $('prevBtn').addEventListener('click',()=>goToPage(pageNum-1));
-  $('nextBtn').addEventListener('click',()=>goToPage(pageNum+1));
-
-  docSelect.addEventListener('change',()=>{
-    docKey=docSelect.value;
-    location.hash='';
-    loadDocument();
-  });
-
-  themeSelect.addEventListener('change',()=>{
-    theme=themeSelect.value;
-    syncBodyTheme();
-    const keep=pageNum;
-    loadDocument().then(()=>{ if(pdf && keep<=pdf.numPages){ pageNum=keep; renderPage(); } });
-  });
-
-  let resizeTimer;
-  addEventListener('resize',()=>{
-    clearTimeout(resizeTimer);
-    resizeTimer=setTimeout(()=>renderPage(),180);
-  });
-
-  let touchX=0,touchY=0;
-  wrap.addEventListener('touchstart',e=>{
-    if(e.touches.length===1){touchX=e.touches[0].clientX;touchY=e.touches[0].clientY;}
-  },{passive:true});
-  wrap.addEventListener('touchend',e=>{
-    if(!e.changedTouches.length) return;
-    const dx=e.changedTouches[0].clientX-touchX;
-    const dy=e.changedTouches[0].clientY-touchY;
-    if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.4){
-      if(dx<0) goToPage(pageNum+1); else goToPage(pageNum-1);
-    }
-  },{passive:true});
-
-  syncBodyTheme();
-  loadDocument();
+  let resizeTimer;addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{for(const n of [...rendered]){const el=$('kbPage'+n);if(el){el.innerHTML=`<div class="page-placeholder">Страница ${n}</div>`;rendered.delete(n)}}setupObserver();renderPage(currentPage)},180)},{passive:true});
+  load();
 })();
 </script>
 </body>
