@@ -173,3 +173,12 @@
 
   console.info('SkillHub: RG recommendations hide on assignment; completed assignments hide from active list');
 })();
+
+/* Load the native Knowledge Base reader after the core app and RG patches. */
+(function(){
+  if(document.querySelector('script[data-sh-native-kb]'))return;
+  const s=document.createElement('script');
+  s.src='./hotfix-knowledge-native-20261005.js?v=1';
+  s.dataset.shNativeKb='1';
+  document.head.appendChild(s);
+})();
