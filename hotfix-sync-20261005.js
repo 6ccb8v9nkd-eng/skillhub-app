@@ -47,7 +47,6 @@
       if(isManager())await loadManagerScope();
       else{S.allowed=[];S.profiles=[S.profile]}
 
-      /* Cache failure must never roll live cloud data back to an old local copy. */
       try{
         localStorage.setItem('sh7_cache_'+S.profile.login,JSON.stringify({
           content:S.content,
@@ -81,7 +80,6 @@
     }
   };
 
-  /* Extra recovery for RG/RS/tech-admin if an earlier startup sync left S.allowed empty. */
   async function recoverManagerData(){
     if(recoveryBusy||!S.user||!isManager())return;
     if((S.allowed||[]).length>1&&(S.attempts||[]).length)return;
@@ -99,4 +97,70 @@
   setTimeout(recoverManagerData,900);
   window.addEventListener('online',()=>setTimeout(recoverManagerData,100));
   console.info('SkillHub hotfix: manager cloud sync recovery enabled');
+})();
+
+/* RG employee controls: Новый код · Изменить · Управление */
+(function(){
+  'use strict';
+  const baseRenderEmployees=renderEmployees;
+
+  function rgEmployee(login){
+    return (S.allowed||[]).find(x=>x.login===login&&x.role==='employee'&&x.active!==false&&S.profile?.role==='mentor'&&x.manager_login===S.profile.login)||null;
+  }
+
+  window.shRgNewCode=async function(login){
+    const x=rgEmployee(login);if(!x)return;
+    return x.claimed_user_id?resetAccess(login):makeCode(login);
+  };
+
+  window.shRgOpenManagement=function(login){
+    const x=rgEmployee(login);if(!x)return;
+    showModal(`<div class="modal-head"><div><h2>Управление сотрудником</h2><div class="meta">${esc(x.name||x.login)} · ${esc(x.login)}</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="card" style="margin-top:12px"><div class="employee-row"><div><b>Открепить</b><div class="meta">Сотрудник останется в SkillHub. PIN, результаты и история сохранятся; другой РГ сможет закрепить его за собой.</div></div><button class="btn secondary" onclick="shRgDetach('${jsq(login)}')">Открепить</button></div><div class="employee-row"><div><b>Удалить</b><div class="meta">Сотрудник будет убран из активных и потеряет доступ. Все результаты и история сохранятся для восстановления.</div></div><button class="btn danger" onclick="shRgArchive('${jsq(login)}')">Удалить</button></div></div>`);
+  };
+
+  window.shRgDetach=async function(login){
+    if(!rgEmployee(login))return;
+    closeModal();
+    await removeEmployeeFromTeam(login);
+  };
+
+  window.shRgArchive=async function(login){
+    const x=rgEmployee(login);if(!x)return;
+    if(!confirm(`Удалить ${x.name||x.login} из активных сотрудников? Доступ будет отключён, но результаты и вся история сохранятся для восстановления.`))return;
+    const {error}=await S.sb.rpc('mentor_archive_employee',{p_login:login});
+    if(error){
+      let m=error.message||String(error);
+      if(m.includes('OUTSIDE_YOUR_SCOPE'))m='Можно удалять только сотрудников своей команды.';
+      else if(m.includes('EMPLOYEE_NOT_FOUND'))m='Сотрудник не найден.';
+      else if(m.includes('FORBIDDEN'))m='Недостаточно прав для удаления сотрудника.';
+      toast(m);return;
+    }
+    closeModal();
+    await syncAll();
+    renderEmployees();
+    if(S.currentPage==='mentor')renderMentor();
+    toast('Сотрудник удалён из активных. История сохранена.');
+  };
+
+  function applyRgEmployeeActions(){
+    if(S.profile?.role!=='mentor')return;
+    const users=employeeListForAdmin();
+    const rows=[...document.querySelectorAll('#employeeRows > .employee-row')];
+    if(!rows.length||rows.length!==users.length)return;
+    rows.forEach((row,i)=>{
+      const x=users[i];
+      if(!x||x.role!=='employee'||x.manager_login!==S.profile.login)return;
+      const actions=row.querySelector('.actions');
+      if(!actions)return;
+      actions.innerHTML=`<span class="pill ${x.active?'good':'bad'}">${x.active?'Активен':'Отключён'}</span><button class="btn secondary" onclick="shRgNewCode('${jsq(x.login)}')">Новый код</button><button class="btn secondary" onclick="openEmployeeEditor(S.allowed.find(u=>u.login==='${jsq(x.login)}'))">Изменить</button><button class="btn secondary" onclick="shRgOpenManagement('${jsq(x.login)}')">Управление</button>`;
+    });
+  }
+
+  renderEmployees=function(){
+    const r=baseRenderEmployees();
+    applyRgEmployeeActions();
+    return r;
+  };
+
+  console.info('SkillHub: RG employee controls enabled');
 })();
