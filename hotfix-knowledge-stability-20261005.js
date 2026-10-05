@@ -2,20 +2,21 @@
 (function(){
   'use strict';
 
-  if (typeof window.renderCurrent !== 'function') {
+  if (typeof renderCurrent !== 'function') {
     console.warn('SkillHub KB stability hotfix: renderCurrent is unavailable');
     return;
   }
 
-  const baseRenderCurrent = window.renderCurrent;
+  const baseRenderCurrent = renderCurrent;
 
-  window.renderCurrent = function(){
+  renderCurrent = function(){
     const openedKnowledgeDoc = window.__shNativeKbDoc || window.__sh845KbDoc;
+    const currentPage = (typeof S !== 'undefined' && S) ? S.currentPage : null;
 
     // syncAll()/Realtime call renderCurrent() after data refresh. While a document
     // is open this must not redraw the Knowledge Base home screen, otherwise the
     // user is thrown back to the Reglament/Handbook selection and has to tap twice.
-    if (window.S?.currentPage === 'knowledge' && openedKnowledgeDoc) return;
+    if (currentPage === 'knowledge' && openedKnowledgeDoc) return;
 
     return baseRenderCurrent.apply(this, arguments);
   };
