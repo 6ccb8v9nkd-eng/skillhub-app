@@ -7,6 +7,14 @@
 (function(){
   'use strict';
 
+  // Load the Content-section structure hotfix for every role that has Content access.
+  if(!document.querySelector('script[data-sh-content-structure]')){
+    const sc=document.createElement('script');
+    sc.src='./hotfix-content-structure-20261006.js?v=2';
+    sc.dataset.shContentStructure='1';
+    document.head.appendChild(sc);
+  }
+
   function isRg(){
     try{return typeof S!=='undefined' && S?.profile?.role==='mentor'}catch(_){return false}
   }
