@@ -141,7 +141,7 @@
   if(!document.getElementById('shSoftCompactFeedbackLoader')){
     const f=document.createElement('script');
     f.id='shSoftCompactFeedbackLoader';
-    f.src='./hotfix-soft-compact-feedback-20261006.js?v=2';
+    f.src='./hotfix-soft-compact-feedback-20261006.js?v=3';
     document.head.appendChild(f);
   }
 })();
