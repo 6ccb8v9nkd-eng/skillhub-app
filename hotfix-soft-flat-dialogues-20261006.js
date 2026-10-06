@@ -118,3 +118,11 @@
 
   console.info('SkillHub: Soft chooser restored; ordinary and manual flows start from one Start button');
 })();
+
+(function(){
+  if(document.getElementById('shMonthlyCheckLoader'))return;
+  const s=document.createElement('script');
+  s.id='shMonthlyCheckLoader';
+  s.src='./hotfix-monthly-check-20261006.js?v=1';
+  document.head.appendChild(s);
+})();
