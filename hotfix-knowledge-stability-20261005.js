@@ -23,3 +23,27 @@
 
   console.info('SkillHub: Knowledge Base background re-render guard enabled');
 })();
+
+/* Remove redundant explanatory captions from the Knowledge Base home screen. */
+(function(){
+  'use strict';
+
+  function cleanKnowledgeHome(){
+    const page=document.getElementById('page-knowledge');
+    if(!page)return;
+    page.querySelector('.sh842-kb-hero p')?.remove();
+    page.querySelector('.sh842-kb-note')?.remove();
+  }
+
+  const baseKbRender=window.sh842RenderKnowledge;
+  if(typeof baseKbRender==='function'){
+    window.sh842RenderKnowledge=function(){
+      const result=baseKbRender.apply(this,arguments);
+      cleanKnowledgeHome();
+      return result;
+    };
+  }
+
+  cleanKnowledgeHome();
+  console.info('SkillHub: Knowledge Base extra captions removed');
+})();
