@@ -5,7 +5,7 @@
   const state=window.__shSoftFlatState||(window.__shSoftFlatState={q:'',page:1,pageSize:12});
 
   function rows(){
-    const all=Array.isArray(window.S?.content)?window.S.content:[];
+    const all=(typeof S!=='undefined'&&Array.isArray(S.content))?S.content:[];
     const q=String(state.q||'').trim().toLocaleLowerCase('ru-RU');
     return all
       .filter(x=>x&&x.status==='published'&&x.section==='soft'&&x.type==='dialogue')
