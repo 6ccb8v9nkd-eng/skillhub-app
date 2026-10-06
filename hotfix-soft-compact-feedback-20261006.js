@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
   function norm(v){return String(v??'').replace(/\s+/g,' ').trim()}
   function clamp(v,n=180){const s=norm(v);return s.length>n?s.slice(0,n-1).trimEnd()+'…':s}
 
@@ -74,6 +74,10 @@
     return themes;
   }
 
+  function disclosureSummary(label){
+    return `<span class="sh-soft-disclosure-label">${label}</span><span class="sh-soft-disclosure" aria-hidden="true">▼</span>`;
+  }
+
   function compactFinalReview(){
     const wrap=document.querySelector('.sh831-result-wrap');
     if(!wrap||wrap.dataset.shSoftOverallCompact)return;
@@ -96,7 +100,7 @@
 
     const detail=document.createElement('details');
     detail.className='card sh-soft-full-review';
-    detail.innerHTML='<summary><span>Посмотреть подробнее</span><i class="sh-soft-disclosure" aria-hidden="true">⌄</i></summary><div class="sh-soft-full-review-body"></div>';
+    detail.innerHTML=`<summary>${disclosureSummary('Посмотреть подробнее')}</summary><div class="sh-soft-full-review-body"></div>`;
     const body=detail.querySelector('.sh-soft-full-review-body');
     const oldTitle=section.querySelector(':scope > h3');if(oldTitle)oldTitle.remove();
     while(section.firstChild)body.appendChild(section.firstChild);
@@ -108,7 +112,7 @@
     const strong=wrap.querySelector('.sh831-strong-dialog');
     if(strong){
       const sm=strong.querySelector('summary');
-      if(sm)sm.innerHTML='<span>Как мог выглядеть полностью сильный диалог</span><i class="sh-soft-disclosure" aria-hidden="true">⌄</i>';
+      if(sm)sm.innerHTML=disclosureSummary('Как мог выглядеть полностью сильный диалог');
       strong.classList.add('sh-soft-strong-dialog-compact');
     }
   }
@@ -120,8 +124,8 @@
     style.textContent=`
       .sh-soft-compact-feedback{padding:14px!important;border-radius:15px!important}.sh-soft-feedback-short{display:grid;gap:5px}.sh-soft-feedback-short b{font-size:12px;color:var(--primary);text-transform:uppercase;letter-spacing:.05em}.sh-soft-feedback-short p{margin:0!important;line-height:1.45;color:var(--ink)}.sh-soft-feedback-toggle{margin-top:9px;border:0;background:transparent;color:var(--primary);font:inherit;font-size:13px;font-weight:850;padding:0;cursor:pointer;text-align:left}.sh-soft-feedback-details{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.55}.sh-soft-feedback-details.hidden{display:none!important}
       .sh-soft-overall-summary{padding:18px!important;margin-top:8px}.sh-soft-summary-kicker{display:block;color:var(--primary);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}.sh-soft-overall-summary h3{margin:0 0 7px;font-size:20px}.sh-soft-overall-summary p{margin:0;color:var(--muted);line-height:1.5}
-      .sh-soft-full-review{padding:0!important;overflow:hidden}.sh-soft-full-review>summary,.sh-soft-strong-dialog-compact>summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:900;color:var(--primary);display:flex;align-items:center;justify-content:space-between;gap:14px}.sh-soft-full-review>summary::-webkit-details-marker,.sh-soft-strong-dialog-compact>summary::-webkit-details-marker{display:none}.sh-soft-full-review>summary span,.sh-soft-strong-dialog-compact>summary span{min-width:0}.sh-soft-disclosure{font-style:normal;font-size:28px;line-height:1;color:var(--primary);flex:0 0 auto;transform:rotate(0deg);transition:transform .18s ease}.sh-soft-full-review[open]>summary .sh-soft-disclosure,.sh-soft-strong-dialog-compact[open]>summary .sh-soft-disclosure{transform:rotate(180deg)}.sh-soft-full-review[open]>summary,.sh-soft-strong-dialog-compact[open]>summary{border-bottom:1px solid var(--line)}.sh-soft-full-review-body{padding:16px;display:grid;gap:12px}.sh-soft-full-review-body .sh831-review-step{margin:0}.sh-soft-full-review-body .sh831-criteria{margin:0}.sh-soft-strong-dialog-compact{margin-top:10px}.sh-soft-result-compact .sh831-result-actions{margin-top:14px}
-      @media(max-width:620px){.sh-soft-overall-summary{padding:15px!important}.sh-soft-full-review>summary,.sh-soft-strong-dialog-compact>summary{padding:14px 15px}.sh-soft-full-review-body{padding:12px}.sh-soft-disclosure{font-size:26px}}
+      .sh-soft-full-review{padding:0!important;overflow:hidden}.sh-soft-full-review>summary,.sh-soft-strong-dialog-compact>summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:900;color:var(--primary);display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px;width:100%;box-sizing:border-box}.sh-soft-full-review>summary::-webkit-details-marker,.sh-soft-strong-dialog-compact>summary::-webkit-details-marker{display:none}.sh-soft-disclosure-label{min-width:0;flex:1 1 auto}.sh-soft-disclosure{display:inline-flex!important;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:rgba(255,214,0,.12);border:1px solid rgba(255,214,0,.35);font-size:16px;line-height:1;color:var(--primary);flex:0 0 34px;transition:transform .18s ease}.sh-soft-full-review[open]>summary .sh-soft-disclosure,.sh-soft-strong-dialog-compact[open]>summary .sh-soft-disclosure{transform:rotate(180deg)}.sh-soft-full-review[open]>summary,.sh-soft-strong-dialog-compact[open]>summary{border-bottom:1px solid var(--line)}.sh-soft-full-review-body{padding:16px;display:grid;gap:12px}.sh-soft-full-review-body .sh831-review-step{margin:0}.sh-soft-full-review-body .sh831-criteria{margin:0}.sh-soft-strong-dialog-compact{margin-top:10px}.sh-soft-result-compact .sh831-result-actions{margin-top:14px}
+      @media(max-width:620px){.sh-soft-overall-summary{padding:15px!important}.sh-soft-full-review>summary,.sh-soft-strong-dialog-compact>summary{padding:14px 15px}.sh-soft-full-review-body{padding:12px}.sh-soft-disclosure{width:32px;height:32px;flex-basis:32px;font-size:15px}}
     `;document.head.appendChild(style);
   }
 
