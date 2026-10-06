@@ -11,14 +11,15 @@
   function dialogues(){return allSoft().filter(x=>x.type==='dialogue');}
   function manuals(){return allSoft().filter(x=>x.type==='manual');}
 
-  function nextDialogue(){
-    const rows=dialogues();
+  function nextBySeen(rows){
     if(!rows.length)return null;
     const seen=typeof seenContentMap==='function'?seenContentMap():new Map();
     const unseen=rows.filter(x=>!seen.has(x.id));
     if(unseen.length)return unseen[Math.floor(Math.random()*unseen.length)];
     return rows.slice().sort((a,b)=>(seen.get(a.id)||0)-(seen.get(b.id)||0))[0]||rows[0];
   }
+  function nextDialogue(){return nextBySeen(dialogues());}
+  function nextManual(){return nextBySeen(manuals());}
 
   function renderChooser(){
     const card=document.getElementById('modalCard');if(!card)return;
@@ -33,7 +34,7 @@
           <span class="sh-soft-choice-copy"><b>Обычные тренировки</b><small>Диалоги с клиентом и выбор лучшего ответа</small><em>${dialogues().length} кейсов</em></span>
           <span class="sh-soft-choice-arrow">→</span>
         </button>
-        <button class="sh-soft-choice-card" onclick="shSoftOpenManual()">
+        <button class="sh-soft-choice-card" onclick="shSoftManualIntro()">
           <span class="sh-soft-choice-icon">✍️</span>
           <span class="sh-soft-choice-copy"><b>Ручные тренажёры</b><small>Свободный ответ с проверкой руководителя</small><em>${manuals().length} тренажёров</em></span>
           <span class="sh-soft-choice-arrow">→</span>
@@ -60,24 +61,43 @@
       </div>`;
   }
 
-  function renderManualFallback(){
+  function renderManualIntro(){
     const card=document.getElementById('modalCard');if(!card)return;
-    const rows=manuals().slice().sort((a,b)=>String(a.title||a.question||'').localeCompare(String(b.title||b.question||''),'ru'));
-    card.innerHTML=`<div class="modal-head"><div><button class="sh-soft-back" onclick="shSoftBackToChooser()">← Назад</button><h2>Ручные тренажёры</h2></div><button class="btn secondary" onclick="closeModal()">✕</button></div><div class="sh-soft-manual-list">${rows.map(x=>`<div class="content-row"><div><b>${esc(x.title||x.question||'Ручной тренажёр')}</b><div class="meta">Свободный ответ → проверка РГ</div></div><button class="btn primary" onclick="closeModal();startManualContent('${x.id}')">Начать</button></div>`).join('')||'<div class="muted">Ручных тренажёров пока нет.</div>'}</div>`;
+    const seen=typeof seenContentMap==='function'?seenContentMap():new Map();
+    const total=manuals().length;
+    const done=manuals().filter(x=>seen.has(x.id)).length;
+    card.innerHTML=`
+      <div class="modal-head">
+        <div><button class="sh-soft-back" onclick="shSoftBackToChooser()">← Назад</button><h2>Ручные тренажёры</h2></div>
+        <button class="btn secondary" onclick="closeModal()">✕</button>
+      </div>
+      <div class="sh-soft-start-card">
+        <div class="sh-soft-start-icon">✍️</div>
+        <h3>Ручные тренажёры Soft Skills</h3>
+        <p>Вы формулируете ответ самостоятельно. После отправки работа уходит руководителю на проверку.</p>
+        <div class="meta">Пройдено ${done} из ${total}</div>
+        <button class="btn primary full" onclick="shSoftStartManual()">Начать</button>
+      </div>`;
   }
 
   window.openSoftHub=function(){showModal('<div></div>');renderChooser();};
   window.shSoftBackToChooser=function(){renderChooser();};
   window.shSoftOrdinaryIntro=function(){renderOrdinaryIntro();};
+  window.shSoftManualIntro=function(){renderManualIntro();};
   window.shSoftStartOrdinary=function(){
     const x=nextDialogue();
     if(!x){toast('В Soft Skills пока нет опубликованных кейсов');return}
     closeModal();startContent(x.id);
   };
-  window.shSoftOpenManual=function(){
-    if(typeof openManualSoft==='function'){closeModal();openManualSoft();return}
-    renderManualFallback();
+  window.shSoftStartManual=function(){
+    const x=nextManual();
+    if(!x){toast('В Soft Skills пока нет ручных тренажёров');return}
+    closeModal();
+    if(typeof startManualContent==='function'){startManualContent(x.id);return}
+    if(typeof openManualSoft==='function'){openManualSoft();return}
+    toast('Ручной тренажёр сейчас недоступен');
   };
+  window.shSoftOpenManual=window.shSoftManualIntro;
 
   window.openSection=function(sec){
     if(sec==='soft'){openSoftHub();return}
@@ -91,10 +111,10 @@
       .sh-soft-choice-card:hover{border-color:var(--primary)}
       .sh-soft-choice-icon{font-size:30px}.sh-soft-choice-copy{display:grid;gap:4px}.sh-soft-choice-copy b{font-size:18px}.sh-soft-choice-copy small{color:var(--muted);line-height:1.4}.sh-soft-choice-copy em{font-style:normal;color:var(--muted);font-size:12px}.sh-soft-choice-arrow{font-size:22px;color:var(--primary)}
       .sh-soft-start-card{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:22px;text-align:center}.sh-soft-start-icon{font-size:38px;margin-bottom:8px}.sh-soft-start-card h3{margin:4px 0 8px}.sh-soft-start-card p{color:var(--muted);line-height:1.5;max-width:560px;margin:0 auto 10px}.sh-soft-start-card .btn{margin-top:18px}
-      .sh-soft-back{border:0;background:transparent;color:var(--primary);font:inherit;font-weight:800;padding:0 0 5px;cursor:pointer}.sh-soft-manual-list{display:grid;gap:8px}
+      .sh-soft-back{border:0;background:transparent;color:var(--primary);font:inherit;font-weight:800;padding:0 0 5px;cursor:pointer}
       @media(max-width:620px){.sh-soft-choice-card{padding:15px}.sh-soft-choice-copy b{font-size:17px}}
     `;document.head.appendChild(s);
   }
 
-  console.info('SkillHub: Soft chooser restored; ordinary flow starts from one Start button');
+  console.info('SkillHub: Soft chooser restored; ordinary and manual flows start from one Start button');
 })();
