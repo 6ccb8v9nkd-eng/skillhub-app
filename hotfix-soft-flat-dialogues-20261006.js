@@ -130,11 +130,18 @@
   if(document.getElementById('shMonthlyCheckLoader')){
     if(typeof window.shMonthlyBegin==='function')loadRunner();
     else document.getElementById('shMonthlyCheckLoader').addEventListener('load',loadRunner,{once:true});
-    return;
+  }else{
+    const s=document.createElement('script');
+    s.id='shMonthlyCheckLoader';
+    s.src='./hotfix-monthly-check-20261006.js?v=2';
+    s.addEventListener('load',loadRunner,{once:true});
+    document.head.appendChild(s);
   }
-  const s=document.createElement('script');
-  s.id='shMonthlyCheckLoader';
-  s.src='./hotfix-monthly-check-20261006.js?v=2';
-  s.addEventListener('load',loadRunner,{once:true});
-  document.head.appendChild(s);
+
+  if(!document.getElementById('shSoftCompactFeedbackLoader')){
+    const f=document.createElement('script');
+    f.id='shSoftCompactFeedbackLoader';
+    f.src='./hotfix-soft-compact-feedback-20261006.js?v=1';
+    document.head.appendChild(f);
+  }
 })();
