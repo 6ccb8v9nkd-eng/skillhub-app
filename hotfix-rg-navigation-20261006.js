@@ -130,6 +130,8 @@
 
   let assignmentMode='home';
   let syncingMonthly=false;
+  let monthlySyncTimer=null;
+  let lastMonthlySource='';
 
   function isManagerRole(){
     try{return typeof S!=='undefined' && ['mentor','rs','tech_admin'].includes(S?.profile?.role)}catch(_){return false}
@@ -192,6 +194,11 @@
     </div>`;
   }
 
+  function scheduleMonthlySync(delay=0){
+    clearTimeout(monthlySyncTimer);
+    monthlySyncTimer=setTimeout(syncMonthlyCard,delay);
+  }
+
   function applyMode(){
     const home=document.getElementById('shAsHome');
     const learning=document.getElementById('shAsLearning');
@@ -200,7 +207,7 @@
     home.classList.toggle('hidden',assignmentMode!=='home');
     learning.classList.toggle('hidden',assignmentMode!=='learning');
     monthly.classList.toggle('hidden',assignmentMode!=='monthly');
-    if(assignmentMode==='monthly')setTimeout(syncMonthlyCard,0);
+    if(assignmentMode==='monthly')scheduleMonthlySync(0);
   }
 
   window.shAssignmentsOpen=function(mode){
@@ -214,15 +221,23 @@
     if(!host)return;
     const source=document.querySelector('#page-mentor [data-sh-monthly-manager]');
     if(!source){
-      if(!host.querySelector('[data-sh-monthly-assignment-clone]'))host.innerHTML='<div class="sh-as-loading">Загружаем текущую проверку…</div>';
+      lastMonthlySource='';
+      if(!host.querySelector('[data-sh-monthly-assignment-clone]')&&!host.querySelector('.sh-as-loading')){
+        host.innerHTML='<div class="sh-as-loading">Загружаем текущую проверку…</div>';
+      }
       return;
     }
+
+    const sourceSignature=source.outerHTML;
+    if(sourceSignature===lastMonthlySource&&host.querySelector('[data-sh-monthly-assignment-clone]'))return;
+
     syncingMonthly=true;
     try{
       const clone=source.cloneNode(true);
       clone.removeAttribute('data-sh-monthly-manager');
       clone.setAttribute('data-sh-monthly-assignment-clone','1');
       host.replaceChildren(clone);
+      lastMonthlySource=sourceSignature;
     }finally{syncingMonthly=false}
   }
 
@@ -237,7 +252,7 @@
       const legacy=page.innerHTML;
       page.innerHTML=buildHub(legacy);
       applyMode();
-      setTimeout(syncMonthlyCard,40);
+      scheduleMonthlySync(40);
       return r;
     };
     wrapped.__shHubWrapped=true;
@@ -247,14 +262,18 @@
   installStyles();
   wrapAssignments();
 
-  const obs=new MutationObserver(()=>{
+  const obs=new MutationObserver(mutations=>{
+    const host=document.getElementById('shAssignmentMonthlyHost');
+    // Ignore mutations caused by cloning/updating the monthly card itself.
+    if(host&&mutations.length&&mutations.every(m=>host.contains(m.target)))return;
+
     installStyles();
     if(typeof renderAssignments==='function'&&!renderAssignments.__shHubWrapped)wrapAssignments();
-    if(document.getElementById('shAssignmentMonthlyHost'))setTimeout(syncMonthlyCard,0);
+    if(host)scheduleMonthlySync(25);
   });
   obs.observe(document.body,{subtree:true,childList:true});
 
-  setTimeout(()=>{wrapAssignments();syncMonthlyCard()},0);
-  setTimeout(()=>{wrapAssignments();syncMonthlyCard()},700);
-  console.info('SkillHub: structured Assignments hub enabled; monthly check removed from My Group');
+  setTimeout(()=>{wrapAssignments();scheduleMonthlySync(0)},0);
+  setTimeout(()=>{wrapAssignments();scheduleMonthlySync(0)},700);
+  console.info('SkillHub: structured Assignments hub enabled without rerender loop');
 })();
