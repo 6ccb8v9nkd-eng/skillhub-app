@@ -1,4 +1,4 @@
-/* SkillHub pilot — dynamic negative-handling Soft Skills dialogue with Alice AI, tech admin only. */
+/* SkillHub pilot — dynamic negative-handling Soft Skills dialogue with Alice AI. */
 (function(){
   'use strict';
 
@@ -7,11 +7,15 @@
   const FALLBACK_MAX_TURNS=6;
   const FALLBACK_MAX_CHARS=600;
   const FALLBACK_SESSION_MINUTES=20;
+  const PILOT_LOGINS=new Set(['a.eliseev1','v.s.ashcheulov']);
   let run=null;
   let adminSessions=[];
 
-  function isTech(){
+  function isTechAdminUser(){
     try{return typeof isTechAdmin==='function'?isTechAdmin():S?.profile?.role==='tech_admin'}catch(_){return false}
+  }
+  function hasAiAccess(){
+    try{return isTechAdminUser()||PILOT_LOGINS.has(String(S?.profile?.login||'').toLowerCase())}catch(_){return false}
   }
   function escText(s){return typeof esc==='function'?esc(String(s??'')):String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
   function addUsage(a,b){return {input:Number(a?.input||0)+Number(b?.input||0),output:Number(a?.output||0)+Number(b?.output||0),total:Number(a?.total||0)+Number(b?.total||0)}}
@@ -29,14 +33,14 @@
   }
 
   function patchChooser(){
-    if(!isTech())return;
+    if(!hasAiAccess())return;
     const root=document.getElementById('modalCard');
     const grid=root?.querySelector('.sh-soft-choice-grid');
     if(!grid||grid.querySelector('.sh-soft-ai-card'))return;
     grid.insertAdjacentHTML('beforeend',`
       <button class="sh-soft-choice-card sh-soft-ai-card" onclick="shAiSoftIntro()">
         <span class="sh-soft-choice-icon">✨</span>
-        <span class="sh-soft-choice-copy"><b>Работа с негативом · ИИ</b><small>Сложный живой кейс на любую тему. Алиса реагирует на ваши ответы, а после даёт качественный разбор без баллов.</small><em>Пока только для тех. администратора</em></span>
+        <span class="sh-soft-choice-copy"><b>Работа с негативом · ИИ</b><small>Сложный живой кейс на любую тему. Алиса реагирует на ваши ответы, а после даёт качественный разбор без баллов.</small><em>Пилот ИИ-тренажёра</em></span>
         <span class="sh-soft-choice-arrow">→</span>
       </button>`);
   }
@@ -51,7 +55,7 @@
   }
 
   window.shAiSoftIntro=async function(){
-    if(!isTech()){toast('ИИ-пилот пока доступен только техническому администратору');return}
+    if(!hasAiAccess()){toast('ИИ-тренажёр пока доступен только участникам пилота');return}
     showModal(`<div class="modal-head"><div><button class="sh-soft-back" onclick="shSoftBackToChooser()">← Назад</button><h2>Работа с негативом · ИИ</h2><div class="meta">${CASE_CODE} · живой кейс</div></div><button class="btn secondary" onclick="closeModal()">✕</button></div>
       <div class="sh-ai-intro">
         <div class="sh-ai-badge">ALICE AI · PILOT</div>
@@ -75,7 +79,7 @@
   };
 
   window.shAiSoftStart=async function(){
-    if(!isTech())return;
+    if(!hasAiAccess())return;
     const btn=document.getElementById('shAiStartBtn');if(btn)btn.disabled=true;
     try{
       const data=await invoke({action:'start'});
@@ -198,7 +202,7 @@
   };
 
   async function loadTechAdminResults(){
-    if(!isTech())return;
+    if(!isTechAdminUser())return;
     const host=document.getElementById('shAiAdminResultsBody');if(!host)return;
     try{
       const {data,error}=await S.sb.from('soft_ai_sessions').select('*').order('created_at',{ascending:false}).limit(50);
@@ -207,8 +211,7 @@
       host.innerHTML=adminSessions.length?adminSessions.map(x=>{
         const u=(S.allowed||[]).find(v=>v.login===x.login)||(S.profiles||[]).find(v=>v.login===x.login);
         const result=x.review?.negativeResult||'';
-        return `<div class="sh-ai-admin-row"><div><b>${escText(u?.name||x.login)}</b><div class="meta">${escText(x.case_code||CASE_CODE)} · ${escText(x.scenario?.title||x.topic||'Работа с негативом')} · ${new Date(x.created_at).toLocaleString('ru-RU')}</div></div><div class="actions"><span class="pill ${resultClass(result)}">${escText(resultLabel(result))}</span><button class="btn secondary" onclick="shAiOpenSessionReview('${x.id}')">Открыть разбор</button></div></div>`;
-      }).join(''):'<div class="muted">Завершите ИИ-кейс — разбор появится здесь автоматически.</div>';
+        return `<div class="sh-ai-admin-row"><div><b>${escText(u?.name||x.login)}</b><div class="meta">${escText(x.case_code||CASE_CODE)} · ${escText(x.scenario?.title||x.topic||'Работа с негативом')} · ${new Date(x.created_at).toLocaleString('ru-RU')}</div></div><div class="actions"><span class="pill ${resultClass(result)}">${escText(resultLabel(result))}</span><button class="btn secondary" onclick="shAiOpenSessionReview('${x.id}')">Открыть разбор</button></div></div>`}).join(''):'<div class="muted">Завершите ИИ-кейс — разбор появится здесь автоматически.</div>';
     }catch(e){
       console.warn('AI session results load failed',e);
       host.innerHTML='<div class="muted">Не удалось загрузить ИИ-разборы.</div>';
@@ -216,7 +219,7 @@
   }
 
   function patchTechAdminResults(){
-    if(!isTech())return;
+    if(!isTechAdminUser())return;
     const page=document.getElementById('page-admin');if(!page)return;
     let box=page.querySelector('#shAiAdminResults');
     if(!box){
@@ -250,5 +253,5 @@
     `;document.head.appendChild(s);
   }
 
-  console.info('SkillHub pilot: qualitative negative-handling AI dialogue v3 enabled for tech_admin only');
+  console.info('SkillHub pilot: qualitative negative-handling AI dialogue enabled for tech admin, Eliseev RG and Ashcheulov employee');
 })();
