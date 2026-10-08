@@ -59,3 +59,11 @@
 
   console.info('SkillHub hotfix: typing speed + accuracy are visible in progress and employee cards');
 })();
+
+(function(){
+  if(document.getElementById('shCaseCodeLoader'))return;
+  const s=document.createElement('script');
+  s.id='shCaseCodeLoader';
+  s.src='./hotfix-case-codes-20261008.js?v=1';
+  document.head.appendChild(s);
+})();
