@@ -144,4 +144,11 @@
     f.src='./hotfix-soft-compact-feedback-20261006.js?v=4';
     document.head.appendChild(f);
   }
+
+  if(!document.getElementById('shTypingProgressLoader')){
+    const t=document.createElement('script');
+    t.id='shTypingProgressLoader';
+    t.src='./hotfix-typing-progress-20261008.js?v=1';
+    document.head.appendChild(t);
+  }
 })();
