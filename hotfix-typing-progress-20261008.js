@@ -67,3 +67,11 @@
   s.src='./hotfix-case-codes-20261008.js?v=1';
   document.head.appendChild(s);
 })();
+
+(function(){
+  if(document.getElementById('shAiSoftPilotLoader'))return;
+  const s=document.createElement('script');
+  s.id='shAiSoftPilotLoader';
+  s.src='./hotfix-soft-ai-pilot-20261008.js?v=1';
+  document.head.appendChild(s);
+})();
