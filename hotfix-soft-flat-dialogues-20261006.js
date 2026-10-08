@@ -1,4 +1,4 @@
-/* SkillHub hotfix: Soft chooser — ordinary dialogues or manual trainers. */
+/* SkillHub hotfix: Soft chooser — manual trainers + AI pilot. Ordinary fixed-choice dialogues are removed from the training hub. */
 (function(){
   'use strict';
 
@@ -8,7 +8,6 @@
     return (typeof S!=='undefined'&&Array.isArray(S.content)?S.content:[])
       .filter(x=>x&&x.status==='published'&&x.section==='soft');
   }
-  function dialogues(){return allSoft().filter(x=>x.type==='dialogue');}
   function manuals(){return allSoft().filter(x=>x.type==='manual');}
 
   function nextBySeen(rows){
@@ -18,7 +17,6 @@
     if(unseen.length)return unseen[Math.floor(Math.random()*unseen.length)];
     return rows.slice().sort((a,b)=>(seen.get(a.id)||0)-(seen.get(b.id)||0))[0]||rows[0];
   }
-  function nextDialogue(){return nextBySeen(dialogues());}
   function nextManual(){return nextBySeen(manuals());}
 
   function renderChooser(){
@@ -29,35 +27,11 @@
         <button class="btn secondary" onclick="closeModal()">✕</button>
       </div>
       <div class="sh-soft-choice-grid">
-        <button class="sh-soft-choice-card" onclick="shSoftOrdinaryIntro()">
-          <span class="sh-soft-choice-icon">💬</span>
-          <span class="sh-soft-choice-copy"><b>Обычные тренировки</b><small>Диалоги с клиентом и выбор лучшего ответа</small><em>${dialogues().length} кейсов</em></span>
-          <span class="sh-soft-choice-arrow">→</span>
-        </button>
         <button class="sh-soft-choice-card" onclick="shSoftManualIntro()">
           <span class="sh-soft-choice-icon">✍️</span>
           <span class="sh-soft-choice-copy"><b>Ручные тренажёры</b><small>Свободный ответ с проверкой руководителя</small><em>${manuals().length} тренажёров</em></span>
           <span class="sh-soft-choice-arrow">→</span>
         </button>
-      </div>`;
-  }
-
-  function renderOrdinaryIntro(){
-    const card=document.getElementById('modalCard');if(!card)return;
-    const seen=typeof seenContentMap==='function'?seenContentMap():new Map();
-    const total=dialogues().length;
-    const done=dialogues().filter(x=>seen.has(x.id)).length;
-    card.innerHTML=`
-      <div class="modal-head">
-        <div><button class="sh-soft-back" onclick="shSoftBackToChooser()">← Назад</button><h2>Обычные тренировки</h2></div>
-        <button class="btn secondary" onclick="closeModal()">✕</button>
-      </div>
-      <div class="sh-soft-start-card">
-        <div class="sh-soft-start-icon">💬</div>
-        <h3>Диалоги Soft Skills</h3>
-        <p>Кейсы идут один за другим. После завершения каждого диалога можно сразу перейти к следующему.</p>
-        <div class="meta">Пройдено ${done} из ${total}</div>
-        <button class="btn primary full" onclick="shSoftStartOrdinary()">Начать</button>
       </div>`;
   }
 
@@ -82,13 +56,7 @@
 
   window.openSoftHub=function(){showModal('<div></div>');renderChooser();};
   window.shSoftBackToChooser=function(){renderChooser();};
-  window.shSoftOrdinaryIntro=function(){renderOrdinaryIntro();};
   window.shSoftManualIntro=function(){renderManualIntro();};
-  window.shSoftStartOrdinary=function(){
-    const x=nextDialogue();
-    if(!x){toast('В Soft Skills пока нет опубликованных кейсов');return}
-    closeModal();startContent(x.id);
-  };
   window.shSoftStartManual=function(){
     const x=nextManual();
     if(!x){toast('В Soft Skills пока нет ручных тренажёров');return}
@@ -98,6 +66,10 @@
     toast('Ручной тренажёр сейчас недоступен');
   };
   window.shSoftOpenManual=window.shSoftManualIntro;
+
+  // Legacy ordinary-dialogue entry points are intentionally disabled so old cached buttons cannot start them.
+  window.shSoftOrdinaryIntro=function(){renderChooser();toast('Обычные Soft-тренировки убраны. Используйте ручной или ИИ-тренажёр.');};
+  window.shSoftStartOrdinary=window.shSoftOrdinaryIntro;
 
   window.openSection=function(sec){
     if(sec==='soft'){openSoftHub();return}
@@ -116,7 +88,7 @@
     `;document.head.appendChild(s);
   }
 
-  console.info('SkillHub: Soft chooser restored; ordinary and manual flows start from one Start button');
+  console.info('SkillHub: Soft chooser now contains manual trainers; AI pilot is injected separately');
 })();
 
 (function(){
