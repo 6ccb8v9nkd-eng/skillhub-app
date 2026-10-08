@@ -48,3 +48,35 @@
 
   console.info('SkillHub hotfix: stable case codes visible in training and review');
 })();
+
+/* Internal Hard training sequences are situations/questions for the employee,
+   not literal client speech. Keep the multi-step mechanics, but label them honestly. */
+(function(){
+  'use strict';
+  function isScenario(x){return x?.section==='hard'&&x?.payload?.presentation==='scenario'}
+  function current(){return typeof S!=='undefined'?S.currentRun?.x:null}
+  function relabelRun(){
+    const x=current();if(!isScenario(x))return;
+    const root=document.getElementById('page-run');if(!root)return;
+    root.querySelectorAll('.sh831-client .sh831-who').forEach(el=>{el.textContent='Ситуация'});
+    root.querySelectorAll('h2').forEach(el=>{if(el.textContent.trim()==='Диалог завершён')el.textContent='Тренировка завершена'});
+  }
+  function relabelRows(){
+    const root=document.getElementById('modalCard');if(!root||typeof S==='undefined')return;
+    const titles=new Set((S.content||[]).filter(isScenario).map(x=>String(x.title||x.question||'').trim()));
+    root.querySelectorAll('.content-row').forEach(row=>{
+      const title=row.querySelector('b')?.textContent?.trim();if(!title||!titles.has(title))return;
+      const pill=row.querySelector('.pill');if(pill)pill.textContent='Ситуация';
+    });
+  }
+  function wrap(name,after){
+    const base=window[name];if(typeof base!=='function')return;
+    window[name]=function(){const r=base.apply(this,arguments);try{after.apply(this,arguments)}catch(e){console.warn('hard scenario relabel skipped',name,e)}return r};
+  }
+  wrap('renderDialogue',relabelRun);
+  wrap('finishDialogue',relabelRun);
+  wrap('startContent',relabelRun);
+  wrap('openSection',function(sec){if(sec==='hard')setTimeout(relabelRows,0)});
+  wrap('shHardFlowOpenTopic',function(){setTimeout(relabelRows,0)});
+  console.info('SkillHub hotfix: internal Hard flows are labelled as situations');
+})();
