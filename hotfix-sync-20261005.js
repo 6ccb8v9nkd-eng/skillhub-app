@@ -1,6 +1,8 @@
-/* SkillHub emergency sync recovery — 2026-10-05
-   Keeps successfully loaded cloud data even when localStorage cache writing fails.
-   Also retries manager data once after startup so RG employees/results reappear. */
+/* SkillHub sync recovery + performance optimization — 2026-10-08
+   - Keeps successfully loaded cloud data even when localStorage cache writing fails.
+   - Loads only the current user's notifications (RG no longer downloads all employee notifications).
+   - Realtime patches only the changed collection instead of running a full syncAll().
+   - Existing history/results remain in Supabase and are not deleted or rewritten. */
 (function(){
   'use strict';
 
@@ -19,6 +21,19 @@
     return true;
   }
 
+  function ownNotificationsQuery(){
+    const login=S.profile?.login||'';
+    let q=S.sb.from('notifications').select('*').order('created_at',{ascending:true});
+    if(login)q=q.eq('login',login);
+    return q;
+  }
+
+  function keepOnlyOwnNotifications(rows){
+    const login=S.profile?.login;
+    if(!login)return rows||[];
+    return (rows||[]).filter(x=>x?.login===login);
+  }
+
   syncAll=async function(manual=false){
     updateNetwork();
     if(!S.user)return false;
@@ -32,7 +47,7 @@
         S.sb.from('content').select('*').order('updated_at',{ascending:false}),
         S.sb.from('assignments').select('*').order('created_at',{ascending:false}),
         S.sb.from('attempts').select('*').order('created_at',{ascending:true}),
-        S.sb.from('notifications').select('*').order('created_at',{ascending:true}),
+        ownNotificationsQuery(),
         S.sb.from('manual_answers').select('*').order('created_at',{ascending:true})
       ];
       const [c,a,t,n,m]=await Promise.all(qs);
@@ -41,7 +56,7 @@
       S.content=(c.data||[]).map(normalizeContent);
       S.assignments=a.data||[];
       S.attempts=t.data||[];
-      S.notifications=n.data||[];
+      S.notifications=keepOnlyOwnNotifications(n.data||[]);
       S.manualAnswers=m.data||[];
 
       if(isManager())await loadManagerScope();
@@ -71,6 +86,7 @@
       try{cached=JSON.parse(localStorage.getItem('sh7_cache_'+S.profile.login)||'null')}catch(_){}
       if(cached){
         Object.assign(S,cached);
+        S.notifications=keepOnlyOwnNotifications(S.notifications||[]);
         S.manualAnswers=S.manualAnswers||[];
         renderUnread();
         renderCurrent();
@@ -96,7 +112,124 @@
   setTimeout(recoverManagerData,80);
   setTimeout(recoverManagerData,900);
   window.addEventListener('online',()=>setTimeout(recoverManagerData,100));
-  console.info('SkillHub hotfix: manager cloud sync recovery enabled');
+  console.info('SkillHub hotfix: optimized cloud sync enabled');
+})();
+
+/* Lightweight realtime: update only the row/collection that changed.
+   This preserves realtime behaviour without downloading the whole database on every event. */
+(function(){
+  'use strict';
+
+  let cacheTimer=null;
+  let toastTimer=null;
+  let lastToast='';
+
+  function replaceById(list,row,normalizer){
+    const arr=Array.isArray(list)?list.slice():[];
+    if(!row?.id)return arr;
+    const value=normalizer?normalizer(row):row;
+    const i=arr.findIndex(x=>x?.id===row.id);
+    if(i>=0)arr[i]=value;else arr.push(value);
+    return arr;
+  }
+
+  function removeById(list,row){
+    const id=row?.id;
+    if(!id)return Array.isArray(list)?list:[];
+    return (Array.isArray(list)?list:[]).filter(x=>x?.id!==id);
+  }
+
+  function applyChange(list,payload,normalizer){
+    if(payload?.eventType==='DELETE')return removeById(list,payload.old);
+    return replaceById(list,payload?.new,normalizer);
+  }
+
+  function persistCacheSoon(){
+    clearTimeout(cacheTimer);
+    cacheTimer=setTimeout(()=>{
+      if(!S?.profile?.login)return;
+      try{
+        localStorage.setItem('sh7_cache_'+S.profile.login,JSON.stringify({
+          content:S.content||[],assignments:S.assignments||[],attempts:S.attempts||[],
+          notifications:S.notifications||[],manualAnswers:S.manualAnswers||[],
+          allowed:S.allowed||[],profiles:S.profiles||[]
+        }));
+      }catch(e){console.warn('SkillHub realtime cache write skipped',e)}
+    },350);
+  }
+
+  function notify(text){
+    if(!text)return;
+    if(lastToast===text){clearTimeout(toastTimer)}
+    lastToast=text;
+    toastTimer=setTimeout(()=>{lastToast=''},900);
+    try{toast(text)}catch(_){}
+    try{
+      if('Notification'in window&&Notification.permission==='granted'){
+        new Notification('SkillHub',{body:text,icon:'./icon-192-v718.png'});
+      }
+    }catch(_){}
+  }
+
+  function rerenderIf(pages){
+    if(!Array.isArray(pages)||!pages.includes(S.currentPage))return;
+    try{renderCurrent()}catch(e){console.warn('SkillHub realtime render skipped',e)}
+  }
+
+  function handleContent(payload){
+    S.content=applyChange(S.content,payload,normalizeContent);
+    persistCacheSoon();
+    rerenderIf(['content','training','home']);
+    notify('Обновлены материалы');
+  }
+
+  function handleAssignment(payload){
+    S.assignments=applyChange(S.assignments,payload);
+    persistCacheSoon();
+    rerenderIf(['assignments','mentor','home','training']);
+    notify('Обновлены задания');
+  }
+
+  function handleNotification(payload){
+    const row=payload?.new||payload?.old;
+    if(!row||row.login!==S.profile?.login)return;
+    S.notifications=applyChange(S.notifications,payload);
+    S.notifications=(S.notifications||[]).filter(x=>x?.login===S.profile?.login);
+    persistCacheSoon();
+    try{renderUnread()}catch(_){}
+    rerenderIf(['notifications']);
+    if(payload?.eventType==='INSERT')notify(payload.new?.title||'Новое уведомление');
+  }
+
+  function handleManual(payload){
+    S.manualAnswers=applyChange(S.manualAnswers,payload);
+    persistCacheSoon();
+    rerenderIf(['mentor','admin','training','notifications']);
+    if(payload?.eventType!=='DELETE')notify(payload.new?.status==='submitted'?'Новая работа на проверку':'Обновлена ручная работа');
+  }
+
+  function handleAttempt(payload){
+    S.attempts=applyChange(S.attempts,payload);
+    persistCacheSoon();
+    rerenderIf(['mentor','progress','admin']);
+  }
+
+  subscribeRealtime=function(){
+    if(!S?.sb||!S?.profile?.login)return;
+    if(S.subscription){try{S.sb.removeChannel(S.subscription)}catch(_){}}
+    const login=S.profile.login;
+    S.subscription=S.sb.channel('skillhub-live-optimized')
+      .on('postgres_changes',{event:'*',schema:'public',table:'content'},handleContent)
+      .on('postgres_changes',{event:'*',schema:'public',table:'assignments'},handleAssignment)
+      .on('postgres_changes',{event:'*',schema:'public',table:'notifications',filter:`login=eq.${login}`},handleNotification)
+      .on('postgres_changes',{event:'*',schema:'public',table:'manual_answers'},handleManual)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'attempts'},handleAttempt)
+      .subscribe();
+  };
+
+  // Rebind if the user session was already restored before this hotfix finished loading.
+  setTimeout(()=>{try{if(typeof S!=='undefined'&&S.user)subscribeRealtime()}catch(_){}},120);
+  console.info('SkillHub hotfix: lightweight realtime enabled');
 })();
 
 /* RG employee controls: Новый код · Изменить · Управление */
