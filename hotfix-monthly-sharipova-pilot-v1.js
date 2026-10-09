@@ -49,6 +49,9 @@
     if(badKinds.length)throw new Error('В проверке есть старый неподдерживаемый формат');
     const badHard=items.filter(x=>x.kind==='hard'&&!['sort_cards','scenario','tariff_calc'].includes(String(x.snapshot?.payload?.mode||'scenario')));
     if(badHard.length)throw new Error('В Hard попало неподдерживаемое задание');
+    const brokenSort=items.filter(x=>x.kind==='hard'&&x.snapshot?.payload?.mode==='sort_cards'&&(!Array.isArray(x.snapshot?.payload?.cards)||!x.snapshot.payload.cards.length||!Array.isArray(x.snapshot?.payload?.categories)||!x.snapshot.payload.categories.length));
+    const brokenScenario=items.filter(x=>x.kind==='hard'&&x.snapshot?.payload?.mode==='scenario'&&(!Array.isArray(x.snapshot?.payload?.options)||!x.snapshot.payload.options.length||!Number.isInteger(Number(x.snapshot?.payload?.correct))));
+    if(brokenSort.length||brokenScenario.length)throw new Error('Одно из Hard-заданий повреждено');
     const hard=items.filter(x=>x.kind==='hard').length,ai=items.filter(x=>x.kind==='ai_dialogue').length,manual=items.filter(x=>x.kind==='manual').length;
     if(!hard||!ai||!manual)throw new Error('Состав проверки неполный');
     return {check,items,run:rq.data,counts:{hard,ai,manual}};
@@ -59,10 +62,20 @@
     await new Promise((resolve,reject)=>{
       const old=document.getElementById('shSharipovaRunnerReload');if(old)old.remove();
       window.__shMonthlyRunnerV12=false;
-      const s=document.createElement('script');s.id='shSharipovaRunnerReload';s.src='./hotfix-monthly-runner-v12.js?v=20261009_sharipova_pilot1';
+      const s=document.createElement('script');s.id='shSharipovaRunnerReload';s.src='./hotfix-monthly-runner-v12.js?v=20261009_sharipova_pilot2';
       s.onload=()=>resolve();s.onerror=()=>reject(new Error('Не удалось загрузить модуль проверки'));document.head.appendChild(s);
     });
     return typeof window.shMonthlyBeginV12==='function'?window.shMonthlyBeginV12:window.shMonthlyBegin;
+  }
+  function forceRunPage(){
+    try{
+      document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+      const page=document.getElementById('page-run');if(page)page.classList.remove('hidden');
+      if(window.S)window.S.currentPage='run';
+      document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+      const t=document.getElementById('pageTitle'),s=document.getElementById('pageSub');if(t)t.textContent='Итоговая проверка';if(s)s.textContent='Пилот · Шарипова';
+      return page;
+    }catch(_){return null}
   }
   async function launch(el){
     if(!active||busy)return;busy=true;
@@ -76,10 +89,15 @@
       const run=await ensureRunner();if(typeof run!=='function')throw new Error('Модуль прохождения не загрузился');
       try{window.closeModal?.()}catch(_){ }
       await Promise.resolve(run(checkId));
+      let page=document.getElementById('page-run');
+      if(!page||page.classList.contains('hidden')||!page.querySelector('.sh12r')){
+        page=forceRunPage();
+        await Promise.resolve(run(checkId));
+      }
       setTimeout(()=>{
-        const page=document.getElementById('page-run');
-        if(!page||page.classList.contains('hidden'))toastMsg('Не удалось открыть проверку. Обновите страницу один раз и повторите.');
-      },900);
+        const p=document.getElementById('page-run');
+        if(!p||p.classList.contains('hidden')||!p.querySelector('.sh12r'))toastMsg('Не удалось открыть проверку. Обновите страницу один раз и повторите.');
+      },700);
     }catch(err){console.error('Sharipova monthly pilot launch',err);toastMsg(err?.message||'Не удалось начать проверку')}
     finally{busy=false;if(el&&el.isConnected){el.textContent=oldText;makeClickable(el)}}
   }
