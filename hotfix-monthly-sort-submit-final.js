@@ -150,3 +150,11 @@
   s.dataset.shMonthlyManualFinal='1';
   document.head.appendChild(s);
 })();
+
+(function loadMonthlyFeedbackFinal(){
+  if(document.querySelector('script[data-sh-monthly-feedback-final]'))return;
+  const s=document.createElement('script');
+  s.src='./hotfix-monthly-feedback-final.js?v=20261009_feedback2';
+  s.dataset.shMonthlyFeedbackFinal='1';
+  document.head.appendChild(s);
+})();
