@@ -1,10 +1,11 @@
 /* SkillHub monthly clean UI integration guard — 2026-10-09.
-   Keeps only the rebuilt final knowledge assessment UI and removes obsolete monthly clones.
+   Keeps only the rebuilt final knowledge assessment UI, removes obsolete monthly clones,
+   and upgrades monthly sort_cards tasks to the native Hard Skills card/column interaction.
 */
 (function(){
   'use strict';
-  if(window.__shMonthlyCleanHostGuardV2)return;
-  window.__shMonthlyCleanHostGuardV2=true;
+  if(window.__shMonthlyCleanHostGuardV3)return;
+  window.__shMonthlyCleanHostGuardV3=true;
 
   let queued=false;
 
@@ -18,9 +19,159 @@
     home.querySelectorAll('.sh-month-card.sh-month-employee,[data-sh-monthly-employee]:not([data-sh-monthly-clean-employee])').forEach(el=>el.remove());
   }
 
+  function upgradeMonthlySortCards(){
+    document.querySelectorAll('.shmc-sort:not([data-sh-hard-sort-upgraded])').forEach(box=>{
+      box.setAttribute('data-sh-hard-sort-upgraded','1');
+
+      const labels=[...box.children].filter(el=>el.tagName==='LABEL');
+      const rows=labels.map((label,index)=>({
+        index,
+        label,
+        text:label.querySelector('span')?.textContent?.trim()||`Карточка ${index+1}`,
+        select:label.querySelector('select[data-shmc-sort]')
+      })).filter(x=>x.select);
+      if(!rows.length)return;
+
+      const first=rows[0].select;
+      const categories=[...first.options].filter(o=>o.value).map(o=>({id:o.value,title:o.textContent.trim()}));
+      if(!categories.length)return;
+
+      labels.forEach(label=>{
+        label.style.display='none';
+        label.setAttribute('aria-hidden','true');
+      });
+
+      const task=box.closest('.shmc-task');
+      const submit=task?.querySelector('button.shmc-next');
+      let selected=null;
+
+      const ui=document.createElement('div');
+      ui.className='sh-month-native-sort';
+      box.appendChild(ui);
+
+      function placements(){
+        const out={};
+        rows.forEach(r=>{if(r.select.value)out[r.index]=r.select.value});
+        return out;
+      }
+
+      function setPlacement(index,categoryId){
+        const row=rows.find(r=>r.index===Number(index));
+        if(!row)return;
+        row.select.value=categoryId||'';
+        row.select.dispatchEvent(new Event('change',{bubbles:true}));
+        selected=null;
+        render();
+      }
+
+      function cardButton(row,placed){
+        const b=document.createElement('button');
+        b.type='button';
+        b.className='sh-hard-sort-card'+(selected===row.index?' is-selected':'');
+        b.draggable=true;
+        b.dataset.monthSortIndex=String(row.index);
+        const span=document.createElement('span');
+        span.textContent=row.text;
+        b.appendChild(span);
+        b.addEventListener('dragstart',ev=>{
+          ev.dataTransfer.setData('text/plain',String(row.index));
+          ev.dataTransfer.effectAllowed='move';
+        });
+        b.addEventListener('click',ev=>{
+          ev.stopPropagation();
+          if(placed){setPlacement(row.index,'');return}
+          selected=selected===row.index?null:row.index;
+          render();
+        });
+        return b;
+      }
+
+      function render(){
+        const placed=placements();
+        const placedCount=Object.keys(placed).length;
+        if(submit)submit.disabled=placedCount<rows.length;
+
+        ui.replaceChildren();
+
+        const tip=document.createElement('div');
+        tip.className='sh-hard-sort-tip';
+        tip.textContent='На компьютере — перетащите карточку. На телефоне — нажмите на карточку, затем на нужную колонку.';
+        ui.appendChild(tip);
+
+        const pool=document.createElement('div');
+        pool.className='sh-hard-sort-pool';
+        const poolHead=document.createElement('div');
+        poolHead.className='sh-hard-sort-pool-head';
+        const poolTitle=document.createElement('b');
+        poolTitle.textContent='Карточки для распределения';
+        const count=document.createElement('span');
+        count.textContent=`${placedCount}/${rows.length}`;
+        poolHead.append(poolTitle,count);
+        const poolBody=document.createElement('div');
+        poolBody.className='sh-hard-sort-pool-body';
+        const unplaced=rows.filter(r=>!placed[r.index]);
+        if(unplaced.length)unplaced.forEach(r=>poolBody.appendChild(cardButton(r,false)));
+        else{
+          const empty=document.createElement('div');
+          empty.className='sh-hard-sort-empty';
+          empty.textContent='Все карточки распределены';
+          poolBody.appendChild(empty);
+        }
+        pool.append(poolHead,poolBody);
+        ui.appendChild(pool);
+
+        const grid=document.createElement('div');
+        grid.className='sh-hard-sort-grid';
+        categories.forEach(cat=>{
+          const zone=document.createElement('section');
+          zone.className='sh-hard-sort-zone';
+          zone.dataset.monthSortCategory=cat.id;
+          zone.addEventListener('dragover',ev=>ev.preventDefault());
+          zone.addEventListener('drop',ev=>{
+            ev.preventDefault();
+            const idx=Number(ev.dataTransfer.getData('text/plain'));
+            if(Number.isInteger(idx))setPlacement(idx,cat.id);
+          });
+          zone.addEventListener('click',()=>{
+            if(selected!==null)setPlacement(selected,cat.id);
+          });
+
+          const head=document.createElement('div');
+          head.className='sh-hard-sort-zone-head';
+          const icon=document.createElement('span');
+          icon.textContent='';
+          const titleWrap=document.createElement('div');
+          const h=document.createElement('h3');
+          h.textContent=cat.title;
+          titleWrap.appendChild(h);
+          const n=document.createElement('b');
+          const inside=rows.filter(r=>placed[r.index]===cat.id);
+          n.textContent=String(inside.length);
+          head.append(icon,titleWrap,n);
+
+          const body=document.createElement('div');
+          body.className='sh-hard-sort-zone-body';
+          if(inside.length)inside.forEach(r=>body.appendChild(cardButton(r,true)));
+          else{
+            const empty=document.createElement('div');
+            empty.className='sh-hard-sort-empty';
+            empty.textContent=selected!==null?'Нажмите сюда, чтобы поместить выбранную карточку':'Перетащите карточку сюда';
+            body.appendChild(empty);
+          }
+          zone.append(head,body);
+          grid.appendChild(zone);
+        });
+        ui.appendChild(grid);
+      }
+
+      render();
+    });
+  }
+
   function fixMonthlyPlacement(){
     queued=false;
     cleanupLegacyEmployee();
+    upgradeMonthlySortCards();
 
     if(!isManager())return;
 
@@ -60,5 +211,5 @@
   setTimeout(fixMonthlyPlacement,0);
   setTimeout(fixMonthlyPlacement,250);
   setTimeout(fixMonthlyPlacement,900);
-  console.info('SkillHub: monthly clean UI guard v2 enabled');
+  console.info('SkillHub: monthly clean UI guard v3 + native sort cards enabled');
 })();
