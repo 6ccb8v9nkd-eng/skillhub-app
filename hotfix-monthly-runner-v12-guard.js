@@ -1,11 +1,12 @@
 /* SkillHub monthly clean UI integration guard — 2026-10-09.
    Keeps only the rebuilt final knowledge assessment UI, removes obsolete monthly clones,
-   and upgrades monthly sort_cards tasks to the native Hard Skills card/column interaction.
+   upgrades monthly sort_cards tasks to the native Hard Skills card/column interaction,
+   and scopes sort submission strictly to the current assessment task.
 */
 (function(){
   'use strict';
-  if(window.__shMonthlyCleanHostGuardV3)return;
-  window.__shMonthlyCleanHostGuardV3=true;
+  if(window.__shMonthlyCleanHostGuardV4)return;
+  window.__shMonthlyCleanHostGuardV4=true;
 
   let queued=false;
 
@@ -84,6 +85,64 @@
           render();
         });
         return b;
+      }
+
+      async function submitCurrentTask(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation?.();
+
+        const values=rows.map(r=>r.select.value);
+        if(values.length!==rows.length||values.some(v=>!v)){
+          if(typeof toast==='function')toast('Распределите все карточки');
+          return;
+        }
+
+        const original=window.shMonthlySubmitSort;
+        if(typeof original!=='function'){
+          if(typeof toast==='function')toast('Не удалось сохранить распределение');
+          return;
+        }
+
+        const originalAttr=submit?.dataset?.shMonthlyOriginalOnclick||'';
+        const idMatch=originalAttr.match(/shMonthlySubmitSort\('([^']+)'\)/);
+        const itemId=idMatch?.[1];
+        if(!itemId){
+          if(typeof toast==='function')toast('Не удалось определить задание');
+          return;
+        }
+
+        if(submit){submit.disabled=true;submit.textContent='Сохраняем…'}
+
+        // The legacy monthly submitter queries every [data-shmc-sort] in document.
+        // Temporarily detach only foreign selects so it sees exactly this task's cards.
+        const own=new Set(rows.map(r=>r.select));
+        const detached=[];
+        [...document.querySelectorAll('[data-shmc-sort]')].forEach(sel=>{
+          if(own.has(sel))return;
+          const marker=document.createComment('sh-month-foreign-sort');
+          sel.parentNode?.insertBefore(marker,sel);
+          detached.push({sel,marker,parent:sel.parentNode});
+          sel.remove();
+        });
+
+        try{
+          await Promise.resolve(original(itemId));
+        }finally{
+          detached.forEach(({sel,marker,parent})=>{
+            if(marker.parentNode)marker.parentNode.replaceChild(sel,marker);
+            else if(parent?.isConnected)parent.appendChild(sel);
+          });
+          if(submit?.isConnected){submit.disabled=false;submit.textContent='Сохранить и продолжить'}
+        }
+      }
+
+      if(submit){
+        const originalAttr=submit.getAttribute('onclick')||'';
+        submit.dataset.shMonthlyOriginalOnclick=originalAttr;
+        submit.removeAttribute('onclick');
+        submit.onclick=null;
+        submit.addEventListener('click',submitCurrentTask);
       }
 
       function render(){
@@ -211,5 +270,5 @@
   setTimeout(fixMonthlyPlacement,0);
   setTimeout(fixMonthlyPlacement,250);
   setTimeout(fixMonthlyPlacement,900);
-  console.info('SkillHub: monthly clean UI guard v3 + native sort cards enabled');
+  console.info('SkillHub: monthly clean UI guard v4 + scoped native sort submit enabled');
 })();
