@@ -28,9 +28,9 @@
 })();
 
 (function(){
-  if(document.getElementById('shMonthlyRevokeLoader'))return;
+  const old=document.getElementById('shMonthlyRevokeLoader');if(old)old.remove();
   const s=document.createElement('script');
   s.id='shMonthlyRevokeLoader';
-  s.src='./hotfix-monthly-revoke-20261009.js?v=1';
+  s.src='./hotfix-monthly-revoke-20261009-v2.js?v=2';
   document.head.appendChild(s);
 })();
