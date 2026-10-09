@@ -22,7 +22,7 @@
     if(!root)return;
 
     const closeBtn=root.querySelector('header button[onclick*="closeModal"]');
-    if(closeBtn){
+    if(closeBtn && !closeBtn.classList.contains('shmr-close')){
       closeBtn.textContent='Закрыть';
       closeBtn.classList.add('shmr-close');
       closeBtn.setAttribute('aria-label','Закрыть результаты');
@@ -34,13 +34,21 @@
       if(cells.length<4)return;
       const cell=cells[3];
       const score=pctFrom(cell.textContent);
-      cell.querySelector('.shmr-result-status')?.remove();
       if(!Number.isFinite(score))return;
       const passed=score>=pass;
-      const badge=document.createElement('span');
-      badge.className='shmr-result-status '+(passed?'good':'bad');
-      badge.textContent=passed?'Пройдена':'Не пройдена';
-      cell.appendChild(badge);
+      const wanted=passed?'Пройдена':'Не пройдена';
+      let badge=cell.querySelector('.shmr-result-status');
+      if(!badge){
+        badge=document.createElement('span');
+        badge.className='shmr-result-status';
+        cell.appendChild(badge);
+      }
+      const cls=passed?'good':'bad';
+      if(badge.textContent!==wanted)badge.textContent=wanted;
+      if(!badge.classList.contains(cls)){
+        badge.classList.remove('good','bad');
+        badge.classList.add(cls);
+      }
     });
   }
 
@@ -48,6 +56,7 @@
     (root||document).querySelectorAll('.shfb-mistake').forEach(box=>{
       const smalls=[...box.querySelectorAll('small')];
       smalls.forEach(el=>{
+        if(el.classList.contains('shmr-chosen')||el.classList.contains('shmr-correct'))return;
         const t=String(el.textContent||'').trim();
         if(/^Выбрано:/i.test(t)){
           el.classList.add('shmr-chosen');
@@ -60,27 +69,22 @@
     });
   }
 
-  const baseResults=window.shMonthlyCleanResults;
-  if(typeof baseResults==='function'){
-    window.shMonthlyCleanResults=async function(){
-      const result=await baseResults.apply(this,arguments);
-      requestAnimationFrame(()=>{
-        const root=document.querySelector('#modalCard .shmc-results');
-        polishResults(root);
-        polishMistakes(root);
-      });
-      return result;
-    };
+  let scheduled=false;
+  function schedulePolish(){
+    if(scheduled)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{
+      scheduled=false;
+      const root=document.querySelector('#modalCard .shmc-results');
+      if(root)polishResults(root);
+      polishMistakes(document.getElementById('modalCard')||document);
+    });
   }
 
   const target=document.getElementById('modalCard')||document.body;
-  const observer=new MutationObserver(()=>{
-    const root=document.querySelector('#modalCard .shmc-results');
-    if(root)polishResults(root);
-    polishMistakes(document.getElementById('modalCard')||document);
-  });
+  const observer=new MutationObserver(schedulePolish);
   observer.observe(target,{subtree:true,childList:true});
-  polishMistakes(document);
+  schedulePolish();
 
   const st=document.createElement('style');
   st.id='shMonthlyResultsClarityStyle';
