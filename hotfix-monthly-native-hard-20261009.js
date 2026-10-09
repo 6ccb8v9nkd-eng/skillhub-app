@@ -18,7 +18,7 @@
   }
   if(!document.querySelector('script[data-sh-layout-stability]')){
     const l=document.createElement('script');
-    l.src='./hotfix-layout-stability-20261009.js?v=20261009_stable1';
+    l.src='./hotfix-layout-stability-20261009.js?v=20261009_stable2';
     l.dataset.shLayoutStability='1';
     document.head.appendChild(l);
   }
