@@ -31,6 +31,13 @@
   const old=document.getElementById('shMonthlyRevokeLoader');if(old)old.remove();
   const s=document.createElement('script');
   s.id='shMonthlyRevokeLoader';
-  s.src='./hotfix-monthly-revoke-20261009-v3.js?v=3';
+  s.src='./hotfix-monthly-revoke-20261009-v3.js?v=4';
+  s.onload=()=>{
+    const prev=document.getElementById('shMonthlyAssignV4Loader');if(prev)prev.remove();
+    const n=document.createElement('script');
+    n.id='shMonthlyAssignV4Loader';
+    n.src='./hotfix-monthly-assign-v4.js?v=1';
+    document.head.appendChild(n);
+  };
   document.head.appendChild(s);
 })();
