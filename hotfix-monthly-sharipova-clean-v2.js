@@ -1,224 +1,32 @@
-/* SkillHub monthly assessment final pilot launcher — Sharipova only, 2026-10-09 v3 */
+/* SkillHub monthly employee runtime v15 — 2026-10-09 */
 (function(){
-  'use strict';
-  if(window.__shMonthlySharipovaFinalV3)return;
-  window.__shMonthlySharipovaFinalV3=true;
-
-  const PILOT='d.i.sharipova';
-  let busy=false;
-  let cached=null;
-  let cachedAt=0;
-
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const login=()=>String(window.S?.profile?.login||'').trim().toLowerCase();
-  const isPilot=()=>login()===PILOT;
-  const sb=()=>window.S?.sb||null;
-  const notify=msg=>{try{window.toast?.(msg)}catch(_){}};
-  const launchText=btn=>String(btn?.textContent||'').replace(/\s+/g,' ').trim();
-
-  function isLaunchButton(btn){
-    if(!btn||btn.tagName!=='BUTTON'||!isPilot())return false;
-    const text=launchText(btn);
-    if(!/(начать|продолжить|пройти|открыть).{0,30}проверк/i.test(text))return false;
-    const raw=String(btn.getAttribute('onclick')||'');
-    if(/shMonthly/i.test(raw))return true;
-    if(btn.matches('[data-sh-final-launch],[data-check-id]'))return true;
-    if(btn.closest('[data-sh-monthly-employee],.sh12r-intro'))return true;
-    if(btn.closest('#page-home'))return true;
-    return false;
-  }
-
-  function enableButton(btn,checkId){
-    if(!btn)return;
-    btn.disabled=false;
-    btn.removeAttribute('disabled');
-    btn.setAttribute('type','button');
-    btn.setAttribute('aria-disabled','false');
-    btn.style.setProperty('pointer-events','auto','important');
-    btn.style.setProperty('opacity','1','important');
-    btn.style.setProperty('cursor','pointer','important');
-    btn.dataset.shFinalLaunch='3';
-    if(checkId)btn.dataset.checkId=checkId;
-    btn.removeAttribute('onclick');
-  }
-
-  async function loadState(force=false){
-    const client=sb();
-    if(!isPilot()||!client)return null;
-    if(!force&&cached&&Date.now()-cachedAt<4000)return cached;
-
-    const cq=await client.from('monthly_checks')
-      .select('id,status,recipients,config,due_date,due_at,month_key,pass_score,created_at')
-      .eq('status','assigned')
-      .order('created_at',{ascending:false})
-      .limit(100);
-    if(cq.error)throw cq.error;
-
-    const check=(cq.data||[]).find(x=>Array.isArray(x.recipients)&&x.recipients.some(r=>String(r||'').trim().toLowerCase()===PILOT));
-    if(!check)return null;
-
-    const [iq,rq]=await Promise.all([
-      client.from('monthly_check_items')
-        .select('id,position,kind,snapshot,max_score,source_content_id')
-        .eq('check_id',check.id)
-        .order('position',{ascending:true}),
-      client.from('monthly_check_runs')
-        .select('id,status,progress,started_at,breakdown')
-        .eq('check_id',check.id)
-        .eq('login',PILOT)
-        .maybeSingle()
-    ]);
-    if(iq.error)throw iq.error;
-    if(rq.error)throw rq.error;
-
-    const items=iq.data||[];
-    const run=rq.data||null;
-    const counts={
-      hard:items.filter(x=>x.kind==='hard').length,
-      ai:items.filter(x=>x.kind==='ai_dialogue').length,
-      manual:items.filter(x=>x.kind==='manual').length
-    };
-    const unsupported=items.filter(x=>x.kind==='hard'&&!['sort_cards','scenario','tariff_calc'].includes(String(x.snapshot?.payload?.mode||'scenario')));
-    if(unsupported.length)throw new Error('В итоговой проверке есть неподдерживаемое Hard-задание');
-
-    cached={check,items,run,counts};
-    cachedAt=Date.now();
-    return cached;
-  }
-
-  function findHomeButton(){
-    const buttons=[...document.querySelectorAll('#page-home button')];
-    return buttons.find(isLaunchButton)||buttons.find(b=>/(начать|продолжить|пройти).{0,30}проверк/i.test(launchText(b)))||null;
-  }
-
-  function decorate(state){
-    if(!state||!isPilot())return;
-    const page=document.getElementById('page-home');
-    if(!page)return;
-
-    const card=page.querySelector('[data-sh-monthly-employee]')||[...page.querySelectorAll('.card,section,article,div')]
-      .find(el=>/итогов.{0,20}проверк/i.test(String(el.textContent||''))&&el.querySelector('button'));
-
-    const btn=(card&&[...card.querySelectorAll('button')].find(b=>/(начать|продолжить|пройти|открыть).{0,30}проверк/i.test(launchText(b))))||findHomeButton();
-    if(btn){
-      enableButton(btn,state.check.id);
-      btn.textContent=(state.run&&state.run.status&&state.run.status!=='not_started'?'Продолжить проверку':'Начать проверку')+' →';
-    }
-
-    if(card){
-      card.dataset.shMonthlyEmployee='1';
-      card.dataset.shSharipovaFinal='3';
-      const progress=Number(state.run?.progress||0);
-      const ring=card.querySelector('.sh-month-ring');
-      if(ring){
-        ring.style.setProperty('--p',String(progress));
-        const strong=ring.querySelector('strong');
-        if(strong)strong.textContent=`${progress}%`;
-      }
-      const mini=card.querySelector('.sh-month-mini-parts');
-      if(mini)mini.innerHTML=`<span>💬 ИИ-диалог · ${state.counts.ai}</span><span>🧠 Hard Skills · ${state.counts.hard}</span><span>✍️ Ручной · ${state.counts.manual}</span>`;
-    }
-  }
-
-  async function ensureRunner(force=false){
-    if(!force&&typeof window.shMonthlyBeginV12==='function')return window.shMonthlyBeginV12;
-    if(!force&&typeof window.shMonthlyBegin==='function'&&window.__shMonthlyRunnerV12)return window.shMonthlyBegin;
-
-    const id='shMonthlySharipovaFinalRunnerV3';
-    document.getElementById(id)?.remove();
-    window.__shMonthlyRunnerV12=false;
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.id=id;
-      s.src=`./hotfix-monthly-runner-v12.js?v=20261009_final3_${Date.now()}`;
-      s.onload=resolve;
-      s.onerror=()=>reject(new Error('Не удалось загрузить модуль итоговой проверки'));
-      document.head.appendChild(s);
-    });
-    const fn=window.shMonthlyBegin;
-    if(typeof fn!=='function')throw new Error('Модуль итоговой проверки не готов');
-    window.shMonthlyBeginV12=fn;
-    return fn;
-  }
-
-  async function openRun(checkId,forceRunner=false){
-    const run=await ensureRunner(forceRunner);
-    await Promise.resolve(run(checkId));
-    await sleep(160);
-    const page=document.getElementById('page-run');
-    return !!page&&!page.classList.contains('hidden')&&!!page.querySelector('.sh12r');
-  }
-
-  async function launch(btn){
-    if(busy||!isPilot())return;
-    busy=true;
-    const old=launchText(btn)||'Начать проверку →';
-    try{
-      if(btn){enableButton(btn,btn.dataset.checkId||'');btn.disabled=true;btn.textContent='Открываем…';}
-      const state=await loadState(true);
-      if(!state)throw new Error('Назначенная итоговая проверка не найдена');
-      if(state.items.length!==12||state.counts.hard!==8||state.counts.ai!==2||state.counts.manual!==2){
-        throw new Error(`Состав проверки некорректен: ${state.items.length} заданий (${state.counts.hard} Hard, ${state.counts.ai} ИИ, ${state.counts.manual} ручных)`);
-      }
-
-      let opened=await openRun(state.check.id,false);
-      if(!opened)opened=await openRun(state.check.id,true);
-      if(!opened){
-        const page=document.getElementById('page-run');
-        document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
-        page?.classList.remove('hidden');
-        if(window.S)window.S.currentPage='run';
-        opened=await openRun(state.check.id,true);
-      }
-      if(!opened)throw new Error('Экран итоговой проверки не открылся');
-    }catch(err){
-      console.error('Sharipova final monthly launch failed',err);
-      notify(err?.message||'Не удалось открыть итоговую проверку');
-      if(btn&&btn.isConnected){enableButton(btn,btn.dataset.checkId||'');btn.textContent=old;}
-    }finally{
-      if(btn&&btn.isConnected)btn.disabled=false;
-      busy=false;
-    }
-  }
-
-  function intercept(ev){
-    if(!isPilot())return;
-    const btn=ev.target?.closest?.('button');
-    if(!isLaunchButton(btn))return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    if(typeof ev.stopImmediatePropagation==='function')ev.stopImmediatePropagation();
-    launch(btn);
-  }
-
-  async function repair(force=false){
-    if(!isPilot())return;
-    try{
-      const state=await loadState(force);
-      if(state)decorate(state);
-      else{
-        const btn=findHomeButton();
-        if(btn)enableButton(btn,'');
-      }
-    }catch(err){
-      console.error('Sharipova monthly repair failed',err);
-      const btn=findHomeButton();
-      if(btn)enableButton(btn,'');
-    }
-  }
-
-  window.addEventListener('click',intercept,true);
-  window.addEventListener('touchend',intercept,{capture:true,passive:false});
-
-  const mo=new MutationObserver(()=>{setTimeout(()=>repair(false),0)});
-  mo.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','class','style']});
-  setInterval(()=>repair(false),800);
-  window.addEventListener('pageshow',()=>setTimeout(()=>repair(true),40));
-  window.addEventListener('focus',()=>setTimeout(()=>repair(true),40));
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>repair(true),40)});
-  setTimeout(()=>repair(true),50);
-  setTimeout(()=>repair(true),400);
-  setTimeout(()=>repair(true),1200);
-
-  console.info('SkillHub: Sharipova final monthly launcher v3 active');
+'use strict';
+if(window.__shMonthlyEmployeeV15)return;window.__shMonthlyEmployeeV15=true;
+const CARD='sh-monthly-employee-v15',MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+let cache=null,cacheAt=0,busy=false,loading=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const p=()=>window.S?.profile||null,who=()=>String(p()?.login||'').trim().toLowerCase(),isEmp=()=>p()?.role==='employee'&&!!who(),sb=()=>window.S?.sb||null;
+const esc=v=>typeof window.esc==='function'?window.esc(v):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cfg=c=>Object.assign({ai_dialogues:0,hard:0,manual:0,estimated_minutes:30,due_time_msk:'23:59'},c?.config||{});
+const month=k=>{const [y,m]=String(k||'').split('-').map(Number);return `${MONTHS[m-1]||''} ${y||''}`.trim()};
+const toast=m=>{try{window.toast?.(m)}catch(_){}};
+function due(c){try{const d=c.due_at?new Date(c.due_at):new Date(`${c.due_date}T12:00:00+03:00`);const a=new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'long',year:'numeric'}).format(d),t=c.due_at?new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',hour:'2-digit',minute:'2-digit',hour12:false}).format(d):(cfg(c).due_time_msk||'23:59');return `${a}, ${t} МСК`}catch(_){return c?.due_date||'конца месяца'}}
+async function state(force=false){
+ if(!isEmp()||!sb())return null;if(!force&&cache&&Date.now()-cacheAt<4000&&cache.login===who())return cache;if(loading){await sleep(80);return cache}loading=true;
+ try{const login=who(),cq=await sb().from('monthly_checks').select('id,status,recipients,config,due_date,due_at,month_key,pass_score,created_at').in('status',['assigned','closed']).order('created_at',{ascending:false}).limit(100);if(cq.error)throw cq.error;
+ const visible=(cq.data||[]).filter(x=>Array.isArray(x.recipients)&&x.recipients.some(v=>String(v||'').trim().toLowerCase()===login)),check=visible.find(x=>x.status==='assigned')||visible[0];if(!check){cache={login,check:null,items:[],run:null,counts:{ai:0,hard:0,manual:0}};cacheAt=Date.now();return cache}
+ const [iq,rq]=await Promise.all([sb().from('monthly_check_items').select('id,position,kind,snapshot,max_score,source_content_id').eq('check_id',check.id).order('position',{ascending:true}),sb().from('monthly_check_runs').select('id,status,progress,started_at,completed_at,breakdown').eq('check_id',check.id).eq('login',login).maybeSingle()]);if(iq.error)throw iq.error;if(rq.error)throw rq.error;
+ const items=iq.data||[],counts={ai:items.filter(x=>x.kind==='ai_dialogue').length,hard:items.filter(x=>x.kind==='hard').length,manual:items.filter(x=>x.kind==='manual').length};cache={login,check,items,run:rq.data||null,counts};cacheAt=Date.now();return cache
+ }finally{loading=false}
+}
+function style(){if(document.getElementById('sh15empStyle'))return;const s=document.createElement('style');s.id='sh15empStyle';s.textContent=`#${CARD}{margin-bottom:18px;border:1px solid var(--line);border-radius:20px;background:var(--panel);padding:18px;display:grid;gap:14px;min-width:0}#${CARD} *{box-sizing:border-box}#${CARD} .h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}#${CARD} .k{display:block;color:var(--primary);font-size:10px;font-weight:950;letter-spacing:.08em}#${CARD} h2{margin:4px 0;font-size:24px}#${CARD} p{margin:0;color:var(--muted);line-height:1.4}#${CARD} .st{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;color:var(--primary)}#${CARD} .m{display:grid;grid-template-columns:64px minmax(0,1fr);gap:13px;align-items:center}#${CARD} .r{--p:0;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--primary) calc(var(--p)*1%),var(--line) 0);position:relative}#${CARD} .r:before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--panel)}#${CARD} .r b{position:relative;z-index:1}#${CARD} .meta b,#${CARD} .meta small{display:block}#${CARD} .meta small{margin-top:4px;color:var(--muted)}#${CARD} .parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${CARD} .parts>div{border:1px solid var(--line);border-radius:13px;background:var(--panel2);padding:10px}#${CARD} .parts b,#${CARD} .parts small{display:block}#${CARD} .parts small{margin-top:3px;color:var(--muted)}#${CARD} [data-sh15-launch]{width:100%;min-height:46px;pointer-events:auto!important;opacity:1!important}@media(max-width:620px){#${CARD}{padding:14px}#${CARD} .h{display:grid}#${CARD} .st{justify-self:start}#${CARD} .parts{grid-template-columns:1fr}}`;document.head.appendChild(s)}
+function html(st){const c=st.check,r=st.run,progress=Math.max(0,Math.min(100,Number(r?.progress||0))),started=!!r&&r.status!=='not_started',done=r?.status==='completed',total=st.items.length||Number(cfg(c).ai_dialogues)+Number(cfg(c).hard)+Number(cfg(c).manual);return `<section id="${CARD}" data-sh-monthly-employee="v15" data-check-id="${esc(c.id)}"><div class="h"><div><span class="k">ИТОГОВАЯ ПРОВЕРКА ЗА МЕСЯЦ</span><h2>${esc(month(c.month_key))}</h2><p>ИИ-диалог, Hard Skills и свободный ответ. Прогресс сохраняется.</p></div><span class="st">${done?'Завершена':'Назначена'}</span></div><div class="m"><div class="r" style="--p:${progress}"><b>${progress}%</b></div><div class="meta"><b>${total} заданий · ≈ ${Number(cfg(c).estimated_minutes||30)} мин</b><small>Пройти до ${esc(due(c))}</small></div></div><div class="parts"><div><b>💬 ИИ-диалог</b><small>${st.counts.ai} задания</small></div><div><b>🧠 Hard Skills</b><small>${st.counts.hard} заданий</small></div><div><b>✍️ Ручной тренажёр</b><small>${st.counts.manual} задания</small></div></div><button type="button" class="btn primary full" data-sh15-launch data-check-id="${esc(c.id)}">${done?'Открыть результат':started?'Продолжить проверку':'Начать проверку'} →</button></section>`}
+function render(st){if(!isEmp())return;style();const page=document.getElementById('page-home');if(!page)return;page.querySelectorAll('[data-sh-monthly-employee]').forEach(x=>{if(x.id!==CARD)x.remove()});const old=document.getElementById(CARD);if(!st?.check){old?.remove();return}old?old.outerHTML=html(st):page.insertAdjacentHTML('afterbegin',html(st))}
+async function runner(){if(typeof window.shMonthlyBeginV12==='function')return window.shMonthlyBeginV12;if(typeof window.shMonthlyBegin==='function'&&window.__shMonthlyRunnerV12){window.shMonthlyBeginV12=window.shMonthlyBegin;return window.shMonthlyBegin}window.__shMonthlyRunnerV12=false;document.getElementById('sh15Runner')?.remove();await new Promise((ok,bad)=>{const s=document.createElement('script');s.id='sh15Runner';s.src='./hotfix-monthly-runner-v12.js?v=20261009_v15';s.onload=ok;s.onerror=()=>bad(new Error('Не удалось загрузить модуль итоговой проверки'));document.head.appendChild(s)});if(typeof window.shMonthlyBegin!=='function')throw new Error('Модуль итоговой проверки не готов');window.shMonthlyBeginV12=window.shMonthlyBegin;return window.shMonthlyBegin}
+async function launch(btn){if(busy||!isEmp())return;busy=true;const old=btn?.textContent||'Начать проверку →';try{if(btn){btn.disabled=true;btn.textContent='Открываем…'}const st=await state(true);if(!st?.check)throw new Error('Назначенная итоговая проверка не найдена');if(!st.items.length)throw new Error('В итоговой проверке нет заданий');const bad=st.items.filter(x=>x.kind==='hard'&&!['scenario','sort_cards','tariff_calc'].includes(String(x.snapshot?.payload?.mode||'scenario')));if(bad.length)throw new Error('В проверке есть неподдерживаемое Hard-задание');const fn=await runner();await Promise.resolve(fn(st.check.id));await sleep(220);let page=document.getElementById('page-run');if(!page||page.classList.contains('hidden')||!page.querySelector('.sh12r')){await Promise.resolve(fn(st.check.id));await sleep(220);page=document.getElementById('page-run')}if(!page||page.classList.contains('hidden')||!page.querySelector('.sh12r'))throw new Error('Экран итоговой проверки не открылся');cache=null}catch(e){console.error('monthly employee v15 launch',e);toast(e?.message||'Не удалось открыть итоговую проверку');if(btn&&btn.isConnected)btn.textContent=old}finally{if(btn&&btn.isConnected)btn.disabled=false;busy=false}}
+async function refresh(force=false){if(!isEmp()){document.getElementById(CARD)?.remove();return}try{render(await state(force))}catch(e){console.error('monthly employee v15 refresh',e)}}
+window.addEventListener('click',e=>{const b=e.target?.closest?.('[data-sh15-launch]');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();launch(b)},true);
+window.addEventListener('touchend',e=>{const b=e.target?.closest?.('[data-sh15-launch]');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();launch(b)},{capture:true,passive:false});
+let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>refresh(false),80)}).observe(document.getElementById('appView')||document.documentElement,{childList:true,subtree:true});
+window.addEventListener('focus',()=>refresh(true));window.addEventListener('pageshow',()=>refresh(true));document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true)});setInterval(()=>refresh(false),2500);setTimeout(()=>refresh(true),80);setTimeout(()=>refresh(true),600);setTimeout(()=>refresh(true),1600);console.info('SkillHub: monthly employee runtime v15 enabled');
 })();
