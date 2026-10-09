@@ -1,7 +1,7 @@
 /* Keep the latest monthly assessment runner active and protect it from legacy async overrides. */
 (function(){
   'use strict';
-  if(window.__shMonthlyRunnerV12GuardV2)return;window.__shMonthlyRunnerV12GuardV2=true;
+  if(window.__shMonthlyRunnerV12GuardV3)return;window.__shMonthlyRunnerV12GuardV3=true;
 
   function loadOnce(id,src){
     if(document.getElementById(id))return;
@@ -9,7 +9,7 @@
   }
   loadOnce('shMonthlyManagerV12Loader','./hotfix-monthly-manager-v12.js?v=20261009_2');
   loadOnce('shMonthlyRunnerPolishV13Loader','./hotfix-monthly-runner-polish-v13.js?v=20261009_2');
-  loadOnce('shMonthlyLaunchStableV14Loader','./hotfix-monthly-launch-stable-v14.js?v=20261009_3');
+  loadOnce('shMonthlyLaunchStableV14Loader','./hotfix-monthly-launch-stable-v14.js?v=20261009_4');
 
   const begin=window.shMonthlyBegin;
   const intro=window.shMonthlyEmployeeIntro;
@@ -31,13 +31,23 @@
   };
   apply();
 
-  /* Legacy monthly scripts can finish long after first paint. Keep the v12 entry points authoritative. */
   setInterval(apply,1000);
   window.addEventListener('focus',apply,true);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)apply()});
 
-  /* Mobile Safari may keep an old inline handler on a card created before the runner loaded.
-     Capture these two launcher clicks and route them directly to the stable v12 functions. */
+  async function stableStart(id,btn){
+    /* v14 is loaded asynchronously by this guard. Wait for it instead of letting
+       the legacy capture handler swallow the click before the stable launcher sees it. */
+    for(let i=0;i<40;i++){
+      if(typeof window.shMonthlyStableLaunch==='function'){
+        return window.shMonthlyStableLaunch(id,btn);
+      }
+      await new Promise(r=>setTimeout(r,50));
+    }
+    apply();
+    return begin(id);
+  }
+
   document.addEventListener('click',function(ev){
     const btn=ev.target&&ev.target.closest?ev.target.closest('button'):null;
     if(!btn)return;
@@ -54,8 +64,7 @@
     if(m){
       ev.preventDefault();ev.stopPropagation();
       if(typeof ev.stopImmediatePropagation==='function')ev.stopImmediatePropagation();
-      apply();
-      Promise.resolve(begin(m[1])).catch(err=>{console.error('monthly start failed',err);window.toast?.(err?.message||'Не удалось начать проверку')});
+      Promise.resolve(stableStart(m[1],btn)).catch(err=>{console.error('monthly stable start failed',err);window.toast?.(err?.message||'Не удалось начать проверку')});
     }
   },true);
 })();
