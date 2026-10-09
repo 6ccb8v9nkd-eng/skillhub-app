@@ -46,7 +46,7 @@
         const oldStay=document.getElementById('shMonthlyStaySectionV7Loader');if(oldStay)oldStay.remove();
         const k=document.createElement('script');
         k.id='shMonthlyStaySectionV7Loader';
-        k.src='./hotfix-monthly-stay-section-v7.js?v=1';
+        k.src='./hotfix-monthly-stay-section-v7.js?v=2';
         document.head.appendChild(k);
       };
       document.head.appendChild(f);
