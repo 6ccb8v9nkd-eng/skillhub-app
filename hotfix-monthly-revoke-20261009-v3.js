@@ -13,7 +13,16 @@
   const lastDay=k=>{const [y,m]=String(k).split('-').map(Number);return `${y}-${String(m).padStart(2,'0')}-${String(new Date(y,m,0).getDate()).padStart(2,'0')}`};
   const dueIso=(date,time='23:59')=>new Date(`${date}T${time}:00+03:00`).toISOString();
   const name=login=>(S?.allowed||[]).find(x=>x.login===login)?.name||login;
-  const activeRecipients=c=>(Array.isArray(c?.recipients)?c.recipients:[]).filter(Boolean).filter(x=>x!=='ALL');
+  const activeRecipients=c=>{
+    const src=(Array.isArray(c?.recipients)?c.recipients:[]).filter(Boolean);
+    if(src.includes('ALL')){
+      const me=S?.profile,all=(S?.allowed||[]).filter(x=>x.active&&x.role==='employee');
+      if(me?.role==='mentor')return all.filter(x=>x.manager_login===me.login).map(x=>x.login);
+      if(me?.role==='rs')return all.filter(x=>x.sector_name===me.sector_name).map(x=>x.login);
+      return all.map(x=>x.login);
+    }
+    return src;
+  };
   let busy=false,lastSync=0;
 
   async function loadCurrent(){
@@ -37,10 +46,11 @@
 
   function noActiveHtml(state){
     const old=(state?.checks||[]).filter(x=>x.status==='closed').slice(0,3);
-    return `<div class="sh-month-head"><div><span class="sh-month-kicker">Итоговая проверка за месяц</span><h2>${e(label(mk()))}</h2><p>${old.length?'Предыдущее назначение отозвано. Можно собрать и назначить новую проверку.':'Единая ежемесячная проверка навыков на реальных клиентских ситуациях.'}</p></div><span class="sh-month-status draft">${old.length?'Отозвана':'Не создана'}</span></div>
+    const revoked=old.some(x=>(state?.runs||[]).some(r=>r.check_id===x.id&&r?.breakdown?.revoked_at));
+    return `<div class="sh-month-head"><div><span class="sh-month-kicker">Итоговая проверка за месяц</span><h2>${e(label(mk()))}</h2><p>${old.length?(revoked?'Предыдущее назначение отозвано. Можно собрать и назначить новую проверку.':'Предыдущая проверка завершена. Можно собрать следующую.'):'Единая ежемесячная проверка навыков на реальных клиентских ситуациях.'}</p></div><span class="sh-month-status draft">${old.length?(revoked?'Отозвана':'Завершена'):'Не создана'}</span></div>
       <div class="sh-month-metrics"><span><b>4</b><small>части</small></span><span><b>16</b><small>заданий</small></span><span><b>≈30</b><small>минут</small></span><span><b>75%</b><small>проходной</small></span></div>
       <div class="sh-month-actions"><button class="btn primary" onclick="shMonthlyCreateDraft()">${old.length?'Создать новую проверку':'Создать каркас'}</button></div>
-      ${old.length?`<div class="sh-month-history"><span>История</span>${old.map(x=>`<button onclick="shMonthlyOpenManager('${j(x.id)}')">${e(label(x.month_key))}<small>Отозвана</small></button>`).join('')}</div>`:''}`;
+      ${old.length?`<div class="sh-month-history"><span>История</span>${old.map(x=>{const wasRevoked=(state?.runs||[]).some(r=>r.check_id===x.id&&r?.breakdown?.revoked_at);return `<button onclick="shMonthlyOpenManager('${j(x.id)}')">${e(label(x.month_key))}<small>${wasRevoked?'Отозвана':'Завершена'}</small></button>`}).join('')}</div>`:''}`;
   }
 
   function activeHtml(c,state){
@@ -59,7 +69,7 @@
 
   async function reconcile(force=false){
     if(!manager()||!S?.sb)return;
-    const page=document.getElementById('page-mentor');if(!page||page.classList.contains('hidden'))return;
+    const page=document.getElementById('page-mentor');if(!page)return;
     if(busy||(!force&&Date.now()-lastSync<1200))return;busy=true;
     try{
       const state=await loadCurrent();lastSync=Date.now();let card=page.querySelector('[data-sh-monthly-manager]');
@@ -106,7 +116,11 @@
   window.shMonthlyRevokeOne=async function(checkId,login){if(!confirm(`Отозвать итоговую проверку у ${name(login)}? Ответы и прогресс сохранятся.`))return;try{await revoke(checkId,[login]);closeModal();toast('Проверка отозвана');setTimeout(()=>location.reload(),250)}catch(err){toast(err?.message||'Не удалось отозвать проверку')}};
   window.shMonthlyRevokeAll=async function(checkId){try{const {check}=await loadCheck(checkId),recipients=activeRecipients(check);if(!recipients.length){toast('Активных назначений нет');return}if(!confirm(`Отозвать итоговую проверку у всех (${recipients.length})? Ответы и прогресс сохранятся.`))return;await revoke(checkId,recipients);closeModal();toast('Проверка отозвана у всех');setTimeout(()=>location.reload(),250)}catch(err){toast(err?.message||'Не удалось отозвать проверку')}};
 
-  document.addEventListener('click',ev=>{const b=ev.target?.closest?.('[data-sh-monthly-revoke]');if(!b)return;ev.preventDefault();ev.stopPropagation();window.shMonthlyOpenRevoke(b.dataset.checkId)},true);
+  document.addEventListener('click',ev=>{
+    const revokeBtn=ev.target?.closest?.('[data-sh-monthly-revoke]');
+    if(revokeBtn){ev.preventDefault();ev.stopPropagation();window.shMonthlyOpenRevoke(revokeBtn.dataset.checkId);return}
+    if(ev.target?.closest?.('[data-page="assignments"]'))setTimeout(()=>reconcile(true),120);
+  },true);
   let t=0;const obs=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>reconcile(false),180)});obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>reconcile(true),350);setTimeout(()=>reconcile(true),1200);
 
