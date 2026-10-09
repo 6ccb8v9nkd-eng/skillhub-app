@@ -26,32 +26,3 @@
   const s=document.createElement('style');s.textContent=`.sh-rg-ai-section{margin-top:18px}.sh-rg-ai-list{display:grid;gap:10px}.sh-rg-ai-item{border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--panel)}.sh-rg-ai-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.sh-rg-ai-summary{margin-top:8px;line-height:1.42}.sh-rg-ai-item details{margin-top:10px}.sh-rg-ai-item summary{cursor:pointer;font-weight:800;color:var(--primary)}.sh-rg-ai-body{display:grid;gap:9px;padding-top:10px}.sh-rg-ai-block{padding:10px 11px;border:1px solid var(--line);border-radius:11px}.sh-rg-ai-block p{margin:5px 0 0;line-height:1.42}.sh-rg-ai-block ul{margin:6px 0 0;padding-left:18px}.sh-rg-ai-chat{display:grid;gap:7px}.sh-rg-ai-msg{padding:9px 10px;border-radius:10px;border:1px solid var(--line)}.sh-rg-ai-msg b{font-size:12px;color:var(--muted)}.sh-rg-ai-msg div{margin-top:3px;line-height:1.4}.sh-rg-ai-msg.employee{margin-left:22px}.sh-rg-ai-msg.client{margin-right:22px}@media(max-width:620px){.sh-rg-ai-msg.employee{margin-left:10px}.sh-rg-ai-msg.client{margin-right:10px}}`;document.head.appendChild(s);
   console.info('SkillHub: RG AI dialogue result visibility enabled');
 })();
-
-(function(){
-  const old=document.getElementById('shMonthlyRevokeLoader');if(old)old.remove();
-  const s=document.createElement('script');
-  s.id='shMonthlyRevokeLoader';
-  s.src='./hotfix-monthly-revoke-20261009-v3.js?v=4';
-  s.onload=()=>{
-    const prev=document.getElementById('shMonthlyAssessmentV5Loader');if(prev)prev.remove();
-    const n=document.createElement('script');
-    n.id='shMonthlyAssessmentV5Loader';
-    n.src='./hotfix-monthly-assessment-v5.js?v=1';
-    n.onload=()=>{
-      const oldFix=document.getElementById('shMonthlyMobileLayoutV6Loader');if(oldFix)oldFix.remove();
-      const f=document.createElement('script');
-      f.id='shMonthlyMobileLayoutV6Loader';
-      f.src='./hotfix-monthly-mobile-layout-v6.js?v=1';
-      f.onload=()=>{
-        const oldStay=document.getElementById('shMonthlyStaySectionV7Loader');if(oldStay)oldStay.remove();
-        const k=document.createElement('script');
-        k.id='shMonthlyStaySectionV7Loader';
-        k.src='./hotfix-monthly-stay-section-v7.js?v=2';
-        document.head.appendChild(k);
-      };
-      document.head.appendChild(f);
-    };
-    document.head.appendChild(n);
-  };
-  document.head.appendChild(s);
-})();
