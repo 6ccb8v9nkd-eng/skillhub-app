@@ -7,7 +7,7 @@
   const FALLBACK_MAX_TURNS=6;
   const FALLBACK_MAX_CHARS=600;
   const FALLBACK_SESSION_MINUTES=20;
-  const PILOT_LOGINS=new Set(['a.eliseev1','v.s.ashcheulov']);
+  const PILOT_LOGINS=new Set(['a.eliseev1','v.s.ashcheulov','d.i.sharipova']);
   let run=null;
   let adminSessions=[];
 
@@ -21,7 +21,9 @@
   function addUsage(a,b){return {input:Number(a?.input||0)+Number(b?.input||0),output:Number(a?.output||0)+Number(b?.output||0),total:Number(a?.total||0)+Number(b?.total||0)}}
 
   async function invoke(body){
-    const {data,error}=await S.sb.functions.invoke('soft-ai',{body});
+    const currentLogin=String(S?.profile?.login||'').toLowerCase();
+    const functionName=currentLogin==='d.i.sharipova'?'soft-ai-pilot-group':'soft-ai';
+    const {data,error}=await S.sb.functions.invoke(functionName,{body});
     if(error){
       let details=null;
       try{if(error.context&&typeof error.context.json==='function')details=await error.context.json()}catch(_){ }
@@ -253,5 +255,5 @@
     `;document.head.appendChild(s);
   }
 
-  console.info('SkillHub pilot: qualitative negative-handling AI dialogue enabled for tech admin, Eliseev RG and Ashcheulov employee');
+  console.info('SkillHub pilot: qualitative negative-handling AI dialogue enabled for tech admin, Eliseev RG, Ashcheulov employee and Sharipova employee');
 })();
