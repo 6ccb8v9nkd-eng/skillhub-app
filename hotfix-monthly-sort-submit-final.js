@@ -142,3 +142,11 @@
 
   console.info('SkillHub: pilot final assessment sort submit isolation v3 enabled');
 })();
+
+(function loadMonthlyManualFinal(){
+  if(document.querySelector('script[data-sh-monthly-manual-final]'))return;
+  const s=document.createElement('script');
+  s.src='./hotfix-monthly-manual-submit-final.js?v=20261009_manual1';
+  s.dataset.shMonthlyManualFinal='1';
+  document.head.appendChild(s);
+})();
