@@ -37,6 +37,13 @@
     const n=document.createElement('script');
     n.id='shMonthlyAssessmentV5Loader';
     n.src='./hotfix-monthly-assessment-v5.js?v=1';
+    n.onload=()=>{
+      const oldFix=document.getElementById('shMonthlyMobileLayoutV6Loader');if(oldFix)oldFix.remove();
+      const f=document.createElement('script');
+      f.id='shMonthlyMobileLayoutV6Loader';
+      f.src='./hotfix-monthly-mobile-layout-v6.js?v=1';
+      document.head.appendChild(f);
+    };
     document.head.appendChild(n);
   };
   document.head.appendChild(s);
