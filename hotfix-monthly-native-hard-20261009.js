@@ -1,7 +1,7 @@
 /* Legacy monthly module disabled 2026-10-09.
    The final knowledge assessment is rebuilt in hotfix-monthly-sharipova-clean-v2.js.
    This compatibility file loads result clarity, the employee Progress archive,
-   the dedicated "Моя итоговая проверка" card, and layout stability polish.
+   the dedicated "Моя итоговая проверка" card, and the no-flash Home gate.
 */
 (function(){
   if(!document.querySelector('script[data-sh-monthly-results-clarity]')){
@@ -16,10 +16,10 @@
     p.dataset.shMonthlyProgressCard='1';
     document.head.appendChild(p);
   }
-  if(!document.querySelector('script[data-sh-layout-stability]')){
-    const l=document.createElement('script');
-    l.src='./hotfix-layout-stability-20261009.js?v=20261009_stable2';
-    l.dataset.shLayoutStability='1';
-    document.head.appendChild(l);
+  if(!document.querySelector('script[data-sh-home-no-flash]')){
+    const n=document.createElement('script');
+    n.src='./hotfix-home-no-flash-20261009.js?v=20261009_noflash1';
+    n.dataset.shHomeNoFlash='1';
+    document.head.appendChild(n);
   }
 })();
