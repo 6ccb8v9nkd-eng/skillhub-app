@@ -1,11 +1,22 @@
-/* Keep the v12 monthly runner active while legacy async scripts finish loading. */
+/* Keep the latest monthly assessment UI active while legacy async scripts finish loading. */
 (function(){
   'use strict';
-  if(!document.getElementById('shMonthlyRunnerPolishV13Loader')){
-    const s=document.createElement('script');s.id='shMonthlyRunnerPolishV13Loader';s.src='./hotfix-monthly-runner-polish-v13.js?v=1';document.head.appendChild(s);
+  function loadOnce(id,src){
+    if(document.getElementById(id))return;
+    const s=document.createElement('script');s.id=id;s.src=src;document.head.appendChild(s);
   }
+  loadOnce('shMonthlyManagerV12Loader','./hotfix-monthly-manager-v12.js?v=20261009_2');
+  loadOnce('shMonthlyRunnerPolishV13Loader','./hotfix-monthly-runner-polish-v13.js?v=20261009_2');
+
   const begin=window.shMonthlyBegin,intro=window.shMonthlyEmployeeIntro,exit=window.shMonthlyExit,next=window.shMonthlyNextItem;
   if(typeof begin!=='function'||typeof intro!=='function')return;
-  const apply=()=>{window.shMonthlyBegin=begin;window.shMonthlyEmployeeIntro=intro;if(typeof exit==='function')window.shMonthlyExit=exit;if(typeof next==='function')window.shMonthlyNextItem=next};
-  apply();const timer=setInterval(apply,500);setTimeout(()=>clearInterval(timer),15000);
+  const apply=()=>{
+    window.shMonthlyBegin=begin;
+    window.shMonthlyEmployeeIntro=intro;
+    if(typeof exit==='function')window.shMonthlyExit=exit;
+    if(typeof next==='function')window.shMonthlyNextItem=next;
+  };
+  apply();
+  const timer=setInterval(apply,250);
+  setTimeout(()=>clearInterval(timer),30000);
 })();
