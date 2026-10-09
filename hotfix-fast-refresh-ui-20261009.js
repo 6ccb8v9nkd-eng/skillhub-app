@@ -77,7 +77,7 @@
     if(changed.length>80){S.content=fresh;return}
     const freshMap=new Map(fresh.map(x=>[x.id,x]));
     kept=kept.filter(x=>!freshMap.has(x.id));
-    S.content=[...fresh,...kept];
+    S.content=[...fresh,...kept].sort((a,b)=>String(b?.updated_at||'').localeCompare(String(a?.updated_at||'')));
   }
 
   async function fastManualRefresh(){
@@ -169,6 +169,31 @@
   wrapEmployees();
   setTimeout(()=>{wrapEmployees();removeSingleCodeButtons()},0);
   setTimeout(()=>{wrapEmployees();removeSingleCodeButtons()},500);
+
+  /* The removed single-code button also reset an existing employee PIN.
+     Preserve that capability inside "Управление", so no functionality is lost. */
+  function wrapRgManagement(){
+    if(typeof window.shRgOpenManagement!=='function'||window.shRgOpenManagement.__shAccessInside)return;
+    const base=window.shRgOpenManagement;
+    const wrapped=function(login){
+      const r=base.apply(this,arguments);
+      try{
+        if(S?.profile?.role!=='mentor')return r;
+        const x=(S.allowed||[]).find(u=>u?.login===login&&u?.role==='employee'&&u?.manager_login===S.profile.login);
+        if(!x?.claimed_user_id)return r;
+        const card=document.querySelector('#modalCard .card');
+        if(!card||card.querySelector('[data-sh-reset-access]'))return r;
+        const safe=String(login).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        card.insertAdjacentHTML('afterbegin',`<div class="employee-row" data-sh-reset-access><div><b>Сбросить доступ</b><div class="meta">Если сотрудник забыл PIN, старый PIN перестанет работать и будет создан новый код первого входа.</div></div><button class="btn secondary" onclick="resetAccess('${safe}')">Сбросить доступ</button></div>`);
+      }catch(e){console.warn('SkillHub RG access control patch skipped',e)}
+      return r;
+    };
+    wrapped.__shAccessInside=true;
+    window.shRgOpenManagement=wrapped;
+  }
+  wrapRgManagement();
+  setTimeout(wrapRgManagement,0);
+  setTimeout(wrapRgManagement,500);
 
   console.info('SkillHub: fast manual refresh + simplified RG employee actions enabled');
 })();
