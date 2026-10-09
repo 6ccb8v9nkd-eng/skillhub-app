@@ -5,7 +5,7 @@
 (function(){
   if(document.querySelector('script[data-sh-monthly-results-clarity]'))return;
   const s=document.createElement('script');
-  s.src='./hotfix-monthly-results-clarity-20261009.js?v=20261009_clarity1';
+  s.src='./hotfix-monthly-results-clarity-20261009.js?v=20261009_clarity2';
   s.dataset.shMonthlyResultsClarity='1';
   document.head.appendChild(s);
 })();
