@@ -9,6 +9,7 @@
   }
   loadOnce('shMonthlyManagerV12Loader','./hotfix-monthly-manager-v12.js?v=20261009_2');
   loadOnce('shMonthlyRunnerPolishV13Loader','./hotfix-monthly-runner-polish-v13.js?v=20261009_2');
+  loadOnce('shMonthlyLaunchStableV14Loader','./hotfix-monthly-launch-stable-v14.js?v=20261009_3');
 
   const begin=window.shMonthlyBegin;
   const intro=window.shMonthlyEmployeeIntro;
