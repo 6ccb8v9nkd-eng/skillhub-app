@@ -26,3 +26,11 @@
   const s=document.createElement('style');s.textContent=`.sh-rg-ai-section{margin-top:18px}.sh-rg-ai-list{display:grid;gap:10px}.sh-rg-ai-item{border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--panel)}.sh-rg-ai-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.sh-rg-ai-summary{margin-top:8px;line-height:1.42}.sh-rg-ai-item details{margin-top:10px}.sh-rg-ai-item summary{cursor:pointer;font-weight:800;color:var(--primary)}.sh-rg-ai-body{display:grid;gap:9px;padding-top:10px}.sh-rg-ai-block{padding:10px 11px;border:1px solid var(--line);border-radius:11px}.sh-rg-ai-block p{margin:5px 0 0;line-height:1.42}.sh-rg-ai-block ul{margin:6px 0 0;padding-left:18px}.sh-rg-ai-chat{display:grid;gap:7px}.sh-rg-ai-msg{padding:9px 10px;border-radius:10px;border:1px solid var(--line)}.sh-rg-ai-msg b{font-size:12px;color:var(--muted)}.sh-rg-ai-msg div{margin-top:3px;line-height:1.4}.sh-rg-ai-msg.employee{margin-left:22px}.sh-rg-ai-msg.client{margin-right:22px}@media(max-width:620px){.sh-rg-ai-msg.employee{margin-left:10px}.sh-rg-ai-msg.client{margin-right:10px}}`;document.head.appendChild(s);
   console.info('SkillHub: RG AI dialogue result visibility enabled');
 })();
+
+(function(){
+  if(document.getElementById('shMonthlyRevokeLoader'))return;
+  const s=document.createElement('script');
+  s.id='shMonthlyRevokeLoader';
+  s.src='./hotfix-monthly-revoke-20261009.js?v=1';
+  document.head.appendChild(s);
+})();
