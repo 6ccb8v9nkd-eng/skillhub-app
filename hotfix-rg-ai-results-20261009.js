@@ -42,6 +42,13 @@
       const f=document.createElement('script');
       f.id='shMonthlyMobileLayoutV6Loader';
       f.src='./hotfix-monthly-mobile-layout-v6.js?v=1';
+      f.onload=()=>{
+        const oldStay=document.getElementById('shMonthlyStaySectionV7Loader');if(oldStay)oldStay.remove();
+        const k=document.createElement('script');
+        k.id='shMonthlyStaySectionV7Loader';
+        k.src='./hotfix-monthly-stay-section-v7.js?v=1';
+        document.head.appendChild(k);
+      };
       document.head.appendChild(f);
     };
     document.head.appendChild(n);
