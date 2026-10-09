@@ -1,13 +1,12 @@
-/* SkillHub final assessment sort_cards submit isolation v3 — 2026-10-09
-   PILOT ONLY: d.i.sharipova, employee, #page-run.
+/* SkillHub final assessment sort_cards submit isolation v4 — 2026-10-09
+   ALL EMPLOYEES: only inside final assessment #page-run.
    Does not touch regular Hard/Soft trainers.
 */
 (function(){
   'use strict';
-  if(window.__shMonthlySortSubmitFinalV3)return;
-  window.__shMonthlySortSubmitFinalV3=true;
+  if(window.__shMonthlySortSubmitFinalV4)return;
+  window.__shMonthlySortSubmitFinalV4=true;
 
-  const PILOT='d.i.sharipova';
   const now=()=>new Date().toISOString();
   const safeArr=x=>Array.isArray(x)?x:[];
 
@@ -18,13 +17,12 @@
   function notify(text){
     try{if(typeof toast==='function')toast(text);else console.info(text)}catch(_){console.info(text)}
   }
-  function isPilot(){
+  function isAssessmentEmployee(){
     const st=state();
-    return String(st?.profile?.role||'').toLowerCase()==='employee' &&
-      String(st?.profile?.login||'').trim().toLowerCase()===PILOT;
+    return String(st?.profile?.role||'').toLowerCase()==='employee';
   }
   function currentTask(){
-    if(!isPilot())return null;
+    if(!isAssessmentEmployee())return null;
     const page=document.getElementById('page-run');
     if(!page||page.classList.contains('hidden'))return null;
     const task=page.querySelector('.shmc-task');
@@ -88,7 +86,7 @@
       const rq=await st.sb.from('monthly_check_runs').select('*').eq('check_id',item.check_id).eq('login',st.profile.login).maybeSingle();
       if(rq.error)throw rq.error;
       const run=rq.data;
-      if(!run)throw new Error('Запуск аттестации не найден');
+      if(!run)throw new Error('Эта итоговая проверка вам не назначена');
 
       const allq=await st.sb.from('monthly_check_items').select('id,position').eq('check_id',item.check_id).order('position',{ascending:true});
       if(allq.error)throw allq.error;
@@ -112,7 +110,7 @@
       if(typeof window.shMonthlyStart!=='function')throw new Error('Модуль аттестации не готов');
       await Promise.resolve(window.shMonthlyStart(item.check_id));
     }catch(e){
-      console.error('SkillHub final assessment sort submit v3',e);
+      console.error('SkillHub final assessment sort submit v4',e);
       notify(e?.message||'Не удалось сохранить распределение');
       if(btn?.isConnected){btn.disabled=false;btn.textContent='Сохранить и продолжить'}
     }
@@ -127,7 +125,7 @@
   };
 
   document.addEventListener('click',function(ev){
-    if(!isPilot())return;
+    if(!isAssessmentEmployee())return;
     const btn=ev.target?.closest?.('#page-run .shmc-task button.shmc-next');
     if(!btn)return;
     const task=btn.closest('.shmc-task');
@@ -140,7 +138,7 @@
     void submit(itemId,task,btn);
   },true);
 
-  console.info('SkillHub: pilot final assessment sort submit isolation v3 enabled');
+  console.info('SkillHub: final assessment sort submit isolation v4 enabled for all employees');
 })();
 
 (function loadMonthlyManualFinal(){
