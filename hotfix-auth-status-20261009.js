@@ -33,12 +33,3 @@
   setTimeout(()=>{wrapEmployees();applyEmployeeAuthStatuses()},500);
   console.info('SkillHub: RG authorization statuses enabled');
 })();
-
-/* Load the monthly-attestation Hard renderer for every role, including employees. */
-(function(){
-  if(document.getElementById('shMonthlyNativeHardLoader'))return;
-  const s=document.createElement('script');
-  s.id='shMonthlyNativeHardLoader';
-  s.src='./hotfix-monthly-native-hard-20261009.js?v=1';
-  document.head.appendChild(s);
-})();
