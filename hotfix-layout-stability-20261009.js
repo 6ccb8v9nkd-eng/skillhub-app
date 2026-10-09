@@ -73,7 +73,9 @@
       syncDepth++;
       try{return await baseSync.apply(this,arguments)}
       finally{
-        syncDepth=Math.max(0,syncDepth-1);
+        // The fast manual refresh schedules renderCurrent() on the next animation frame.
+        // Keep the smoothing flag alive long enough for that frame too.
+        setTimeout(()=>{syncDepth=Math.max(0,syncDepth-1)},90);
         try{window.dispatchEvent(new CustomEvent('sh:sync-complete'))}catch(_){ }
       }
     };
