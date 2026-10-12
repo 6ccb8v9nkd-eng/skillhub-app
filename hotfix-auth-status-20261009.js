@@ -34,12 +34,12 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load the final stable RG dashboard renderer after legacy manager wrappers.
-   This is UI-only and does not touch monthly assessment logic or data. */
+/* Load one final runtime layer for critical pages and realtime.
+   It replaces the temporary RG-only recovery loader. */
 (function(){
-  if(document.querySelector('script[data-sh-rg-dashboard-recovery]'))return;
+  if(document.querySelector('script[data-sh-runtime-stability]'))return;
   const s=document.createElement('script');
-  s.src='./hotfix-rg-dashboard-recovery-20261012.js?v=20261012_1';
-  s.dataset.shRgDashboardRecovery='1';
+  s.src='./hotfix-runtime-stability-20261012.js?v=20261012_1';
+  s.dataset.shRuntimeStability='1';
   document.head.appendChild(s);
 })();
