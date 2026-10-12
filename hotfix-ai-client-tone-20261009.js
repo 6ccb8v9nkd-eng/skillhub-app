@@ -79,3 +79,59 @@
 
   console.info('SkillHub AI: realistic client tone + role guard enabled');
 })();
+
+/* SkillHub automatic release refresh — 2026-10-12
+   Detects a new application release and refreshes clients automatically.
+   Users should not need Ctrl+F5 after future deployments. */
+(function(){
+  'use strict';
+  if(window.__shAutoReleaseRefresh)return;
+  window.__shAutoReleaseRefresh=true;
+
+  const KEY='sh_app_release_version';
+  let checking=false,reloading=false;
+
+  async function clearSkillHubCaches(){
+    try{
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(k=>String(k).startsWith('skillhub-')).map(k=>caches.delete(k)));
+      }
+    }catch(e){console.warn('SkillHub release refresh: cache clear skipped',e)}
+    try{
+      if('serviceWorker' in navigator){
+        const regs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.update().catch(()=>{})));
+      }
+    }catch(e){console.warn('SkillHub release refresh: SW update skipped',e)}
+  }
+
+  async function checkRelease(){
+    if(checking||reloading||!navigator.onLine)return;
+    checking=true;
+    try{
+      const r=await fetch('./app-version.json?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return;
+      const j=await r.json();
+      const remote=String(j?.version||'').trim();
+      if(!remote)return;
+      const local=localStorage.getItem(KEY)||'';
+      if(!local){localStorage.setItem(KEY,remote);return}
+      if(local===remote)return;
+      reloading=true;
+      localStorage.setItem(KEY,remote);
+      await clearSkillHubCaches();
+      const u=new URL(location.href);
+      u.searchParams.set('appv',remote);
+      u.searchParams.set('_refresh',Date.now().toString());
+      location.replace(u.toString());
+    }catch(e){console.warn('SkillHub release refresh: check skipped',e)}
+    finally{checking=false}
+  }
+
+  setTimeout(checkRelease,2500);
+  setInterval(checkRelease,60000);
+  window.addEventListener('focus',checkRelease);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkRelease()});
+  console.info('SkillHub: automatic release refresh enabled');
+})();
