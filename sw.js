@@ -1,4 +1,4 @@
-const CACHE='skillhub-20261012-runtime-stable-v1';
+const CACHE='skillhub-20261012-live-core-v1';
 const SHELL=[
   './',
   './index.html',
@@ -20,9 +20,16 @@ const SHELL=[
   './knowledge/rendered/handbook-dark/page-001.webp'
 ];
 
+/* A single missing optional asset must never block a new service worker install. */
 self.addEventListener('install',e=>{
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)));
+  e.waitUntil((async()=>{
+    const c=await caches.open(CACHE);
+    await Promise.allSettled(SHELL.map(async url=>{
+      const r=await fetch(url,{cache:'no-store'});
+      if(r&&r.ok)await c.put(url,r.clone());
+    }));
+  })());
 });
 
 self.addEventListener('activate',e=>e.waitUntil(
@@ -42,11 +49,13 @@ self.addEventListener('fetch',e=>{
     u.pathname.endsWith('/')||
     u.pathname.endsWith('/index.html')||
     u.pathname.endsWith('.js')||
-    u.pathname.endsWith('.css')
+    u.pathname.endsWith('.css')||
+    u.pathname.endsWith('app-version.json')||
+    u.pathname.endsWith('release-ready.json')
   );
 
   e.respondWith(
-    fetch(e.request,{cache:fresh?'reload':'no-store'})
+    fetch(e.request,{cache:fresh?'no-store':'default'})
       .then(r=>{
         if(r&&r.ok){
           const copy=r.clone();
