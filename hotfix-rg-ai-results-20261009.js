@@ -1,4 +1,4 @@
-/* SkillHub manager employee card — grouped results, recommendations and AI — 2026-10-12 */
+/* SkillHub manager employee card — grouped results, percentage recommendations and AI — 2026-10-12 */
 (function(){
   'use strict';
 
@@ -26,23 +26,39 @@
   }
   function side(inner=''){return `<span class="shm-side">${inner}<span class="shm-chevron">›</span></span>`}
 
-  function recommendations(login){
-    if(typeof topicStats!=='function')return[];
-    return arr(topicStats(login)).filter(t=>t?.diagnosed&&['soft','hard'].includes(t.section)&&['gap','attention'].includes(t.status)).sort((a,b)=>(a.status==='gap'?0:1)-(b.status==='gap'?0:1)||Number(a.avgRecent||0)-Number(b.avgRecent||0));
+  function analyzeRows(rows){
+    const sorted=arr(rows).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const recent=sorted.slice(-3),count=sorted.length;
+    if(!recent.length)return{count:0,avgRecent:null,trend:0,diagnosed:false,status:'unknown',courseRecommended:false};
+    const avgRecent=Math.round(recent.reduce((s,x)=>s+Number(x.score||0),0)/recent.length);
+    const last=Number(sorted.at(-1)?.score||0),prev=count>1?Number(sorted.at(-2)?.score||0):null,trend=prev===null?0:last-prev;
+    const status=count<2?'unknown':avgRecent<50?'critical':avgRecent<70?'gap':avgRecent<80?'watch':avgRecent<90?'reinforce':'strong';
+    return{count,avgRecent,trend,diagnosed:count>=2,status,courseRecommended:count>=2&&avgRecent<70};
+  }
+  const analysisLabel=a=>a.status==='critical'?'Критическая зона':a.status==='gap'?'Зона развития':a.status==='watch'?'Наблюдение':a.status==='reinforce'?'Закрепить':a.status==='strong'?'Освоено':'Мало данных';
+  const analysisClass=a=>['critical','gap'].includes(a.status)?'bad':['watch','reinforce'].includes(a.status)?'warn':a.status==='strong'?'good':'';
+  const trendText=n=>n>0?`↑ +${n} п.п.`:n<0?`↓ ${n} п.п.`:'→ без изменений';
+
+  function developmentTopics(login){
+    const map=new Map();
+    arr(S.attempts).filter(x=>x.login===login&&['soft','hard'].includes(x.section)).forEach(a=>{
+      const topic=String(a.topic||'Без темы').trim()||'Без темы',key=a.section+'|||'+topic;
+      if(!map.has(key))map.set(key,{section:a.section,topic,rows:[]});map.get(key).rows.push(a);
+    });
+    return [...map.values()].map(g=>({...g,...analyzeRows(g.rows)})).filter(x=>x.diagnosed&&x.avgRecent<70).sort((a,b)=>a.avgRecent-b.avgRecent);
   }
   function recommendationSection(login){
-    const recs=recommendations(login);
-    const summary=recs.length?`${recs.length} ${recs.length===1?'рекомендация':'рекомендации'}`:'актуальных рекомендаций нет';
+    const recs=developmentTopics(login);
+    const summary=recs.length?`${recs.length} ${recs.length===1?'тема':'тем'} для развития`:'курсы сейчас не требуются';
     const body=recs.length?recs.map(r=>{
       const assigned=typeof hasActiveTopicAssignment==='function'&&hasActiveTopicAssignment(login,r.section,r.topic);
       const available=typeof hasTopicContent==='function'&&hasTopicContent(r.section,r.topic);
-      const bad=r.status==='gap';
-      let action='<span class="muted small">По теме пока нет опубликованных материалов</span>';
-      if(assigned)action='<span class="pill good">Уже назначено</span>';
+      let action='<span class="muted small">По этой теме пока нет опубликованного курса</span>';
+      if(assigned)action='<span class="pill good">Курс уже назначен</span>';
       else if(available&&typeof openRecommendedAssignment==='function')action=`<button class="btn primary shm-rec-btn" onclick="openRecommendedAssignment('${jsq(login)}','${r.section}','${jsq(r.topic)}')">Назначить курс</button>`;
-      return `<div class="shm-rec"><div class="shm-rec-copy"><div><span class="shm-kicker">${esc(sectionLabel(r.section))}</span><b>${esc(r.topic)}</b></div><span class="pill ${bad?'bad':'warn'}">${Math.round(Number(r.avgRecent||0))}%</span></div><div class="meta">${bad?'Зона развития':'Нужно закрепить'} · ${r.attempts||0} попыток</div><div class="shm-rec-action">${action}</div></div>`;
-    }).join(''):'<div class="shm-empty">По Soft и Hard сейчас нет подтверждённых зон развития. Рекомендации появятся после достаточного количества попыток по теме.</div>';
-    return `<details class="shm-section shm-recs"><summary><div class="shm-title"><b>Рекомендованные курсы</b><span>${summary}</span></div>${side(recs.length?`<span class="pill ${recs.some(r=>r.status==='gap')?'bad':'warn'}">${recs.length}</span>`:'')}</summary><div class="shm-body">${body}</div></details>`;
+      return `<div class="shm-rec"><div class="shm-rec-copy"><div><span class="shm-kicker">${esc(sectionLabel(r.section))}</span><b>${esc(r.topic)}</b></div><span class="pill bad">${Math.round(Number(r.avgRecent||0))}%</span></div><div class="meta">${analysisLabel(r)} · среднее последних ${Math.min(3,r.count)} попыток · ${trendText(r.trend)}</div><div class="shm-rec-action">${action}</div></div>`;
+    }).join(''):'<div class="shm-empty">Нет тем, по которым требуется назначение курса. Курс рекомендуется только после минимум 2 попыток, если средний результат последних 3 ниже 70%.</div>';
+    return `<details class="shm-section shm-recs"><summary><div class="shm-title"><b>Рекомендованные курсы</b><span>${summary} · порог рекомендации ниже 70%</span></div>${side(recs.length?`<span class="pill bad">${recs.length}</span>`:'')}</summary><div class="shm-body">${body}</div></details>`;
   }
 
   function attemptRow(a,login,managerLogin){
@@ -50,16 +66,17 @@
     const detail=a.type==='typing'?'<span class="muted small">Скорость печати</span>':has?`<button class="btn secondary shm-mini" onclick="openAttemptReview('${a.id}','${jsq(login)}','${jsq(managerLogin||'')}')">Ответы</button>`:'<span class="muted small">без детализации</span>';
     return `<div class="shm-attempt"><div class="shm-attempt-main"><b>${fmt(a.created_at)}</b><span class="meta">${esc(a.topic||'Без темы')}</span></div><span class="pill ${scoreClass(a.score)}">${Number(a.score)}%</span><div class="shm-attempt-action">${detail}</div></div>`;
   }
-  function topicBlock(topic,rows,login,managerLogin){
-    const st=stats(rows);
-    return `<details class="shm-topic"><summary><div class="shm-title"><b>${esc(topic||'Без темы')}</b><span>${statText(st)}</span></div>${side()}</summary><div class="shm-topic-body">${rows.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(a=>attemptRow(a,login,managerLogin)).join('')}</div></details>`;
+  function topicBlock(sec,topic,rows,login,managerLogin){
+    const st=stats(rows),an=analyzeRows(rows);
+    const status=an.diagnosed?`${analysisLabel(an)}${an.courseRecommended?' · курс рекомендован':''} · ${trendText(an.trend)}`:'Мало данных для оценки';
+    return `<details class="shm-topic"><summary><div class="shm-title"><b>${esc(topic||'Без темы')}</b><span>${statText(st)} · ${status}</span></div>${side(an.avgRecent!==null?`<span class="pill ${analysisClass(an)}">${an.avgRecent}%</span>`:'')}</summary><div class="shm-topic-body">${rows.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(a=>attemptRow(a,login,managerLogin)).join('')}</div></details>`;
   }
   function autoSection(sec,rows,login,managerLogin){
     const map=new Map();
     rows.forEach(a=>{const t=String(a.topic||'Без темы').trim()||'Без темы';if(!map.has(t))map.set(t,[]);map.get(t).push(a)});
     const topics=[...map.entries()].sort((a,b)=>a[0].localeCompare(b[0],'ru'));
     const st=stats(rows);
-    return `<details class="shm-section"><summary><div class="shm-title"><b>${esc(sectionLabel(sec))}</b><span>${statText(st)}</span></div>${side()}</summary><div class="shm-body">${topics.map(([t,r])=>topicBlock(t,r,login,managerLogin)).join('')}</div></details>`;
+    return `<details class="shm-section"><summary><div class="shm-title"><b>${esc(sectionLabel(sec))}</b><span>${statText(st)}</span></div>${side()}</summary><div class="shm-body">${topics.map(([t,r])=>topicBlock(sec,t,r,login,managerLogin)).join('')}</div></details>`;
   }
 
   function latestManual(login){
@@ -105,7 +122,7 @@
     const auto=sectionOrder.filter(s=>bySec.has(s)).map(s=>autoSection(s,bySec.get(s),login,managerLogin)).join('')+[...bySec.entries()].filter(([s])=>!sectionOrder.includes(s)).map(([s,r])=>autoSection(s,r,login,managerLogin)).join('');
     const back=managerLogin?`<button class="btn secondary sh815-back-btn" onclick="openManagerDashboard('${jsq(managerLogin)}')">← К группе</button>`:'';
     const token='shmAi'+Date.now()+Math.random().toString(36).slice(2,7);
-    showModal(`<div class="modal-head shm-head"><div><div class="sh815-modal-nav">${back}</div><h2>${esc(u?.name||login)}</h2><div class="meta">${esc(login)} · карточка сотрудника</div></div><div class="actions"><button class="btn secondary" onclick="openMentorExport('', '${jsq(login)}')">⬇ Excel</button><button class="btn secondary" onclick="closeModal()">✕</button></div></div><div class="shm-intro"><b>Результаты и развитие</b><span>Все направления собраны в отдельные блоки. Откройте нужный раздел или тему.</span></div><div class="shm-groups">${recommendationSection(login)}${auto||'<div class="shm-empty">Автоматических тренировок пока нет.</div>'}${manualSection(login)}<details class="shm-section"><summary><div class="shm-title"><b>ИИ-тренажёр Soft</b><span id="${token}-meta">загрузка результатов…</span></div>${side()}</summary><div id="${token}-body" class="shm-body"><div class="shm-empty">Загружаю завершённые ИИ-диалоги…</div></div></details></div>`);
+    showModal(`<div class="modal-head shm-head"><div><div class="sh815-modal-nav">${back}</div><h2>${esc(u?.name||login)}</h2><div class="meta">${esc(login)} · карточка сотрудника</div></div><div class="actions"><button class="btn secondary" onclick="openMentorExport('', '${jsq(login)}')">⬇ Excel</button><button class="btn secondary" onclick="closeModal()">✕</button></div></div><div class="shm-intro"><b>Результаты и развитие</b><span>Курс рекомендуем после минимум 2 попыток, если средний результат последних 3 по теме ниже 70%.</span></div><div class="shm-groups">${recommendationSection(login)}${auto||'<div class="shm-empty">Автоматических тренировок пока нет.</div>'}${manualSection(login)}<details class="shm-section"><summary><div class="shm-title"><b>ИИ-тренажёр Soft</b><span id="${token}-meta">загрузка результатов…</span></div>${side()}</summary><div id="${token}-body" class="shm-body"><div class="shm-empty">Загружаю завершённые ИИ-диалоги…</div></div></details></div>`);
     loadAi(login,token);
   };
 
@@ -118,8 +135,8 @@
       .shm-body{padding:10px;display:grid;gap:9px}.shm-topic-body{display:grid}.shm-empty{padding:14px;color:var(--muted);text-align:center}.shm-attempt{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}.shm-attempt:last-child{border-bottom:0}.shm-attempt-main{min-width:0;display:grid;gap:2px}.shm-attempt-main>b{font-size:13px}.shm-mini{padding:7px 10px!important}.shm-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
       .shm-rec{padding:12px;border:1px solid var(--line);border-radius:12px;display:grid;gap:7px}.shm-rec-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}.shm-rec-copy>div{display:grid;gap:3px}.shm-rec-copy b{font-size:15px}.shm-kicker{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.shm-rec-action{display:flex;justify-content:flex-end}.shm-rec-btn{min-width:150px}
       .shm-manual,.shm-ai{padding:12px;display:grid;gap:10px}.shm-ai-summary{line-height:1.45}.shm-ai-note{padding:10px 11px;border:1px solid var(--line);border-radius:11px}.shm-ai-note p{margin:5px 0 0;line-height:1.42}.shm-ai-note ul{margin:6px 0 0;padding-left:18px}.shm-chat{display:grid;gap:7px}.shm-msg{padding:9px 10px;border:1px solid var(--line);border-radius:10px}.shm-msg b{font-size:12px;color:var(--muted)}.shm-msg div{margin-top:3px;line-height:1.4}.shm-msg.employee{margin-left:22px}.shm-msg.client{margin-right:22px}
-      @media(max-width:620px){.shm-head{align-items:flex-start}.shm-section>summary{padding:14px}.shm-topic>summary{gap:7px}.shm-side>.pill{font-size:11px;max-width:115px;white-space:normal;text-align:center}.shm-chevron{font-size:21px}.shm-attempt{grid-template-columns:minmax(0,1fr) auto}.shm-attempt-action{grid-column:1/-1}.shm-mini{width:100%}.shm-rec{padding:11px}.shm-rec-action{justify-content:stretch}.shm-rec-btn{width:100%}.shm-msg.employee{margin-left:7px}.shm-msg.client{margin-right:7px}}
+      @media(max-width:620px){.shm-head{align-items:flex-start}.shm-section>summary{padding:14px}.shm-topic>summary{gap:7px}.shm-side>.pill{font-size:11px;max-width:135px;white-space:normal;text-align:center}.shm-chevron{font-size:21px}.shm-attempt{grid-template-columns:minmax(0,1fr) auto}.shm-attempt-action{grid-column:1/-1}.shm-mini{width:100%}.shm-rec{padding:11px}.shm-rec-action{justify-content:stretch}.shm-rec-btn{width:100%}.shm-msg.employee{margin-left:7px}.shm-msg.client{margin-right:7px}}
     `;document.head.appendChild(s);
   }
-  console.info('SkillHub: manager employee card layout + recommendations enabled');
+  console.info('SkillHub: manager employee card percentage recommendations enabled');
 })();
