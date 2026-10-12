@@ -36,13 +36,11 @@
 
 /* Load one stable runtime and one atomic release controller. */
 (function(){
-  /* app-v844 keeps S as a global lexical binding; expose the same object to
-     runtime modules so every module reads one shared state, not a copy. */
   try{if(typeof S!=='undefined'&&!window.S)window.S=S}catch(_){}
 
   if(!document.querySelector('script[data-sh-runtime-stability]')){
     const s=document.createElement('script');
-    s.src='./hotfix-runtime-stability-v2-20261012.js?v=20261012_1';
+    s.src='./hotfix-runtime-stability-v3-20261012.js?v=20261012_1';
     s.dataset.shRuntimeStability='1';
     document.head.appendChild(s);
   }
