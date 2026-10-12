@@ -34,11 +34,11 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load the final runtime stability layer and one atomic release controller. */
+/* Load one stable runtime and one atomic release controller. */
 (function(){
   if(!document.querySelector('script[data-sh-runtime-stability]')){
     const s=document.createElement('script');
-    s.src='./hotfix-runtime-stability-20261012.js?v=20261012_1';
+    s.src='./hotfix-runtime-stability-v2-20261012.js?v=20261012_1';
     s.dataset.shRuntimeStability='1';
     document.head.appendChild(s);
   }
