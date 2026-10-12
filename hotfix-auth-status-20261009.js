@@ -34,7 +34,7 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load one final runtime layer for critical pages and realtime. */
+/* Load the final runtime stability layer and one atomic release controller. */
 (function(){
   if(!document.querySelector('script[data-sh-runtime-stability]')){
     const s=document.createElement('script');
@@ -42,10 +42,10 @@
     s.dataset.shRuntimeStability='1';
     document.head.appendChild(s);
   }
-  if(!document.querySelector('script[data-sh-fast-release]')){
+  if(!document.querySelector('script[data-sh-release-core]')){
     const r=document.createElement('script');
-    r.src='./hotfix-release-fast-check-20261012.js?v=20261012_1';
-    r.dataset.shFastRelease='1';
+    r.src='./hotfix-release-core-20261012.js?v=20261012_1';
+    r.dataset.shReleaseCore='1';
     document.head.appendChild(r);
   }
 })();
