@@ -1,4 +1,4 @@
-const CACHE='skillhub-20261009-speed-v1';
+const CACHE='skillhub-20261012-ai-fix-v1';
 const SHELL=[
   './',
   './index.html',
