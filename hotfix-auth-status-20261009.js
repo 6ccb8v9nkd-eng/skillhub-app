@@ -34,12 +34,18 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load one final runtime layer for critical pages and realtime.
-   It replaces the temporary RG-only recovery loader. */
+/* Load one final runtime layer for critical pages and realtime. */
 (function(){
-  if(document.querySelector('script[data-sh-runtime-stability]'))return;
-  const s=document.createElement('script');
-  s.src='./hotfix-runtime-stability-20261012.js?v=20261012_1';
-  s.dataset.shRuntimeStability='1';
-  document.head.appendChild(s);
+  if(!document.querySelector('script[data-sh-runtime-stability]')){
+    const s=document.createElement('script');
+    s.src='./hotfix-runtime-stability-20261012.js?v=20261012_1';
+    s.dataset.shRuntimeStability='1';
+    document.head.appendChild(s);
+  }
+  if(!document.querySelector('script[data-sh-fast-release]')){
+    const r=document.createElement('script');
+    r.src='./hotfix-release-fast-check-20261012.js?v=20261012_1';
+    r.dataset.shFastRelease='1';
+    document.head.appendChild(r);
+  }
 })();
