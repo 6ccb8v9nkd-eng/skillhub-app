@@ -34,7 +34,7 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load one stable runtime and one atomic release controller. */
+/* Load stable runtime, manager terminology and atomic release controller. */
 (function(){
   try{if(typeof S!=='undefined'&&!window.S)window.S=S}catch(_){}
 
@@ -43,6 +43,12 @@
     s.src='./hotfix-runtime-stability-v3-20261012.js?v=20261012_1';
     s.dataset.shRuntimeStability='1';
     document.head.appendChild(s);
+  }
+  if(!document.querySelector('script[data-sh-training-terminology]')){
+    const t=document.createElement('script');
+    t.src='./hotfix-training-terminology-20261012.js?v=20261012_1';
+    t.dataset.shTrainingTerminology='1';
+    document.head.appendChild(t);
   }
   if(!document.querySelector('script[data-sh-release-core]')){
     const r=document.createElement('script');
