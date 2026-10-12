@@ -12,12 +12,13 @@
 
   const KEY='sh_app_release_version';
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const state=()=>{try{return S}catch(_){return null}};
   const pageVersion=()=>String(new URL(location.href).searchParams.get('appv')||localStorage.getItem(KEY)||'').trim();
   let applying=false,pending='',releaseChannel=null,dbStarted=false;
 
   function safeToReload(){
     try{
-      const p=String(window.S?.currentPage||'');
+      const p=String(state()?.currentPage||'');
       if(p==='run')return false;
       if(document.querySelector('.sh-ai-soft-wrap,.sh-ai-dialog,.monthly-runner,.sh-monthly-runner'))return false;
       const active=document.activeElement;
@@ -118,7 +119,7 @@
 
   function startDbReleaseChannel(){
     if(dbStarted)return;
-    const sb=window.S?.sb;
+    const sb=state()?.sb;
     if(!sb)return;
     dbStarted=true;
     try{
@@ -154,7 +155,7 @@
   /* DB realtime is primary; polling is only a fallback if realtime is unavailable. */
   setTimeout(()=>{startDbReleaseChannel();checkManifest()},800);
   setInterval(()=>{startDbReleaseChannel();checkManifest()},30000);
-  const waitForSb=setInterval(()=>{if(window.S?.sb){clearInterval(waitForSb);startDbReleaseChannel()}},250);
+  const waitForSb=setInterval(()=>{if(state()?.sb){clearInterval(waitForSb);startDbReleaseChannel()}},250);
 
   console.info('SkillHub: atomic realtime release core enabled');
 })();
