@@ -33,3 +33,13 @@
   setTimeout(()=>{wrapEmployees();applyEmployeeAuthStatuses()},500);
   console.info('SkillHub: RG authorization statuses enabled');
 })();
+
+/* Load the final stable RG dashboard renderer after legacy manager wrappers.
+   This is UI-only and does not touch monthly assessment logic or data. */
+(function(){
+  if(document.querySelector('script[data-sh-rg-dashboard-recovery]'))return;
+  const s=document.createElement('script');
+  s.src='./hotfix-rg-dashboard-recovery-20261012.js?v=20261012_1';
+  s.dataset.shRgDashboardRecovery='1';
+  document.head.appendChild(s);
+})();
