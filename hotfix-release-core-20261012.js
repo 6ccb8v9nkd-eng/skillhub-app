@@ -1,6 +1,6 @@
 /* SkillHub release core — 2026-10-12
    Atomic, realtime-assisted application releases.
-   Keeps the current working build alive until the next index is fully published.
+   Keeps the current working build alive until the next release is fully published.
 */
 (function(){
   'use strict';
@@ -11,9 +11,8 @@
   window.__shAutoReleaseRefresh=true;
 
   const KEY='sh_app_release_version';
-  const META='meta[name="skillhub-release"]';
-  const currentFromPage=()=>String(document.querySelector(META)?.content||'').trim();
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const pageVersion=()=>String(new URL(location.href).searchParams.get('appv')||localStorage.getItem(KEY)||'').trim();
   let applying=false,pending='',releaseChannel=null,dbStarted=false;
 
   function safeToReload(){
@@ -27,23 +26,31 @@
     return true;
   }
 
-  async function fetchVersion(){
+  async function fetchJson(path){
     try{
-      const r=await fetch('./app-version.json?t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)return'';
-      const j=await r.json();
-      return String(j?.version||'').trim();
-    }catch(_){return''}
+      const r=await fetch(path+(path.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return null;
+      return await r.json();
+    }catch(_){return null}
   }
 
-  async function indexReady(version){
+  async function fetchVersion(){
+    const j=await fetchJson('./app-version.json');
+    return String(j?.version||'').trim();
+  }
+
+  async function releaseReady(version){
+    const ready=await fetchJson('./release-ready.json');
+    if(String(ready?.version||'').trim()!==version)return false;
+    const assets=Array.isArray(ready?.assets)?ready.assets:[];
+    if(!assets.length)return false;
     try{
-      const r=await fetch('./index.html?release_check='+encodeURIComponent(version)+'&t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)return false;
-      const html=await r.text();
-      const escaped=version.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      return new RegExp('<meta\\s+name=["\\\']skillhub-release["\\\']\\s+content=["\\\']'+escaped+'["\\\']','i').test(html)
-        || new RegExp('<meta\\s+content=["\\\']'+escaped+'["\\\']\\s+name=["\\\']skillhub-release["\\\']','i').test(html);
+      const checks=await Promise.all(assets.map(async path=>{
+        const sep=String(path).includes('?')?'&':'?';
+        const r=await fetch(String(path)+sep+'release_check='+encodeURIComponent(version)+'&t='+Date.now(),{cache:'no-store'});
+        return !!r.ok;
+      }));
+      return checks.every(Boolean);
     }catch(_){return false}
   }
 
@@ -65,18 +72,17 @@
   async function applyRelease(version){
     version=String(version||'').trim();
     if(!version||applying)return;
-    const page=currentFromPage();
-    if(page===version){localStorage.setItem(KEY,version);pending='';return}
+    if(pageVersion()===version){localStorage.setItem(KEY,version);pending='';return}
     pending=version;
     if(!safeToReload())return;
     applying=true;
     try{
-      /* Never switch to a half-published release. Keep old build alive until both
-         version marker and index marker agree. */
+      /* The ready marker is published only after every release asset is in place.
+         If publication/CDN propagation is incomplete, keep the current build alive. */
       let ready=false;
-      for(let i=0;i<20;i++){
-        const [manifest,indexOk]=await Promise.all([fetchVersion(),indexReady(version)]);
-        if(manifest===version&&indexOk){ready=true;break}
+      for(let i=0;i<24;i++){
+        const [manifest,assetsOk]=await Promise.all([fetchVersion(),releaseReady(version)]);
+        if(manifest===version&&assetsOk){ready=true;break}
         await sleep(750);
       }
       if(!ready){
@@ -101,8 +107,13 @@
   async function checkManifest(){
     if(!navigator.onLine||applying)return;
     const version=await fetchVersion();
-    if(version&&version!==currentFromPage())applyRelease(version);
-    else if(version)localStorage.setItem(KEY,version);
+    if(!version)return;
+    const current=pageVersion();
+    /* A brand-new browser has already fetched the current index, so establish
+       its baseline without forcing a pointless second reload. */
+    if(!current){localStorage.setItem(KEY,version);return}
+    if(version!==current)applyRelease(version);
+    else localStorage.setItem(KEY,version);
   }
 
   function startDbReleaseChannel(){
@@ -119,7 +130,7 @@
         .subscribe(status=>{
           if(status==='SUBSCRIBED'){
             sb.from('app_release_state').select('version').eq('id',1).maybeSingle()
-              .then(({data})=>{const v=String(data?.version||'').trim();if(v)applyRelease(v)})
+              .then(({data})=>{const v=String(data?.version||'').trim();if(v&&v!==pageVersion())applyRelease(v)})
               .catch(()=>{});
           }
           if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
@@ -140,7 +151,7 @@
   window.addEventListener('focus',()=>{startDbReleaseChannel();if(pending)applyRelease(pending);else checkManifest()});
   window.addEventListener('online',()=>{startDbReleaseChannel();if(pending)applyRelease(pending);else checkManifest()});
 
-  /* DB realtime is primary; a slow manifest poll is only a safety net. */
+  /* DB realtime is primary; polling is only a fallback if realtime is unavailable. */
   setTimeout(()=>{startDbReleaseChannel();checkManifest()},800);
   setInterval(()=>{startDbReleaseChannel();checkManifest()},30000);
   const waitForSb=setInterval(()=>{if(window.S?.sb){clearInterval(waitForSb);startDbReleaseChannel()}},250);
