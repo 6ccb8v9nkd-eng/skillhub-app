@@ -16,10 +16,16 @@
   async function inject(login){
     if(!canView()||!login)return;
     try{
-      const {data,error}=await S.sb.from('soft_ai_sessions').select('id,login,created_at,completed_at,scenario,transcript,review').eq('login',login).order('completed_at',{ascending:false}).limit(20);
+      const {data,error}=await S.sb.from('soft_ai_sessions')
+        .select('id,login,created_at,completed_at,scenario,transcript,review')
+        .eq('login',login)
+        .not('completed_at','is',null)
+        .not('review','is',null)
+        .order('completed_at',{ascending:false})
+        .limit(20);
       if(error||!data?.length)return;
       const card=$('modalCard');if(!card||card.querySelector('.sh-rg-ai-section'))return;
-      const el=document.createElement('div');el.className='sh-rg-ai-section';el.innerHTML=`<div class="sh74-section-head"><h2>ИИ-диалоги Soft</h2><span class="meta">${data.length} последних прохождений</span></div><div class="sh-rg-ai-list">${data.map(item).join('')}</div>`;card.appendChild(el);
+      const el=document.createElement('div');el.className='sh-rg-ai-section';el.innerHTML=`<div class="sh74-section-head"><h2>ИИ-диалоги Soft</h2><span class="meta">${data.length} последних завершённых прохождений</span></div><div class="sh-rg-ai-list">${data.map(item).join('')}</div>`;card.appendChild(el);
     }catch(e){console.warn('SkillHub: AI dialogue results unavailable',e)}
   }
   window.openUserAttempts=function(login){const r=baseOpen.apply(this,arguments);setTimeout(()=>inject(login),30);return r};
