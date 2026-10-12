@@ -13,7 +13,14 @@ const usage=(a,b)=>({input:Number(a?.input||0)+Number(b?.input||0),output:Number
 
 async function invoke(body){
   if(!canUse())throw new Error('ИИ-тренажёр недоступен для этой роли');
-  const {data,error}=await S.sb.functions.invoke('soft-ai',{body});
+  let timer,res;
+  try{
+    res=await Promise.race([
+      S.sb.functions.invoke('soft-ai',{body}),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('ИИ отвечает слишком долго. Попробуйте ещё раз.')),20000)})
+    ]);
+  }finally{if(timer)clearTimeout(timer)}
+  const {data,error}=res||{};
   if(error){let d=null;try{if(error.context&&typeof error.context.json==='function')d=await error.context.json()}catch(_){}const e=new Error(d?.error||error.message||'Ошибка ИИ');e.code=d?.code||'';throw e}
   if(data?.error){const e=new Error(data.error);e.code=data.code||'';throw e}
   return data;
@@ -36,7 +43,14 @@ window.shAiSoftIntro=async function(){
 
 window.shAiSoftStart=async function(){
   if(busy)return;busy=true;const b=byId('shAiStartBtn');if(b){b.disabled=true;b.textContent='Создаём кейс…'};
-  try{const d=await invoke({action:'start'});run={scenario:d.scenario||{},minTurns:Number(d.minTurns||4),maxTurns:Number(d.maxTurns||6),maxChars:Number(d.maxChars||600),sessionMinutes:Number(d.sessionMinutes||20),startedAt:Date.now(),transcript:[{role:'client',content:d.message||''}],usage:usage(null,d.usage),finished:false};closeModal();if(typeof go==='function')go('run');render()}
+  try{
+    const d=await invoke({action:'start'});
+    run={scenario:d.scenario||{},minTurns:Number(d.minTurns||4),maxTurns:Number(d.maxTurns||6),maxChars:Number(d.maxChars||600),sessionMinutes:Number(d.sessionMinutes||20),startedAt:Date.now(),transcript:[{role:'client',content:d.message||''}],usage:usage(null,d.usage),finished:false};
+    busy=false;
+    closeModal();
+    if(typeof go==='function')go('run');
+    render();
+  }
   catch(e){toast(e.message||'Не удалось создать кейс');if(b){b.disabled=false;b.textContent='Получить новый кейс'}}finally{busy=false}
 };
 
