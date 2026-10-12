@@ -2,7 +2,8 @@
    The final knowledge assessment is rebuilt in hotfix-monthly-sharipova-clean-v2.js.
    This compatibility file loads result clarity, the employee Progress archive,
    the dedicated "Моя итоговая проверка" card, the no-flash Home classifier,
-   the employee-only 7-day training history window, and the Home gate release.
+   the employee-only 7-day training history window, the Home gate release,
+   and browser auth-session recovery.
 */
 (function(){
   if(!document.querySelector('script[data-sh-monthly-results-clarity]')){
@@ -34,5 +35,11 @@
     h.src='./hotfix-progress-history-7d-20261010.js?v=20261010_history1';
     h.dataset.shProgressHistory7d='1';
     document.head.appendChild(h);
+  }
+  if(!document.querySelector('script[data-sh-auth-recovery]')){
+    const a=document.createElement('script');
+    a.src='./hotfix-auth-recovery-20261012.js?v=20261012_auth1';
+    a.dataset.shAuthRecovery='1';
+    document.head.appendChild(a);
   }
 })();
