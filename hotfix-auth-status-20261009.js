@@ -57,12 +57,21 @@
     document.head.appendChild(r);
   }
 
+  function loadAssignmentRecipients(){
+    if(document.querySelector('script[data-sh-assignment-recipients]'))return;
+    const p=document.createElement('script');
+    p.src='./hotfix-assignment-recipients-20261013.js?v=20261013_1';
+    p.dataset.shAssignmentRecipients='1';
+    document.head.appendChild(p);
+  }
+
   /* Assignment UI must be the final manager override, after legacy parser scripts. */
   function loadAssignmentCompose(){
-    if(document.querySelector('script[data-sh-assignment-compose]'))return;
+    if(document.querySelector('script[data-sh-assignment-compose]')){loadAssignmentRecipients();return}
     const a=document.createElement('script');
     a.src='./hotfix-assignment-compose-20261013.js?v=20261013_1';
     a.dataset.shAssignmentCompose='1';
+    a.addEventListener('load',loadAssignmentRecipients,{once:true});
     document.head.appendChild(a);
   }
   if(document.readyState==='complete')setTimeout(loadAssignmentCompose,0);
