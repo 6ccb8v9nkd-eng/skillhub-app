@@ -1,4 +1,4 @@
-/* SkillHub manager wording: use "training" instead of "course" — 2026-10-12 */
+/* SkillHub manager wording — 2026-10-13 */
 (function(){
   'use strict';
   if(window.__shTrainingTerminology)return;
@@ -13,10 +13,15 @@
     ['Нет тем, по которым требуется назначение курса. Курс рекомендуется только после минимум 2 попыток, если средний результат последних 3 ниже 70%.','Нет тем, по которым требуется назначение тренировки. Тренировка рекомендуется только после минимум 2 попыток, если средний результат последних 3 ниже 70%.'],
     ['курс рекомендован','тренировка рекомендована']
   ];
+  const negativeLabels={
+    'снижен':'Негатив снижен',
+    'частично снижен':'Негатив частично снижен',
+    'усилен':'Негатив усилился'
+  };
 
   function rewrite(root){
     const scopes=[];
-    if(root?.nodeType===1 && (root.matches?.('.shm-recs,.shm-topic,.shm-groups')||root.closest?.('.shm-groups')))scopes.push(root);
+    if(root?.nodeType===1 && (root.matches?.('.shm-recs,.shm-topic,.shm-groups')||root.closest?.('.shm-groups,.shm-topic')))scopes.push(root);
     if(root?.querySelectorAll)scopes.push(...root.querySelectorAll('.shm-recs,.shm-topic,.shm-groups'));
     const seen=new Set();
     for(const scope of scopes){
@@ -25,7 +30,13 @@
       let n;
       while((n=walker.nextNode())){
         let text=n.nodeValue||'',next=text;
-        for(const [from,to] of replacements)next=next.split(from).join(to);
+        const trimmed=text.trim().toLowerCase();
+        if(negativeLabels[trimmed]){
+          const lead=text.match(/^\s*/)?.[0]||'',trail=text.match(/\s*$/)?.[0]||'';
+          next=lead+negativeLabels[trimmed]+trail;
+        }else{
+          for(const [from,to] of replacements)next=next.split(from).join(to);
+        }
         if(next!==text)n.nodeValue=next;
       }
     }
@@ -39,5 +50,5 @@
   });
   observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
   rewrite(document);
-  console.info('SkillHub: manager training terminology enabled');
+  console.info('SkillHub: training terminology and AI result labels enabled');
 })();
