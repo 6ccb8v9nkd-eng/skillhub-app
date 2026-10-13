@@ -34,7 +34,7 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load stable runtime, manager terminology and atomic release controller. */
+/* Load stable runtime, wording and atomic release controller. */
 (function(){
   try{if(typeof S!=='undefined'&&!window.S)window.S=S}catch(_){}
 
@@ -46,7 +46,7 @@
   }
   if(!document.querySelector('script[data-sh-training-terminology]')){
     const t=document.createElement('script');
-    t.src='./hotfix-training-terminology-20261012.js?v=20261012_1';
+    t.src='./hotfix-training-terminology-20261012.js?v=20261013_1';
     t.dataset.shTrainingTerminology='1';
     document.head.appendChild(t);
   }
@@ -56,4 +56,15 @@
     r.dataset.shReleaseCore='1';
     document.head.appendChild(r);
   }
+
+  /* Assignment UI must be the final manager override, after legacy parser scripts. */
+  function loadAssignmentCompose(){
+    if(document.querySelector('script[data-sh-assignment-compose]'))return;
+    const a=document.createElement('script');
+    a.src='./hotfix-assignment-compose-20261013.js?v=20261013_1';
+    a.dataset.shAssignmentCompose='1';
+    document.head.appendChild(a);
+  }
+  if(document.readyState==='complete')setTimeout(loadAssignmentCompose,0);
+  else window.addEventListener('load',loadAssignmentCompose,{once:true});
 })();
