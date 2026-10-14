@@ -56,6 +56,12 @@
     r.dataset.shReleaseCore='1';
     document.head.appendChild(r);
   }
+  if(!document.querySelector('script[data-sh-rg-top-actions]')){
+    const c=document.createElement('script');
+    c.src='./hotfix-rg-top-actions-20261014.js?v=20261014_1';
+    c.dataset.shRgTopActions='1';
+    document.head.appendChild(c);
+  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
