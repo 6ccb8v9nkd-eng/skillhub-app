@@ -80,6 +80,12 @@
     m.dataset.shMonthlyManualIntegrity='1';
     document.head.appendChild(m);
   }
+  if(!document.querySelector('script[data-sh-monthly-assignment-stable]')){
+    const ms=document.createElement('script');
+    ms.src='./hotfix-monthly-assignment-stable-20261015.js?v=20261015_4';
+    ms.dataset.shMonthlyAssignmentStable='1';
+    document.head.appendChild(ms);
+  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
