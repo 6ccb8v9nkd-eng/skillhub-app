@@ -86,12 +86,6 @@
     ms.dataset.shMonthlyAssignmentStable='1';
     document.head.appendChild(ms);
   }
-  if(!document.querySelector('script[data-sh-instant-assignments]')){
-    const ia=document.createElement('script');
-    ia.src='./hotfix-instant-assignments-20261015.js?v=20261015_1';
-    ia.dataset.shInstantAssignments='1';
-    document.head.appendChild(ia);
-  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
