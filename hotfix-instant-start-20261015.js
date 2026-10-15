@@ -1,6 +1,8 @@
-/* SkillHub instant startup — 2026-10-15
-   Show the last good local snapshot immediately, then refresh from Supabase in background.
-   No business rules or stored cloud data are changed.
+/* SkillHub instant startup + quiet background sync — 2026-10-15
+   - paints the last good local snapshot immediately;
+   - keeps one authoritative cloud refresh on login/manual refresh;
+   - suppresses the legacy full-database 60s refresh loop while realtime is active.
+   No business rules or cloud records are changed.
 */
 (function(){
   'use strict';
@@ -9,11 +11,17 @@
 
   const base=window.syncAll;
   if(typeof base!=='function')return;
+  const AUTO_REFRESH_MS=10*60*1000;
   let hydratedFor='';
+  let cloudLogin='';
+  let lastCloudSync=0;
+  let inFlight=null;
 
   function ownNotifications(rows,login){return (Array.isArray(rows)?rows:[]).filter(x=>String(x?.login||'')===login)}
+  function currentLogin(){return String(window.S?.profile?.login||'')}
+
   function hydrate(){
-    const login=String(window.S?.profile?.login||'');
+    const login=currentLogin();
     if(!login||hydratedFor===login)return false;
     hydratedFor=login;
     let cached=null;
@@ -35,9 +43,28 @@
     }catch(e){console.warn('SkillHub instant cache skipped',e);return false}
   }
 
+  function runCloud(manual,args,ctx){
+    const login=currentLogin();
+    if(login!==cloudLogin){cloudLogin=login;lastCloudSync=0;inFlight=null}
+    if(inFlight)return inFlight;
+    const now=Date.now();
+    if(!manual&&lastCloudSync&&now-lastCloudSync<AUTO_REFRESH_MS)return Promise.resolve(true);
+    lastCloudSync=now;
+    try{
+      const result=base.apply(ctx,args);
+      inFlight=Promise.resolve(result).then(v=>{
+        if(v===false)lastCloudSync=0;
+        return v;
+      },e=>{lastCloudSync=0;throw e}).finally(()=>{inFlight=null});
+      return inFlight;
+    }catch(e){lastCloudSync=0;inFlight=null;throw e}
+  }
+
   window.syncAll=function(manual=false){
     if(manual!==true)hydrate();
-    return base.apply(this,arguments);
+    return runCloud(manual===true,arguments,this);
   };
-  console.info('SkillHub: instant cached startup enabled');
+
+  window.addEventListener('offline',()=>{lastCloudSync=0});
+  console.info('SkillHub: instant cached startup + quiet background sync enabled');
 })();
