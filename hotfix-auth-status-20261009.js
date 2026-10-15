@@ -74,6 +74,12 @@
     d.dataset.shMonthlyExpandedResults='1';
     document.head.appendChild(d);
   }
+  if(!document.querySelector('script[data-sh-monthly-manual-integrity]')){
+    const m=document.createElement('script');
+    m.src='./hotfix-monthly-manual-integrity-20261015.js?v=20261015_1';
+    m.dataset.shMonthlyManualIntegrity='1';
+    document.head.appendChild(m);
+  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
