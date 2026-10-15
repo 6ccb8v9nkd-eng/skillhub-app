@@ -6,6 +6,7 @@ const SHELL=[
   './app-v844.js?v=20261005_restore_live_v1',
   './hotfix-sync-20261005.js?v=3',
   './hotfix-speed-20261009.js?v=1',
+  './hotfix-instant-start-20261015.js?v=20261015_1',
   './manifest.webmanifest?v=20260930_v844',
   './icon-192-v718.png',
   './icon-512-v718.png',
@@ -20,7 +21,6 @@ const SHELL=[
   './knowledge/rendered/handbook-dark/page-001.webp'
 ];
 
-/* A single missing optional asset must never block a new service worker install. */
 self.addEventListener('install',e=>{
   self.skipWaiting();
   e.waitUntil((async()=>{
@@ -38,36 +38,60 @@ self.addEventListener('activate',e=>e.waitUntil(
     .then(()=>self.clients.claim())
 ));
 
+async function networkFirst(request){
+  try{
+    const r=await fetch(request,{cache:'no-store'});
+    if(r&&r.ok){const c=await caches.open(CACHE);c.put(request,r.clone()).catch(()=>{})}
+    return r;
+  }catch(_){
+    const cached=await caches.match(request);
+    if(cached)return cached;
+    if(request.mode==='navigate')return (await caches.match('./index.html'))||Response.error();
+    return Response.error();
+  }
+}
+
+async function versionedStatic(request){
+  const cached=await caches.match(request);
+  if(cached){
+    fetch(request,{cache:'no-store'}).then(async r=>{
+      if(r&&r.ok){const c=await caches.open(CACHE);await c.put(request,r.clone())}
+    }).catch(()=>{});
+    return cached;
+  }
+  const r=await fetch(request,{cache:'no-store'});
+  if(r&&r.ok){const c=await caches.open(CACHE);c.put(request,r.clone()).catch(()=>{})}
+  return r;
+}
+
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
   const u=new URL(e.request.url);
   if(u.hostname.includes('supabase.co'))return;
-
   const sameOrigin=u.origin===self.location.origin;
-  const fresh=sameOrigin&&(
+  if(!sameOrigin)return;
+
+  const controlPlane=
     e.request.mode==='navigate'||
     u.pathname.endsWith('/')||
     u.pathname.endsWith('/index.html')||
-    u.pathname.endsWith('.js')||
-    u.pathname.endsWith('.css')||
     u.pathname.endsWith('app-version.json')||
-    u.pathname.endsWith('release-ready.json')
-  );
+    u.pathname.endsWith('release-ready.json')||
+    u.pathname.endsWith('/sw.js');
 
-  e.respondWith(
-    fetch(e.request,{cache:fresh?'no-store':'default'})
-      .then(r=>{
-        if(r&&r.ok){
-          const copy=r.clone();
-          caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{});
-        }
-        return r;
-      })
-      .catch(async()=>{
-        const cached=await caches.match(e.request);
-        if(cached)return cached;
-        if(e.request.mode==='navigate')return (await caches.match('./index.html'))||Response.error();
-        return Response.error();
-      })
-  );
+  const isStatic=/\.(?:js|css|webp|png|svg|ico|woff2?)$/i.test(u.pathname);
+  const hasVersion=u.searchParams.has('v');
+
+  if(controlPlane){e.respondWith(networkFirst(e.request));return}
+  if(isStatic&&hasVersion){e.respondWith(versionedStatic(e.request));return}
+
+  e.respondWith((async()=>{
+    const cached=await caches.match(e.request);
+    if(cached)return cached;
+    try{
+      const r=await fetch(e.request);
+      if(r&&r.ok){const c=await caches.open(CACHE);c.put(e.request,r.clone()).catch(()=>{})}
+      return r;
+    }catch(_){return Response.error()}
+  })());
 });
