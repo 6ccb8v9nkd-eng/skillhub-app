@@ -1,4 +1,4 @@
-const CACHE='skillhub-20261015-stable-ui-v2';
+const CACHE='skillhub-20261015-stable-ui-v3';
 const SHELL=[
   './',
   './index.html',
