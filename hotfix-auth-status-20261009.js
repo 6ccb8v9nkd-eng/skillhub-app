@@ -62,6 +62,12 @@
     c.dataset.shRgTopActions='1';
     document.head.appendChild(c);
   }
+  if(!document.querySelector('script[data-sh-monthly-ai-chat-ux]')){
+    const u=document.createElement('script');
+    u.src='./hotfix-monthly-ai-chat-ux-20261015.js?v=20261015_1';
+    u.dataset.shMonthlyAiChatUx='1';
+    document.head.appendChild(u);
+  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
