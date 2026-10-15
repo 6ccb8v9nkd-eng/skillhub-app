@@ -26,6 +26,7 @@
     const wrapped=function(){const r=base.apply(this,arguments);applyEmployeeAuthStatuses();return r};
     wrapped.__shAuthStatus=true;
     window.renderEmployees=wrapped;
+    try{renderEmployees=wrapped}catch(_){}
   }
 
   wrapEmployees();
@@ -34,10 +35,16 @@
   console.info('SkillHub: RG authorization statuses enabled');
 })();
 
-/* Load stable runtime, wording and atomic release controller. */
+/* Load stable runtime, wording, auth recovery and atomic release controller. */
 (function(){
   try{if(typeof S!=='undefined'&&!window.S)window.S=S}catch(_){}
 
+  if(!document.querySelector('script[data-sh-auth-recovery]')){
+    const ar=document.createElement('script');
+    ar.src='./hotfix-auth-recovery-20261012.js?v=20261015_1';
+    ar.dataset.shAuthRecovery='1';
+    document.head.appendChild(ar);
+  }
   if(!document.querySelector('script[data-sh-runtime-stability]')){
     const s=document.createElement('script');
     s.src='./hotfix-runtime-stability-v3-20261012.js?v=20261012_1';
@@ -144,4 +151,86 @@
   }
   if(document.readyState==='complete')setTimeout(loadAssignmentCompose,0);
   else window.addEventListener('load',loadAssignmentCompose,{once:true});
+})();
+
+/* Navigation/display integrity guard — navigation-triggered only, no polling or global observer. */
+(function(){
+  'use strict';
+  if(window.__shUiIntegrity20261015)return;
+  window.__shUiIntegrity20261015=true;
+  const RELEASE='2026.10.15.11';
+  const managers=new Set(['mentor','rs','tech_admin']);
+  const normal={home:'renderHome',training:'renderTraining',progress:'renderProgress',notifications:'renderNotifications',mentor:'renderMentor',content:'renderContent',employees:'renderEmployees',admin:'renderTechAdmin'};
+
+  function role(){try{return String(S?.profile?.role||'')}catch(_){return''}}
+  function pageRoot(name){return document.getElementById('page-'+name)}
+  function visible(name){const r=pageRoot(name);return !!r&&!r.classList.contains('hidden')}
+  function hasContent(name){const r=pageRoot(name);return !!r&&(r.childElementCount>0||String(r.textContent||'').trim().length>0)}
+  function call(name){
+    try{
+      if(name==='assignments'&&managers.has(role())){
+        window.shEnsureStableAssignments?.();
+        if(typeof window.renderAssignments==='function'&&window.renderAssignments.__shStableAssignments===true)window.renderAssignments();
+        return;
+      }
+      if(name==='knowledge'){
+        if(typeof window.sh842RenderKnowledge==='function')window.sh842RenderKnowledge();
+        else if(typeof window.renderKnowledge==='function')window.renderKnowledge();
+        return;
+      }
+      const fn=window[normal[name]];
+      if(typeof fn==='function')fn();
+    }catch(e){console.error('SkillHub UI recovery failed for '+name,e)}
+  }
+  function verify(name){
+    if(!visible(name))return;
+    if(name==='assignments'&&managers.has(role()))window.shEnsureStableAssignments?.();
+    if(hasContent(name))return;
+    call(name);
+    requestAnimationFrame(()=>{
+      if(visible(name)&&!hasContent(name)){
+        console.error('SkillHub UI integrity: section stayed empty',name);
+        const r=pageRoot(name);
+        if(r)r.innerHTML='<div class="card"><b>Раздел не отрисовался</b><div class="meta">Обновите данные один раз. Ошибка уже зафиксирована в консоли.</div></div>';
+      }
+    });
+  }
+
+  try{
+    const base=window.go;
+    if(typeof base==='function'&&!base.__shUiIntegrity){
+      const wrapped=function(name){
+        const r=base.apply(this,arguments);
+        queueMicrotask(()=>verify(String(name||'')));
+        return r;
+      };
+      wrapped.__shUiIntegrity=true;
+      window.go=wrapped;
+      try{go=wrapped}catch(_){}
+    }
+  }catch(e){console.warn('SkillHub UI integrity navigation wrapper skipped',e)}
+
+  function setVersion(){
+    const labels=[...document.querySelectorAll('#modalCard .sh74-profile-meta small')];
+    const label=labels.find(x=>String(x.textContent||'').trim()==='Текущая версия');
+    const value=label?.parentElement?.querySelector('b');
+    if(value)value.textContent=RELEASE;
+  }
+  try{
+    const baseProfile=window.showProfileEditor;
+    if(typeof baseProfile==='function'&&!baseProfile.__shCurrentVersion){
+      const wrapped=function(){const r=baseProfile.apply(this,arguments);setVersion();return r};
+      wrapped.__shCurrentVersion=true;
+      window.showProfileEditor=wrapped;
+      try{showProfileEditor=wrapped}catch(_){}
+    }
+  }catch(e){console.warn('SkillHub profile version patch skipped',e)}
+
+  window.shUiHealthCheck=function(){
+    const names=['home','training','knowledge','progress','notifications','mentor','content','assignments','employees','admin'];
+    return names.map(name=>({name,dom:!!pageRoot(name),hasContent:hasContent(name),visible:visible(name),renderer:name==='knowledge'?(typeof window.sh842RenderKnowledge==='function'||typeof window.renderKnowledge==='function'):name==='assignments'?typeof window.renderAssignments==='function':typeof window[normal[name]]==='function'}));
+  };
+
+  if(document.getElementById('page-'+String(S?.currentPage||'')))queueMicrotask(()=>verify(String(S.currentPage||'')));
+  console.info('SkillHub: navigation/display integrity guard enabled');
 })();
