@@ -102,12 +102,16 @@
     if(!isManagerReady())return false;
     const ready=typeof window.renderAssignments==='function'&&window.renderAssignments.__shStableAssignments===true;
     if(ready)return true;
-    const old=document.querySelector('script[data-sh-instant-assignments]');
-    if(old)old.remove();
+    const existing=document.querySelector('script[data-sh-instant-assignments]');
+    if(existing)return true;
     window.__shAssignmentsStable20261015=false;
     const ia=document.createElement('script');
     ia.src='./hotfix-instant-assignments-20261015.js?v=20261015_2';
     ia.dataset.shInstantAssignments='1';
+    ia.addEventListener('error',()=>{
+      ia.remove();
+      console.error('SkillHub: stable Assignments controller failed to load');
+    },{once:true});
     document.head.appendChild(ia);
     return true;
   }
@@ -158,7 +162,7 @@
   'use strict';
   if(window.__shUiIntegrity20261015)return;
   window.__shUiIntegrity20261015=true;
-  const RELEASE='2026.10.15.11';
+  const RELEASE='2026.10.15.12';
   const managers=new Set(['mentor','rs','tech_admin']);
   const normal={home:'renderHome',training:'renderTraining',progress:'renderProgress',notifications:'renderNotifications',mentor:'renderMentor',content:'renderContent',employees:'renderEmployees',admin:'renderTechAdmin'};
 
