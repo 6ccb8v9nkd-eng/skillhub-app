@@ -68,6 +68,12 @@
     u.dataset.shMonthlyAiChatUx='1';
     document.head.appendChild(u);
   }
+  if(!document.querySelector('script[data-sh-monthly-expanded-results]')){
+    const d=document.createElement('script');
+    d.src='./hotfix-monthly-results-expanded-20261015.js?v=20261015_1';
+    d.dataset.shMonthlyExpandedResults='1';
+    document.head.appendChild(d);
+  }
 
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
