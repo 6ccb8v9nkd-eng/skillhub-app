@@ -87,6 +87,44 @@
     document.head.appendChild(ms);
   }
 
+  function isManagerReady(){
+    try{return ['mentor','rs','tech_admin'].includes(String(S?.profile?.role||''))}catch(_){return false}
+  }
+
+  function loadStableAssignments(){
+    if(!isManagerReady())return false;
+    const ready=typeof window.renderAssignments==='function'&&window.renderAssignments.__shStableAssignments===true;
+    if(ready)return true;
+    const old=document.querySelector('script[data-sh-instant-assignments]');
+    if(old)old.remove();
+    window.__shAssignmentsStable20261015=false;
+    const ia=document.createElement('script');
+    ia.src='./hotfix-instant-assignments-20261015.js?v=20261015_2';
+    ia.dataset.shInstantAssignments='1';
+    document.head.appendChild(ia);
+    return true;
+  }
+  window.shEnsureStableAssignments=loadStableAssignments;
+
+  try{
+    if(typeof window.enterApp==='function'&&!window.enterApp.__shAssignmentsBootstrap){
+      const baseEnter=window.enterApp;
+      const wrappedEnter=function(){
+        const r=baseEnter.apply(this,arguments);
+        queueMicrotask(loadStableAssignments);
+        setTimeout(loadStableAssignments,150);
+        return r;
+      };
+      wrappedEnter.__shAssignmentsBootstrap=true;
+      window.enterApp=wrappedEnter;
+      try{enterApp=wrappedEnter}catch(_){}
+    }
+  }catch(_){}
+  setTimeout(loadStableAssignments,0);
+  setTimeout(loadStableAssignments,400);
+  setTimeout(loadStableAssignments,1200);
+  setTimeout(loadStableAssignments,2500);
+
   function loadAssignmentRecipients(){
     if(document.querySelector('script[data-sh-assignment-recipients]'))return;
     const p=document.createElement('script');
