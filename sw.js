@@ -1,4 +1,4 @@
-const CACHE='skillhub-20261012-live-core-v1';
+const CACHE='skillhub-20261015-stable-ui-v2';
 const SHELL=[
   './',
   './index.html',
@@ -7,6 +7,7 @@ const SHELL=[
   './hotfix-sync-20261005.js?v=3',
   './hotfix-speed-20261009.js?v=1',
   './hotfix-instant-start-20261015.js?v=20261015_1',
+  './hotfix-instant-assignments-20261015.js?v=20261015_1',
   './manifest.webmanifest?v=20260930_v844',
   './icon-192-v718.png',
   './icon-512-v718.png',
