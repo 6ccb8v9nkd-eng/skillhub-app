@@ -11,6 +11,15 @@
   const uniq=a=>[...new Set((a||[]).map(x=>String(x||'').trim().toLowerCase()).filter(Boolean))];
   const toast=m=>{try{window.toast?.(m)}catch(_){}};
 
+  // UI only: keep the top "Назначить проверку" action and "Результаты",
+  // but hide the redundant per-check "Назначить ещё" button.
+  if(!document.getElementById('sh-hide-monthly-assign-again')){
+    const style=document.createElement('style');
+    style.id='sh-hide-monthly-assign-again';
+    style.textContent='.shmc-manager-row .shmc-row-actions > button:nth-child(2){display:none!important}';
+    document.head.appendChild(style);
+  }
+
   function dueIso(date,time='23:59'){
     return new Date(`${date}T${time}:00+03:00`).toISOString();
   }
