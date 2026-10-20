@@ -77,7 +77,7 @@
   }
   if(!document.querySelector('script[data-sh-monthly-expanded-results]')){
     const d=document.createElement('script');
-    d.src='./hotfix-monthly-results-expanded-20261015.js?v=20261015_2';
+    d.src='./hotfix-monthly-results-expanded-20261015.js?v=20261020_sort_table1';
     d.dataset.shMonthlyExpandedResults='1';
     document.head.appendChild(d);
   }
