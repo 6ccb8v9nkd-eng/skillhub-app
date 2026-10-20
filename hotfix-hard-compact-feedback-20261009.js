@@ -63,6 +63,17 @@
     });
   }
 
+  // Correct Hard answers need a concise rationale, not a wall of alternatives.
+  // Wrong answers keep the full comparison for learning.
+  function trimAlternativesOnCorrect(root){
+    root.querySelectorAll('.sh831-review-step.is-good').forEach(step=>{
+      step.querySelectorAll('.sh837-hard-wrong-grid').forEach(el=>el.remove());
+      step.querySelectorAll('.sh837-hard-subtitle').forEach(el=>{
+        if(/почему.*(?:остальные|другие).*вариант/i.test(norm(el.textContent).toLowerCase()))el.remove();
+      });
+    });
+  }
+
   function collapseSteps(root){
     root.querySelectorAll('.sh831-review-step').forEach(step=>{
       if(step.dataset.shCompactStep==='1')return;
@@ -118,6 +129,7 @@
     if(!root||!hardRun())return;
     root.classList.add('sh-hard-compact-page');
     removeShortResult(root);
+    trimAlternativesOnCorrect(root);
     addAlternativeTexts(root);
     collapseSteps(root);
     collapseWholeReview(root);
