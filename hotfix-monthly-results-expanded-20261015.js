@@ -60,6 +60,40 @@
 
   const catTitle=(p,id)=>arr(p?.categories).find(x=>String(x.id)===String(id))?.title||String(id??'—');
   const same=(a,b)=>String(a??'')===String(b??'');
+  // Display-only reconstruction of the employee's original category placement.
+  // It does not modify answers, task definitions or grading.
+  function sortCardTableHtml(p,a){
+    const cards=arr(p.cards),places=arr(a.placements),categories=arr(p.categories);
+    if(!cards.length||!categories.length)return '<div class="muted">Нет карточек для отображения</div>';
+    const cols=categories.map(c=>({id:String(c.id),title:String(c.title||c.id),items:[]}));
+    const outside=[];let correct=0,answered=0;
+    cards.forEach((card,i)=>{
+      const selected=places[i],has=selected!==null&&selected!==undefined&&String(selected).trim()!=='';
+      if(has)answered++;
+      const right=String(card.category??''),ok=has&&same(selected,right);if(ok)correct++;
+      const entry={text:String(card.text||card.id||'Карточка '+(i+1)),right:catTitle(p,right),ok};
+      const col=cols.find(c=>same(c.id,selected));
+      if(col)col.items.push(entry);else outside.push(entry);
+    });
+    const cardHtml=x=>'<div class="shmrx-sort-card '+(x.ok?'good':'bad')+'">'+
+      '<div class="shmrx-sort-card-title">'+esc(x.text)+'</div>'+
+      '<div class="shmrx-sort-card-status">'+(x.ok?'✓ Верно':'✕ Ошибка')+'</div>'+
+      (x.ok?'':'<div class="shmrx-sort-card-right">Правильно: '+esc(x.right)+'</div>')+'</div>';
+    const head='<thead><tr>'+cols.map(c=>'<th scope="col">'+esc(c.title)+'</th>').join('')+'</tr></thead>';
+    const count=Math.max(0,...cols.map(c=>c.items.length));
+    let rows='';
+    for(let i=0;i<count;i++){
+      rows+='<tr>'+cols.map(c=>'<td>'+(c.items[i]?cardHtml(c.items[i]):'')+'</td>').join('')+'</tr>';
+    }
+    const label=answered===cards.length?'':'; не распределено: '+(cards.length-answered);
+    let html='<div class="shmrx-sort-summary"><b>Распределение сотрудника</b><span>✓ '+correct+' из '+cards.length+' верно'+label+'</span></div>'+
+      '<div class="shmrx-sort-scroll" role="region" aria-label="Распределение карточек по категориям" tabindex="0">'+
+      '<table class="shmrx-sort-table '+(cols.length>2?'shmrx-sort-multi':'')+'"><caption>Ответ сотрудника по категориям</caption>'+head+'<tbody>'+rows+'</tbody></table></div>';
+    if(outside.length)html+='<div class="shmrx-sort-unplaced"><b>Без категории</b>'+outside.map(cardHtml).join('')+'</div>';
+    if(p.note)html+='<div class="shmrx-hard-explain"><b>Пояснение к заданию</b><p>'+esc(p.note)+'</p></div>';
+    return html;
+  }
+
   function hardAnswerHtml(item,a){
     if(!a)return'';
     const p=item?.snapshot?.payload||{},mode=p.mode||'';
@@ -75,8 +109,7 @@
       body=rows.map(r=>`<div class="shmrx-hard-step ${Number(r.your)===Number(r.right)?'good':'bad'}"><b>${esc(r.label)}</b><div><span>Ответ сотрудника: <strong>${esc(r.your??'—')} ${esc(r.unit)}</strong></span><span>Правильный: <strong>${esc(r.right??'—')} ${esc(r.unit)}</strong></span></div></div>`).join('');
       const ex=p.step2?.explanation||p.step1?.explanation||p.explanation;if(ex)body+=`<div class="shmrx-hard-explain"><b>Разбор</b><p>${esc(ex)}</p></div>`;
     }else if(mode==='sort_cards'){
-      const placements=arr(a.placements),cards=arr(p.cards);
-      body=`<div class="shmrx-hard-list">${cards.map((c,i)=>{const your=placements[i],right=c.category,ok=same(your,right);return `<div class="shmrx-hard-row ${ok?'good':'bad'}"><div><b>${esc(c.text||c.id||`Карточка ${i+1}`)}</b><small>${ok?'✓ Верно':'✕ Ошибка'}</small></div><div><span>Ответ сотрудника: <strong>${esc(catTitle(p,your))}</strong></span><span>Правильный: <strong>${esc(catTitle(p,right))}</strong></span></div></div>`}).join('')}</div>${p.note?`<div class="shmrx-hard-explain"><b>Подсказка по правилу</b><p>${esc(p.note)}</p></div>`:''}`;
+      body=sortCardTableHtml(p,a);
     }else{
       body=`<div class="shmrx-hard-explain"><b>Ответ сотрудника</b><p>${esc(JSON.stringify(a))}</p></div>`;
     }
@@ -116,6 +149,21 @@
       .shmrx-scenario,.shmrx-manual-answer,.shmrx-note,.shmrx-negative,.shmrx-hard-explain{border:1px solid var(--line);border-radius:11px;padding:10px;background:var(--panel2);margin-top:8px}.shmrx-scenario:first-child,.shmrx-manual-answer:first-child{margin-top:0}.shmrx-scenario b,.shmrx-manual-answer b,.shmrx-note b,.shmrx-negative b,.shmrx-hard-explain>b{display:block;font-size:11px}.shmrx-scenario p,.shmrx-manual-answer p,.shmrx-note p,.shmrx-hard-explain p{margin:5px 0 0;white-space:pre-wrap;line-height:1.5}.shmrx-negative{display:flex;align-items:center;justify-content:space-between;gap:10px}.shmrx-negative span{font-size:12px;font-weight:850}
       .shmrx-chat{display:grid;gap:8px;margin-top:9px}.shmrx-chat>div{max-width:82%;border:1px solid var(--line);border-radius:13px;padding:9px 11px}.shmrx-chat>div.client{justify-self:start;background:var(--panel2)}.shmrx-chat>div.employee{justify-self:end;background:color-mix(in srgb,var(--primary) 8%,var(--panel))}.shmrx-chat small{display:block;color:var(--muted);font-size:10px}.shmrx-chat p{margin:4px 0 0;white-space:pre-wrap;line-height:1.45}
       .shmrx-hard-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}.shmrx-hard-pair>div,.shmrx-hard-step,.shmrx-hard-row{border:1px solid var(--line);border-radius:11px;padding:10px;background:var(--panel2)}.shmrx-hard-pair small,.shmrx-hard-row small{display:block;color:var(--muted);margin-bottom:4px}.shmrx-hard-pair.good>div,.shmrx-hard-step.good,.shmrx-hard-row.good{border-color:color-mix(in srgb,#39a96b 55%,var(--line));background:color-mix(in srgb,#39a96b 8%,var(--panel2))}.shmrx-hard-pair.bad>div,.shmrx-hard-step.bad,.shmrx-hard-row.bad{border-color:color-mix(in srgb,#d65c5c 55%,var(--line));background:color-mix(in srgb,#d65c5c 7%,var(--panel2))}.shmrx-hard-step{margin-bottom:8px}.shmrx-hard-step>div,.shmrx-hard-row>div:last-child{display:grid;gap:4px;margin-top:6px}.shmrx-hard-step span,.shmrx-hard-row span{font-size:12px}.shmrx-hard-list{display:grid;gap:8px}.shmrx-hard-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.8fr);gap:12px}.shmrx-hard-row>div:first-child{min-width:0}
+      /* Only in the manager's completed Hard Skills result details. */
+      .shmrx-sort-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+      .shmrx-sort-summary b{font-size:13px}.shmrx-sort-summary span{font-size:12px;font-weight:800;color:var(--muted)}
+      .shmrx-sort-scroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      .shmrx-results .shmrx-sort-table{width:100%;min-width:500px;table-layout:fixed;border-collapse:separate;border-spacing:8px 7px}
+      .shmrx-results .shmrx-sort-table.shmrx-sort-multi{min-width:690px}
+      .shmrx-sort-table caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+      .shmrx-sort-table th{padding:12px 9px!important;border:1px solid var(--line)!important;border-radius:10px;text-align:center!important;background:var(--panel2);font-weight:850;line-height:1.35}
+      .shmrx-sort-table td{padding:0!important;border:0!important;vertical-align:top!important;overflow-wrap:anywhere}
+      .shmrx-sort-card{min-height:64px;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);line-height:1.4;overflow-wrap:anywhere}
+      .shmrx-sort-card-title{font-size:12px;font-weight:750}.shmrx-sort-card-status{font-size:11px;font-weight:850;margin-top:6px}
+      .shmrx-sort-card-right{font-size:11px;margin-top:6px;opacity:.9;font-weight:650}
+      .shmrx-sort-card.good{border-color:color-mix(in srgb,#39a96b 60%,var(--line));background:color-mix(in srgb,#39a96b 10%,var(--panel2))}
+      .shmrx-sort-card.bad{border-color:color-mix(in srgb,#d65c5c 60%,var(--line));background:color-mix(in srgb,#d65c5c 10%,var(--panel2))}
+      .shmrx-sort-unplaced{display:grid;gap:7px;margin-top:9px}.shmrx-sort-unplaced>b{font-size:12px}
       @media(max-width:720px){.shmrx-expand>summary{align-items:flex-start;flex-wrap:wrap}.shmrx-expand>summary small{margin-left:0}.shmrx-chat>div{max-width:94%}.shmrx-negative,.shmrx-hard-pair,.shmrx-hard-row{display:grid;grid-template-columns:1fr}}
     `;document.head.appendChild(s)
   }
