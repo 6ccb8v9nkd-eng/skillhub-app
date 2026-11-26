@@ -636,7 +636,7 @@ function arcadeSave(id,n){try{var b=JSON.parse(localStorage.getItem(storeKey())|
 function arcadeRun(id){
  cleanup();
  var g=games.find(x=>x.id===id);if(!g)return;
- var rounds=id==='multichat'?chatCases.flatMap(c=>c.turns.map(t=>({q:t.q,options:t.a,ok:t.ok,why:'В ответе важно помочь с вопросом и не давать непроверенных обещаний.',client:c.name}))):arcadeCases[id];
+ var rounds=id==='multichat'?Array.from({length:2},(_,turn)=>chatCases.map(c=>({q:c.turns[turn].q,options:c.turns[turn].a,ok:c.turns[turn].ok,why:'В ответе важно помочь с вопросом и не давать непроверенных обещаний.',client:c.name}))).flat():arcadeCases[id];
  if(!rounds||!rounds.length)return;
  var current=0,points=0,correct=0,streak=0,bestStreak=0,speed=0,trust=48,answering=false,remaining=12,endAt=0,stopped=false,resetRound=null;
  var heading={detective:'Охота за уликами',negative:'Победи недовольство',multichat:'Чат-спринт',voice:'Разминка с Алексеем'}[id];
