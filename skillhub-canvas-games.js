@@ -126,15 +126,26 @@ function start(opts){
  function steer(l){runnerLane=clamp(l,0,2)}
  function updateControls(){
   var el=root.querySelector('#shcgControls');
-  if(mode==='tennis'){
-   el.innerHTML='<div class="shcg-answers">'+tennisCases[current].a.map((x,i)=>'<button type="button" class="shcg-answer'+(aim===i?' active':'')+'" data-aim="'+i+'"><b>'+String(i+1)+'. '+x+'</b><small>'+(i===aim?'✓ Выбрано':'Выбрать ответ')+'</small></button>').join('')+'</div><div class="shcg-steer"><button type="button" data-step="-1" aria-label="Передвинуть ракетку влево">←</button><button type="button" data-step="1" aria-label="Передвинуть ракетку вправо">→</button></div>';
-   el.querySelectorAll('[data-aim]').forEach(b=>b.onclick=()=>{if(!playing||paused||roundDelay>0||ball.flying)return;aim=Number(b.dataset.aim);updateControls()});
-   el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(!playing||paused)return;position=clamp(position+Number(b.dataset.step)*90,110,990)});
-   root.querySelector('#shcgHint').textContent='Управление: ← → или мышь/палец · Цель: ответ + удар';
-  }else{
+  if(mode==='tennis'||mode==='football'){
+   var choiceCases=tennisCases;
+   el.innerHTML='<div class="shcg-answers">'+choiceCases[Math.min(current,5)].a.map((x,i)=>'<button type="button" class="shcg-answer'+(aim===i?' active':'')+'" data-aim="'+i+'"><b>'+String(i+1)+'. '+x+'</b><small>'+(i===aim?'✓ Выбрано':'Выбрать ответ')+'</small></button>').join('')+'</div>'+
+    (mode==='tennis'?'<div class="shcg-steer"><button type="button" data-step="-1" aria-label="Передвинуть ракетку влево">←</button><button type="button" data-step="1" aria-label="Передвинуть ракетку вправо">→</button></div>':'<button type="button" class="shcg-shot" id="shcgKick">⚽ УДАР!</button>');
+   el.querySelectorAll('[data-aim]').forEach(b=>b.onclick=()=>{if(!playing||paused||roundDelay>0||kick.active||kickDelay>0||ball.flying)return;aim=Number(b.dataset.aim);updateControls()});
+   if(mode==='tennis'){
+    el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(!playing||paused)return;position=clamp(position+Number(b.dataset.step)*90,110,990)});
+    root.querySelector('#shcgHint').textContent='Выбери ответ (1–3), затем отбей мяч мышью, пальцем или стрелками';
+   }else{
+    el.querySelector('#shcgKick').onclick=shoot;
+    root.querySelector('#shcgHint').textContent='Выбери ответ (1–3), поймай силу удара в зелёной зоне и нажми «УДАР!» / пробел';
+   }
+  }else if(mode==='runner'){
    el.innerHTML='<div class="shcg-mission"><small>СОБИРАЙ ТОЛЬКО</small><span id="shcgTarget">'+kinds[mission].label+'</span></div><div class="shcg-steer"><button data-run="-1" aria-label="Сменить полосу влево">←</button><button data-run="1" aria-label="Сменить полосу вправо">→</button></div><div class="shcg-alert">Дорожки переключаются также клавишами A/D или касанием экрана.</div>';
    el.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>steer(runnerLane+Number(b.dataset.run)));
    root.querySelector('#shcgHint').textContent='Собери 12 верных операций · Ошибки отнимают жизни';
+  }else{
+   el.innerHTML='<div class="shcg-answers">'+departments.map((x,i)=>'<button type="button" class="shcg-answer" data-department="'+i+'"><b>'+String(i+1)+'. '+x.label+'</b><small>'+x.sub+'</small></button>').join('')+'</div>';
+   el.querySelectorAll('[data-department]').forEach(b=>b.onclick=()=>dispatchChoose(Number(b.dataset.department)));
+   root.querySelector('#shcgHint').textContent='Перетяни карточку к отделу или нажми 1, 2, 3 · Успей распределить 12 обращений';
   }
  }
  function fillBg(){
