@@ -233,19 +233,83 @@ function shdArtifact(step,i){
 function detective(step,total){
  step=step||0;total=total||0;
  if(step>=cases.length)return finish('detective',Math.round(total*2/cases.length),'Расследование завершено','Результат учитывает верность выводов и изученные улики.');
- var r=cases[step],seen=new Set(),solved=false;
+ var r=cases[step],seen=new Set(),pinned=new Set(),solved=false,current=0;
  var descriptors=step===0?[
- ['doc','blue','Банковский документ'],['service','gold','Данные об услуге'],['timeline','green','Журнал обработки'],['message','purple','Уведомления клиента']
- ]:step===1?[['payment','gold','Платёжное поручение'],['doc','blue','Банковский документ'],['service','green','Сверка данных'],['message','purple','Переписка']]:[['doc','blue','Банковский документ'],['timeline','green','История операций'],['service','gold','Данные об услуге'],['message','purple','Уведомления и чат']];
- var html='<div class="shd-dossier"><div class="shd-case-label">'+shdIcon('folder',15)+' Досье № '+String(step+1).padStart(2,'0')+' · в работе</div><h3>'+esc(r.title)+'</h3><div class="shd-client"><span class="shd-avatar">'+shdIcon('person',19)+'</span><div><small>Обращение клиента</small><p>'+esc(r.client)+'</p></div></div></div><div class="shd-section"><strong>Материалы дела</strong><span id="shdCount">0 из 4 изучено</span></div><div class="shd-progress"><i id="shdProgress"></i></div><div class="shd-files">'+r.evidence.map((x,i)=>{var d=descriptors[i];return '<article class="shd-file" data-tone="'+d[1]+'"><button class="shd-file-head" type="button" data-evidence="'+i+'" aria-expanded="false" aria-controls="shdBody'+i+'"><span class="shd-file-icon">'+shdIcon(d[0])+'</span><span class="shd-file-copy"><strong>'+esc(x[0])+'</strong><small>'+esc(d[2])+' · Улика '+(i+1)+'</small></span><span class="shd-file-status"><span class="shd-seen"></span><span class="shd-chevron">›</span></span></button><div class="shd-file-body" id="shdBody'+i+'" hidden>'+shdArtifact(step,i)+'</div></article>'}).join('')+'</div><p class="shd-note">Все данные вымышлены. Изучи не менее двух материалов, чтобы собрать версию.</p><button class="shg-continue shd-solve" id="solve" disabled>Собрать версию · 0/4</button><div class="shd-verdict" hidden><div class="shd-section"><strong>Твоя версия</strong></div><div class="shg-options"></div></div><div class="shg-feedback-slot"></div>';
+  ['doc','blue','Выписка по счёту'],['service','gold','Подключённая услуга'],['timeline','green','История операций'],['message','purple','Уведомления']
+ ]:step===1?[
+  ['payment','gold','Платёж'],['doc','blue','Движение денег'],['service','green','Сверка реквизитов'],['message','purple','Обращение']
+ ]:step===2?[
+  ['doc','blue','Выписка'],['timeline','green','История обработки'],['service','gold','Карточка операции'],['message','purple','Обращение']
+ ]:[
+  ['doc','blue','Выписка'],['timeline','green','История начисления'],['service','gold','Карточка пакета'],['message','purple','Уведомление']
+ ];
+ var questions=[
+  'Найди причину изменения остатка и выясни, была ли ошибка.',
+  'Определи, исполнен ли платёж и что безопасно предложить клиенту.',
+  'Выясни, сколько денег списалось окончательно.',
+  'Установи основание комиссии и проверь повторные списания.'
+ ];
+ var hints=[
+  'Сопоставь назначение операции с датой и условиями подключения услуги.',
+  'Сначала проверь статус платежа, затем итоговое движение средств.',
+  'Отличай временный резерв от окончательно исполненного списания.',
+  'Посмотри условия пакета, даты периодов и число начислений.'
+ ];
+ var html='<header class="shd-dossier shd-hero"><div class="shd-hero-top"><span class="shd-case-label">'+shdIcon('folder',16)+' ДЕЛО № '+String(step+1).padStart(2,'0')+'</span><span class="shd-hero-count">Расследование '+(step+1)+' / '+cases.length+'</span></div><h3>'+esc(r.title)+'</h3><p class="shd-mission">'+esc(questions[step])+'</p><div class="shd-client"><span class="shd-avatar">'+shdIcon('person',19)+'</span><div><small>Сообщение клиента</small><p>'+esc(r.client)+'</p></div></div></header>'+
+  '<div class="shd-workspace"><aside class="shd-sidebar"><div class="shd-side-title"><div><small>АРХИВ РАССЛЕДОВАНИЯ</small><h4>Улики и документы</h4></div><span id="shdCount">0 / 4</span></div><div class="shd-progress" role="progressbar" aria-label="Изученные материалы" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><i id="shdProgress"></i></div><div class="shd-files">'+
+  r.evidence.map((x,i)=>{var d=descriptors[i];return '<button type="button" class="shd-evidence" data-tone="'+d[1]+'" data-evidence="'+i+'" aria-pressed="false"><span class="shd-file-icon">'+shdIcon(d[0],23)+'</span><span class="shd-file-copy"><small>Улика '+String(i+1).padStart(2,'0')+'</small><strong>'+esc(x[0])+'</strong><span class="shd-file-kind">'+esc(d[2])+'</span></span><span class="shd-tick" aria-hidden="true">○</span></button>'}).join('')+
+  '</div><div class="shd-hint"><div class="shd-hint-title">'+shdIcon('folder',17)+' Нужен ориентир?</div><button type="button" id="shdHint" aria-expanded="false">Показать подсказку</button><p id="shdHintText" hidden>'+esc(hints[step])+'</p></div></aside>'+
+  '<section class="shd-stage" aria-label="Просмотр материалов"><div class="shd-stage-top"><div><span class="shd-stage-kicker">РАБОЧИЙ СТОЛ ДЕТЕКТИВА</span><h4 id="shdDocTitle">Документ</h4></div><span id="shdOpened" class="shd-page-number">01 / 04</span></div><div id="shdDocument" class="shd-document" role="region" aria-live="polite"></div><div class="shd-actions"><button type="button" id="shdPrev">← Назад</button><button type="button" id="shdPin" class="shd-pin" aria-pressed="false">＋ В блокнот</button><button type="button" id="shdNext">Дальше →</button></div><div class="shd-notebook"><div class="shd-notebook-head"><strong>Блокнот расследования</strong><span id="shdPinCount">0 улик</span></div><div id="shdNotes" class="shd-notes-empty">Сохрани важные находки из документов, чтобы сопоставить факты.</div></div></section></div>'+
+  '<div class="shd-verdict-cta"><div><strong>Готов собрать версию?</strong><p>Открой хотя бы два документа. Чем больше фактов проверишь, тем точнее вывод.</p></div><button class="shg-continue shd-solve" id="solve" disabled>Проверить гипотезу · 0/4</button></div>'+
+  '<div class="shd-verdict" hidden><div class="shd-verdict-top"><span class="shd-case-label">ФИНАЛ ДЕЛА</span><h4>Что произошло на самом деле?</h4><p>Выбери заключение на основе изученных материалов.</p></div><div class="shg-options"></div></div><div class="shg-feedback-slot"></div>';
  var p=shell('detective','Дело '+(step+1)+' из '+cases.length,html);
  var panel=p.querySelector('.shg-panel');if(panel)panel.classList.add('shg-detective');
+ var view=p.querySelector('.shg-view');if(view)view.classList.add('shd-wide-view');
  var solve=p.querySelector('#solve'),count=p.querySelector('#shdCount'),progress=p.querySelector('#shdProgress'),verdict=p.querySelector('.shd-verdict');
- p.querySelectorAll('[data-evidence]').forEach(b=>b.onclick=()=>{
-  var file=b.closest('.shd-file'),t=file.querySelector('.shd-file-body');t.hidden=!t.hidden;b.setAttribute('aria-expanded',String(!t.hidden));
-  if(!t.hidden&&!solved){seen.add(b.dataset.evidence);file.classList.add('seen');b.querySelector('.shd-seen').textContent='✓';count.textContent=seen.size+' из 4 изучено';progress.style.width=(seen.size/4*100)+'%';solve.disabled=seen.size<2;solve.textContent='Собрать версию · '+seen.size+'/4'}
- });
- solve.onclick=()=>{if(seen.size<2||solved)return;solve.hidden=true;verdict.hidden=false;choices(p,r.answers,i=>{if(solved)return;solved=true;var ok=i===r.ok,points=(ok?40:0)+(seen.size/4)*10;var selected=[...verdict.querySelectorAll('button')].find(b=>b.textContent.replace(/^\d+/,'').trim()===r.answers[i]);if(selected)selected.classList.add(ok?'chosen-ok':'chosen-bad');feedback(p,ok,(ok?'Дело раскрыто. ':'Версия не подтвердилась. ')+r.why,()=>detective(step+1,total+points),step+1===cases.length?'Результат':'Следующее дело')});verdict.querySelectorAll('.shg-option').forEach((b,i)=>{var num=document.createElement('span');num.className='shd-version-num';num.textContent=String(i+1);b.prepend(num)});verdict.scrollIntoView({behavior:'smooth',block:'nearest'})};
+ var doc=p.querySelector('#shdDocument'),title=p.querySelector('#shdDocTitle'),page=p.querySelector('#shdOpened'),pinButton=p.querySelector('#shdPin');
+ function refreshNotebook(){
+  var notes=p.querySelector('#shdNotes');
+  p.querySelector('#shdPinCount').textContent=pinned.size+' '+(pinned.size===1?'улика':pinned.size<5?'улики':'улик');
+  notes.classList.toggle('shd-notes-empty',!pinned.size);
+  notes.innerHTML=pinned.size?[...pinned].sort((a,b)=>a-b).map(i=>'<div class="shd-note-item"><span>0'+(i+1)+'</span><div><b>'+esc(r.evidence[i][0])+'</b><p>'+esc(r.evidence[i][1])+'</p></div></div>').join(''):'Сохрани важные находки из документов, чтобы сопоставить факты.';
+  pinButton.textContent=pinned.has(current)?'✓ В блокноте':'＋ В блокнот';
+  pinButton.setAttribute('aria-pressed',String(pinned.has(current)));
+ }
+ function showEvidence(i,scroll){
+  current=Math.max(0,Math.min(r.evidence.length-1,i));seen.add(String(current));
+  doc.innerHTML='<div class="shd-document-label"><span>МАТЕРИАЛ № '+String(current+1).padStart(2,'0')+'</span><span>Учебное расследование</span></div>'+shdArtifact(step,current);
+  title.textContent=r.evidence[current][0];page.textContent=String(current+1).padStart(2,'0')+' / 04';
+  p.querySelectorAll('[data-evidence]').forEach(b=>{
+   var n=Number(b.dataset.evidence);
+   b.classList.toggle('active',n===current);b.classList.toggle('seen',seen.has(String(n)));
+   b.setAttribute('aria-pressed',String(n===current));b.querySelector('.shd-tick').textContent=seen.has(String(n))?'✓':'○';
+  });
+  count.textContent=seen.size+' / 4';progress.style.width=(seen.size/4*100)+'%';progress.parentNode.setAttribute('aria-valuenow',String(seen.size));
+  solve.disabled=seen.size<2||solved;solve.textContent='Проверить гипотезу · '+seen.size+'/4';
+  p.querySelector('#shdPrev').disabled=current===0;p.querySelector('#shdNext').disabled=current===3;refreshNotebook();
+  if(scroll&&window.innerWidth<800){
+   p.querySelector('.shd-stage').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  }
+ }
+ p.querySelectorAll('[data-evidence]').forEach(b=>b.onclick=()=>showEvidence(Number(b.dataset.evidence),true));
+ p.querySelector('#shdPrev').onclick=()=>showEvidence(current-1,false);
+ p.querySelector('#shdNext').onclick=()=>showEvidence(current+1,false);
+ pinButton.onclick=()=>{if(pinned.has(current))pinned.delete(current);else pinned.add(current);refreshNotebook()};
+ p.querySelector('#shdHint').onclick=function(){
+  var el=p.querySelector('#shdHintText'),willOpen=el.hidden;el.hidden=!willOpen;
+  this.textContent=willOpen?'Скрыть подсказку':'Показать подсказку';this.setAttribute('aria-expanded',String(willOpen));
+ };
+ solve.onclick=()=>{
+  if(seen.size<2||solved)return;solve.hidden=true;verdict.hidden=false;
+  choices(p,r.answers,i=>{
+   if(solved)return;solved=true;var ok=i===r.ok,points=(ok?40:0)+(seen.size/4)*10;
+   var selected=verdict.querySelector('[data-answer="'+i+'"]');if(selected)selected.classList.add(ok?'chosen-ok':'chosen-bad');
+   feedback(p,ok,(ok?'Дело раскрыто. ':'Версия не подтвердилась. ')+r.why,()=>detective(step+1,total+points),step+1===cases.length?'Результат':'Следующее дело');
+  });
+  verdict.querySelectorAll('.shg-option').forEach((b,i)=>{var num=document.createElement('span');num.className='shd-version-num';num.textContent=String(i+1);b.prepend(num)});
+  verdict.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+ };
+ showEvidence(0,false);
 }
 
 var bossNodes={
