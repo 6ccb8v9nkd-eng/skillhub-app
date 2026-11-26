@@ -92,7 +92,7 @@ function renderZone(){
   html+='<div class="shg-hero"><div class="shg-hero-icon">🎮</div><h1>Игровая зона</h1><p>Прокачивай рабочие навыки в коротких мини-играх. Листай карточки и выбирай свой вызов.</p><p id="shgInfo" hidden>Выбирай игру, проходи задания и улучшай личный результат.</p></div>';
   html+='<div class="shg-carousel" id="shgCarousel">';
   games.forEach(function(g){
-    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':'Играть ▶')+'</button><div class="shg-best">'+(b[g.id]!=null?'Лучший результат '+b[g.id]+'%':'')+'</div></article>';
+    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':'Играть ▶')+'</button><div class="shg-best">'+(b[g.id]!=null?(g.id==='voice'?'Самооценка ':'Лучший результат ')+b[g.id]+'%':'')+'</div></article>';
   });
   html+='</div><div class="shg-nav"><button data-prev aria-label="Предыдущая игра">‹</button><div class="shg-dots">'+games.map(function(g,i){return '<button data-dot="'+i+'" aria-label="'+esc(g.title)+'"><i class="'+(i===1?'on':'')+'"></i></button>'}).join('')+'</div><button data-next aria-label="Следующая игра">›</button></div></div>';
   p.innerHTML=html;
@@ -180,5 +180,6 @@ reveal.onclick=()=>{if(shown)return;shown=true;reveal.hidden=true;var review=p.q
 function play(id){cleanup();if(id==='negative')boss();else if(id==='detective')detective();else if(id==='multichat')multichat();else if(id==='voice')voice()}
 
 
+window.shGameCleanup=cleanup;window.addEventListener('pagehide',cleanup);
 openGameZone();if(window.parent!==window)window.parent.postMessage({type:'skillhub-games-ready'},location.origin);
 })();</script></body></html>
