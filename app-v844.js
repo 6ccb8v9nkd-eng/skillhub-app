@@ -942,13 +942,13 @@ editContent=function(id){const x=S.content.find(c=>c.id===id);if(!x)return;x.typ
 /* ===== end 7.1.9 ===== */
 
 /* ===== SkillHub 7.2.3 — external game: Master Line ===== */
-const MASTER_LINE_URL='https://masterlinii-game.website.yandexcloud.net/';
+const MASTER_LINE_URL='./skillhub-games.html?v=20261126_1';
 trainingCards=function(){
   return `<div class="sh750-training-grid">
     <article class="sh750-training-card sh750-soft"><div class="sh750-card-icon">${sh750TrainingIcon('soft')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">КОММУНИКАЦИЯ</span><h3>Soft Skills</h3><p>Диалоги, клиентский сервис и работа с формулировками.</p><button class="sh750-card-btn" onclick="openSoftHub()">Открыть →</button></div></article>
     <article class="sh750-training-card sh750-hard"><div class="sh750-card-icon">${sh750TrainingIcon('hard')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ЗНАНИЯ</span><h3>Hard Skills</h3><p>Продукты, процессы, процедуры и реальные клиентские ситуации.</p><button class="sh750-card-btn" onclick="openSection('hard')">Открыть →</button></div></article>
     <article class="sh750-training-card sh750-typing"><div class="sh750-card-icon">${sh750TrainingIcon('typing')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">СКОРОСТЬ</span><h3>Печать</h3><p>Тренировка скорости и точности набора на рабочих текстах.</p><button class="sh750-card-btn" onclick="startTyping()">Начать →</button></div></article>
-    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИНТЕРАКТИВ</span><h3>Игровой формат</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить →</a></div></article>
+    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИНТЕРАКТИВ</span><h3>Игровой формат</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" href="${MASTER_LINE_URL}">Запустить →</a></div></article>
   </div>`;
 };
 /* ===== end 7.2.3 ===== */
@@ -1094,7 +1094,7 @@ function renderTraining(){
     <article class="sh750-training-card sh750-soft"><div class="sh750-card-icon">${sh750TrainingIcon('soft')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">КОММУНИКАЦИЯ</span><h3>Soft Skills</h3><p>Диалоги, клиентский сервис и работа с формулировками.</p>${progressHtml(soft)}<button class="sh750-card-btn" onclick="openSoftHub()">Открыть →</button></div></article>
     <article class="sh750-training-card sh750-hard"><div class="sh750-card-icon">${sh750TrainingIcon('hard')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ЗНАНИЯ</span><h3>Hard Skills</h3><p>Продукты, процессы, процедуры и реальные клиентские ситуации.</p>${progressHtml(hard)}<button class="sh750-card-btn" onclick="openSection('hard')">Открыть →</button></div></article>
     <article class="sh750-training-card sh750-typing"><div class="sh750-card-icon">${sh750TrainingIcon('typing')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">СКОРОСТЬ</span><h3>Печать</h3><p>Тренировка скорости и точности набора на рабочих текстах.</p>${progressHtml(typing)}<button class="sh750-card-btn" onclick="startTyping()">Начать →</button></div></article>
-    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИНТЕРАКТИВ</span><h3>Игровой формат</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" target="_blank" rel="noopener noreferrer" href="${MASTER_LINE_URL}">Запустить →</a></div></article>
+    <article class="sh750-training-card sh750-game"><div class="sh750-card-icon">${sh750TrainingIcon('game')}</div><div class="sh750-card-copy"><span class="sh750-card-kicker">ИНТЕРАКТИВ</span><h3>Игровой формат</h3><p>Практика навыков в игровом формате.</p><a class="sh750-card-btn" href="${MASTER_LINE_URL}">Запустить →</a></div></article>
   </div>`;
 }
 
@@ -1294,7 +1294,7 @@ renderNotifications=function(){
 
 /* ===== SkillHub 7.4.8 — Home dual cards refined ===== */
 function sh748HomeCardsHtml(){
-  return `<div class="sh748-hero-shell"><div class="sh748-hero-head"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh748-hero-subtitle">Что выбираете сегодня?</div><p class="sh748-hero-text">Тренируйте навыки или попробуйте себя в игре.</p></div><div class="sh748-home-grid"><section class="sh748-card sh748-card-train"><div class="sh748-card-icon">${sh741SkillIcon('needs')}</div><div class="sh748-card-body"><h3>Потренироваться</h3><p><strong>Soft, Hard и Печать</strong><br>Три направления для регулярной практики.</p><button class="sh748-card-btn" onclick="go('training')">К тренировкам →</button></div><div class="sh748-card-note">Маленькие шаги — большие результаты!</div></section><section class="sh748-card sh748-card-game"><div class="sh748-card-icon sh748-card-icon-game"><img class="sh748-game-icon" src="./master-line-icon.png" alt="Мастер линии"></div><div class="sh748-card-body"><h3>Поиграть</h3><p><strong>Мастер линии</strong><br>Стань настоящим мастером линии.<br>Практика навыков в игровом формате.</p><a class="sh748-card-btn sh748-card-btn-dark" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Запустить игру →</a></div><div class="sh748-card-side">Учись.<br>Играй.<br>Расти!</div></section></div></div>`;
+  return `<div class="sh748-hero-shell"><div class="sh748-hero-head"><div class="sh74-hero-kicker">SkillHub</div><h2>Привет, ${esc(sh74Name())}! 👋</h2><div class="sh748-hero-subtitle">Что выбираете сегодня?</div><p class="sh748-hero-text">Тренируйте навыки или попробуйте себя в игре.</p></div><div class="sh748-home-grid"><section class="sh748-card sh748-card-train"><div class="sh748-card-icon">${sh741SkillIcon('needs')}</div><div class="sh748-card-body"><h3>Потренироваться</h3><p><strong>Soft, Hard и Печать</strong><br>Три направления для регулярной практики.</p><button class="sh748-card-btn" onclick="go('training')">К тренировкам →</button></div><div class="sh748-card-note">Маленькие шаги — большие результаты!</div></section><section class="sh748-card sh748-card-game"><div class="sh748-card-icon sh748-card-icon-game"><img class="sh748-game-icon" src="./master-line-icon.png" alt="Мастер линии"></div><div class="sh748-card-body"><h3>Поиграть</h3><p><strong>Мастер линии</strong><br>Стань настоящим мастером линии.<br>Практика навыков в игровом формате.</p><a class="sh748-card-btn sh748-card-btn-dark" href="${MASTER_LINE_URL}">Запустить игру →</a></div><div class="sh748-card-side">Учись.<br>Играй.<br>Расти!</div></section></div></div>`;
 }
 function sh748ApplyEmployeeHome(pageId){
   const page=$(pageId),hero=page?.querySelector('.sh74-hero');
@@ -1430,7 +1430,7 @@ function sh749ReferenceHomeHtml(){
           <div class="sh749-copy">
             <h3>Поиграть</h3>
             <p>Решай игровые задачи<br>и оттачивай навыки в деле.</p>
-            <a class="sh749-cta sh749-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Начать игру <span>→</span></a>
+            <a class="sh749-cta sh749-cta-game" href="${MASTER_LINE_URL}">Начать игру <span>→</span></a>
           </div>
           <div class="sh749-visual sh749-game-art">${sh749GameArt()}</div>
         </article>
@@ -1476,7 +1476,7 @@ function sh750ReferenceHomeHtml(){
           <div class="sh750-copy">
             <h3>Поиграть</h3>
             <p>Решай игровые задачи<br>и оттачивай навыки в деле.</p>
-            <a class="sh750-cta" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer">Начать игру <span>→</span></a>
+            <a class="sh750-cta" href="${MASTER_LINE_URL}">Начать игру <span>→</span></a>
           </div>
           <div class="sh750-art sh750-game-art" aria-hidden="true"></div>
         </article>
@@ -1902,11 +1902,11 @@ function sh751PremiumHomeHtml(){
           </div>
           <div class="sh751-art">${sh751TrainVisual()}</div>
         </article>
-        <article class="sh751-card sh751-card-game" role="button" tabindex="0" onclick="window.open(MASTER_LINE_URL,'_blank','noopener,noreferrer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.open(MASTER_LINE_URL,'_blank','noopener,noreferrer')}">
+        <article class="sh751-card sh751-card-game" role="button" tabindex="0" onclick="(window.shOpenGames?window.shOpenGames():location.assign(MASTER_LINE_URL))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();(window.shOpenGames?window.shOpenGames():location.assign(MASTER_LINE_URL))}">
           <div class="sh751-copy">
             <h3>Поиграть</h3>
             <p>Брось себе вызов и побей свой лучший результат.</p>
-            <a class="sh751-cta sh751-cta-game" href="${MASTER_LINE_URL}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Играть <span>→</span></a>
+            <a class="sh751-cta sh751-cta-game" href="${MASTER_LINE_URL}" onclick="event.stopPropagation()">Играть <span>→</span></a>
           </div>
           <div class="sh751-art sh751-art-game">${sh751GameVisual()}</div>
         </article>
