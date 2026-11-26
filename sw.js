@@ -1,9 +1,10 @@
-const CACHE='skillhub-20261126-arcade-v10';
+const CACHE='skillhub-20261126-arcade-v11';
 const SHELL=[
   './',
   './index.html',
-  './skillhub-games.html?v=20261126_arcade_v22',
+  './skillhub-games.html?v=20261126_arcade_v23',
   './skillhub-canvas-games.js?v=20261126_canvas_v4',
+  './assets/skillhub-arcade-cover-atlas-v1.webp',
   './styles-v844.css?v=20260930_v844',
   './app-v844.js?v=20261005_restore_live_v1',
   './hotfix-sync-20261005.js?v=3',
