@@ -179,7 +179,7 @@ function start(opts){
  if(!c){root.querySelector('#shcgOverlay').innerHTML='<div class="shcg-modal"><h2>Игра недоступна</h2><p>Браузер не поддерживает Canvas 2D.</p><button class="shcg-cta" id="shcgBackFallback">К играм</button></div>';root.querySelector('#shcgBackFallback').onclick=opts.onExit;return function(){}}
  var overlay=root.querySelector('#shcgOverlay'),button=root.querySelector('#shcgPause'),soundBtn=root.querySelector('#shcgSound');
  var alive=true,playing=false,paused=false,finished=false,raf=0,last=0,time=0,score=0,combo=0,maxCombo=0,lives=3,hearts=3,correct=0,shot=0,trust=48,aim=0,position=550,keys={},effects=[],noise=0,audioEnabled=true,audioCtx=null;
- var current=0,ball={x:550,y:330,vx:100,vy:235,r:15,trail:[],flying:false,tx:0,ty:0,startX:0,startY:0,progress:0},roundDelay=0,msg='',msgGood=false,gameTime=48,runnerLane=1,spawnClock=.5,objects=[],mission=0,missionTimer=0,missionId=0,runnerTarget=12,ranAt=0,kick={active:false,progress:0,tx:550,good:false,power:0},kickDelay=0,kickPower=.5,goalkeeper=550,dispatchTime=9,dispatchDelay=0,dispatchChoice=-1,dispatchDrag=false,dispatchDragX=550,dispatchDragY=440;
+ var current=0,ball={x:550,y:330,vx:100,vy:235,r:15,trail:[],flying:false,tx:0,ty:0,startX:0,startY:0,progress:0},roundDelay=0,msg='',msgGood=false,gameTime=48,runnerLane=1,spawnClock=.5,objects=[],mission=0,missionTimer=0,missionId=0,runnerTarget=12,ranAt=0,kick={active:false,progress:0,tx:550,good:false,power:0},kickDelay=0,kickPower=.5,goalkeeper=550,footballPhase=0,footballAnswered=false,footballTried=false,footballErrors=0,footballFirstTry=0,footballSolved=0,footballNote='',footballNoteGood=false,footballChoice=-1,dispatchTime=9,dispatchDelay=0,dispatchChoice=-1,dispatchDrag=false,dispatchDragX=550,dispatchDragY=440;
  var portrait=null;
  if(opts.portrait){portrait=new Image();portrait.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(opts.portrait)}
  function beep(ok){
@@ -194,21 +194,58 @@ function start(opts){
  function drawFx(){for(var i=0;i<effects.length;i++){var p=effects[i];c.globalAlpha=clamp(p.life,0,1);c.shadowBlur=17;c.shadowColor=p.color;c.fillStyle=p.color;c.beginPath();c.arc(p.x,p.y,p.r*clamp(p.life,0,1),0,Math.PI*2);c.fill()}c.globalAlpha=1;c.shadowBlur=0}
  function hud(){root.querySelector('#shcgPoints').textContent=score.toLocaleString('ru-RU')+' XP';root.querySelector('#shcgCombo').textContent='×'+combo;root.querySelector('#shcgTrust').textContent=(mode==='tennis'||mode==='football')?trust+'%':correct+'/'+runnerTarget;root.querySelector('#shcgLives').textContent=(mode==='tennis'||mode==='football'?'♥ '.repeat(Math.max(0,lives))+'♡ '.repeat(3-Math.max(0,lives)):'♥ '.repeat(Math.max(0,lives))+' · '+Math.max(0,Math.ceil(mode==='runner'?gameTime:dispatchTime))+'с')}
  function steer(l){runnerLane=clamp(l,0,2)}
+ function safeText(s){return String(s==null?'':s).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
+ function footballPick(i){
+  if(!alive||!playing||paused||finished||mode!=='football'||footballPhase>=2||footballAnswered||kick.active||kickDelay>0)return;
+  var stage=footballCases[current].phases[footballPhase];
+  footballChoice=i;
+  if(i===stage.good){
+   footballAnswered=true;footballNoteGood=true;footballNote=stage.why;footballSolved++;
+   if(!footballTried){footballFirstTry++;score+=100}else score+=40;
+   trust=clamp(trust+4,0,100);beep(true);particles(550,250,'#7dffc5',12);
+  }else{
+   footballTried=true;footballErrors++;footballNoteGood=false;
+   footballNote='Этот вывод не подтверждается всеми данными. Сравни статусы, суммы и даты и попробуй ещё раз.';
+   trust=clamp(trust-5,0,100);combo=0;score=Math.max(0,score-35);beep(false);
+  }
+  hud();updateControls();
+ }
+ function footballAdvance(){
+  if(!footballAnswered||footballPhase>=2)return;
+  footballPhase++;footballAnswered=false;footballTried=false;footballNote='';footballChoice=-1;
+  updateControls();
+ }
  function updateControls(){
-  var el=root.querySelector('#shcgControls');
-  var cap=root.querySelector('#shcgMobileCaption');if(cap)cap.textContent=mode==='tennis'||mode==='football'?tennisCases[Math.min(current,tennisCases.length-1)].q:mode==='runner'?'Собирай только: '+kinds[mission].label:dispatchCases[Math.min(current,dispatchCases.length-1)].name+': '+dispatchCases[Math.min(current,dispatchCases.length-1)].q;
-  if(mode==='tennis'||mode==='football'){
-   var choiceCases=tennisCases;
-   el.innerHTML='<div class="shcg-answers">'+choiceCases[Math.min(current,5)].a.map((x,i)=>'<button type="button" class="shcg-answer'+(aim===i?' active':'')+'" data-aim="'+i+'"><b>'+String(i+1)+'. '+x+'</b><small>'+(i===aim?'✓ Выбрано':'Выбрать ответ')+'</small></button>').join('')+'</div>'+
-    (mode==='tennis'?'<div class="shcg-steer"><button type="button" data-step="-1" aria-label="Передвинуть ракетку влево">←</button><button type="button" data-step="1" aria-label="Передвинуть ракетку вправо">→</button></div>':'<button type="button" class="shcg-shot" id="shcgKick">⚽ УДАР!</button>');
-   el.querySelectorAll('[data-aim]').forEach(b=>b.onclick=()=>{if(!playing||paused||roundDelay>0||kick.active||kickDelay>0||ball.flying)return;aim=Number(b.dataset.aim);updateControls()});
-   if(mode==='tennis'){
-    el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(!playing||paused)return;position=clamp(position+Number(b.dataset.step)*90,110,990)});
-    root.querySelector('#shcgHint').textContent='Выбери ответ (1–3), затем отбей мяч мышью, пальцем или стрелками';
+  var el=root.querySelector('#shcgControls'),cap=root.querySelector('#shcgMobileCaption');
+  if(cap)cap.textContent=mode==='football'?footballCases[Math.min(current,footballCases.length-1)].name:mode==='tennis'?tennisCases[Math.min(current,tennisCases.length-1)].q:mode==='runner'?'Собирай только: '+kinds[mission].label:dispatchCases[Math.min(current,dispatchCases.length-1)].name+': '+dispatchCases[Math.min(current,dispatchCases.length-1)].q;
+  if(mode==='football'){
+   var item=footballCases[Math.min(current,footballCases.length-1)],board=root.querySelector('#shcgFootballBoard');
+   board.innerHTML='<div class="shcg-football-kicker">⚽ ПЕНАЛЬТИ №'+String(current+1).padStart(2,'0')+' / '+footballCases.length+' · БАНКОВСКИЙ КЕЙС</div>'+
+    '<h2>'+safeText(item.name)+'</h2><p class="shcg-football-client">'+safeText(item.client)+'</p>'+
+    '<div class="shcg-football-facts">'+item.facts.map(x=>'<span>'+safeText(x)+'</span>').join('')+'</div>';
+   if(footballPhase<2){
+    var stage=item.phases[footballPhase];
+    el.innerHTML='<div class="shcg-football-phase"><b>'+(footballPhase===0?'01 · АНАЛИЗ':'02 · РЕШЕНИЕ')+' — '+safeText(stage.q)+'</b><small>Шаг '+(footballPhase+1)+' из 3</small></div>'+
+     '<div class="shcg-answers">'+stage.a.map((a,i)=>'<button type="button" data-football-answer="'+i+'" class="shcg-answer'+(footballChoice===i?(footballNoteGood?' chosen-right':' chosen-wrong'):'')+'" '+(footballAnswered?'disabled':'')+'><b>'+String(i+1)+'. '+safeText(a)+'</b></button>').join('')+'</div>'+
+     (footballNote?'<div class="shcg-football-feedback '+(footballNoteGood?'':'bad')+'">'+safeText(footballNote)+'</div>':'')+
+     (footballAnswered?'<button type="button" class="shcg-football-next" id="shcgFootballNext">'+(footballPhase===0?'Следующий этап: тактика →':'К пенальти →')+'</button>':'');
+    el.querySelectorAll('[data-football-answer]').forEach(b=>b.onclick=()=>footballPick(Number(b.dataset.footballAnswer)));
+    var next=el.querySelector('#shcgFootballNext');if(next)next.onclick=footballAdvance;
+    root.querySelector('#shcgHint').textContent='Не угадывай: сначала сопоставь три факта. Ошибки снижают доверие и сужают окно точного удара.';
    }else{
-    el.querySelector('#shcgKick').onclick=shoot;
-    root.querySelector('#shcgHint').textContent='Выбери ответ (1–3), поймай силу удара в зелёной зоне и нажми «УДАР!» / пробел';
+    var windowSize=footballErrors===0?.28:footballErrors===1?.22:.16;
+    el.innerHTML='<div class="shcg-football-phase"><b>03 · ПЕНАЛЬТИ — выбери угол и момент удара</b><small>Шаг 3 из 3</small></div>'+
+     '<div class="shcg-football-shot"><div class="shcg-answers">'+['↖ Левый угол','↑ Центр','↗ Правый угол'].map((v,i)=>'<button type="button" data-football-aim="'+i+'" class="shcg-answer'+(aim===i?' active':'')+'"><b>'+v+'</b></button>').join('')+'</div><button type="button" class="shcg-shot" id="shcgKick" '+(kick.active||kickDelay>0?'disabled':'')+'>⚽ УДАР!</button></div>';
+    el.querySelectorAll('[data-football-aim]').forEach(b=>b.onclick=()=>{if(kick.active||kickDelay>0||!playing||paused)return;aim=Number(b.dataset.footballAim);updateControls()});
+    var kickBtn=el.querySelector('#shcgKick');if(kickBtn)kickBtn.onclick=shoot;
+    root.querySelector('#shcgHint').textContent='После '+(footballErrors?footballErrors+' ошибок':'безошибочного решения')+' окно удара '+(footballErrors?'уже':'широкое')+'. Уводи мяч от вратаря, пробей в зелёной зоне силы.';
    }
+  }else if(mode==='tennis'){
+   el.innerHTML='<div class="shcg-answers">'+tennisCases[Math.min(current,5)].a.map((x,i)=>'<button type="button" class="shcg-answer'+(aim===i?' active':'')+'" data-aim="'+i+'"><b>'+String(i+1)+'. '+safeText(x)+'</b><small>'+(i===aim?'✓ Выбрано':'Выбрать ответ')+'</small></button>').join('')+'</div>'+
+     '<div class="shcg-steer"><button type="button" data-step="-1" aria-label="Передвинуть ракетку влево">←</button><button type="button" data-step="1" aria-label="Передвинуть ракетку вправо">→</button></div>';
+   el.querySelectorAll('[data-aim]').forEach(b=>b.onclick=()=>{if(!playing||paused||roundDelay>0||ball.flying)return;aim=Number(b.dataset.aim);updateControls()});
+   el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(!playing||paused)return;position=clamp(position+Number(b.dataset.step)*90,110,990)});
+   root.querySelector('#shcgHint').textContent='Выбери ответ (1–3), затем отбей мяч мышью, пальцем или стрелками';
   }else if(mode==='runner'){
    el.innerHTML='<div class="shcg-mission"><small>СОБИРАЙ ТОЛЬКО</small><span id="shcgTarget">'+kinds[mission].label+'</span></div><div class="shcg-steer"><button data-run="-1" aria-label="Сменить полосу влево">←</button><button data-run="1" aria-label="Сменить полосу вправо">→</button></div><div class="shcg-alert">Дорожки переключаются также клавишами A/D или касанием экрана.</div>';
    el.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>steer(runnerLane+Number(b.dataset.run)));
