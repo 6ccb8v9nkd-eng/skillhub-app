@@ -20,6 +20,7 @@
     try{
       const p=String(state()?.currentPage||'');
       if(p==='run')return false;
+      if(document.getElementById('shGamesOverlay'))return false;
       if(document.querySelector('.sh-ai-soft-wrap,.sh-ai-dialog,.monthly-runner,.sh-monthly-runner'))return false;
       const active=document.activeElement;
       if(active&&['INPUT','TEXTAREA','SELECT'].includes(active.tagName)&&String(active.value||'').trim())return false;
@@ -144,6 +145,7 @@
 
   /* Re-check a deferred release as soon as the user leaves an active exercise. */
   document.addEventListener('click',()=>{if(pending&&!applying)setTimeout(()=>applyRelease(pending),50)},true);
+  window.addEventListener('skillhub-games-closed',()=>{if(pending&&!applying)applyRelease(pending)});
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)return;
     startDbReleaseChannel();
