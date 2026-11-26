@@ -1,7 +1,8 @@
-const CACHE='skillhub-20261015-stable-ui-v3';
+const CACHE='skillhub-20261126-arcade-v1';
 const SHELL=[
   './',
   './index.html',
+  './skillhub-games.html?v=20261126_arcade_v13',
   './styles-v844.css?v=20260930_v844',
   './app-v844.js?v=20261005_restore_live_v1',
   './hotfix-sync-20261005.js?v=3',
@@ -76,6 +77,7 @@ self.addEventListener('fetch',e=>{
     e.request.mode==='navigate'||
     u.pathname.endsWith('/')||
     u.pathname.endsWith('/index.html')||
+    u.pathname.endsWith('/skillhub-games.html')||
     u.pathname.endsWith('app-version.json')||
     u.pathname.endsWith('release-ready.json')||
     u.pathname.endsWith('/sw.js');
