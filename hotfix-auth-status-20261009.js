@@ -59,7 +59,7 @@
   }
   if(!document.querySelector('script[data-sh-release-core]')){
     const r=document.createElement('script');
-    r.src='./hotfix-release-core-20261012.js?v=20261012_1';
+    r.src='./hotfix-release-core-20261012.js?v=20261126_games1';
     r.dataset.shReleaseCore='1';
     document.head.appendChild(r);
   }
