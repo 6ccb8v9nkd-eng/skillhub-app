@@ -323,14 +323,15 @@ function multichat(){
  if(dead)return;startBtn.disabled=true;
  var chats=scenes.map(x=>({...x,crm:crmData[x.id],crmTab:'overview',transcript:[{role:'client',content:x.first}],draft:'',pending:false,done:false,wait:0,reviews:[],error:'',unread:1})),selected=0,mobilePane='chat',remaining=300,answered=0,penalty=0,last=Date.now(),finished=false;
  function countDone(){return chats.filter(x=>x.done).length}
- function state(ch){return ch.done?'Закрыт':ch.pending?'Печатает…':ch.error?'Повторить':'Ждёт '+ch.wait+' с'}
+ function state(ch){return ch.done?'Закрыт':ch.pending?'Печатает…':ch.error?'Повторить':ch.wait>=20?'⚠ Ждёт '+ch.wait+' с':'Ждёт '+ch.wait+' с'}
  function mmss(n){return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
  function complete(){
   if(finished||dead)return;finished=true;clearInterval(timer);timer=null;
   var means=chats.map(ch=>ch.reviews.length?ch.reviews.reduce((s,r)=>s+r.quality,0)/ch.reviews.length:0);
   var raw=Math.round(means.reduce((a,b)=>a+b,0)/3),score=Math.max(0,Math.round(raw-penalty));
   if(answered>0)save('multichat',score);
-  var summary='<div class="shg-result" style="padding:6px 0"><div class="shg-score">'+score+'%</div><h2>Смена завершена</h2><p>Ответов с оценкой: '+answered+' · Закрыто: '+countDone()+'/3</p><p class="sha-rule">Средняя оценка трёх чатов '+raw+'%; неотработанные чаты — 0. Штраф за ожидание −'+penalty+' п.п. Оценка ИИ учебная, не результат проверки банковского регламента.</p></div>'+chats.map((ch,i)=>'<div class="sha-worktop"><div class="sha-chathead" style="padding:0 0 10px;background:none">'+shaAvatar(ch.name,i)+'<div><b>'+esc(ch.name)+'</b><small>'+esc(ch.subject)+'</small></div><span class="sha-spacer"></span><b>'+Math.round(means[i])+'%</b></div>'+(ch.reviews.length?ch.reviews.map((r,j)=>'<div class="sha-review"><b>Ответ '+(j+1)+' · '+r.quality+'%</b><p>'+esc(r.feedback)+'</p></div>').join(''):'<p class="sha-rule">Нет ответа с оценкой.</p>')+'</div>').join('')+'<div class="shg-actions"><button class="shg-primary" id="shaAgain">Ещё раз</button><button class="shg-secondary" id="shaHome">К играм</button></div>';
+  var critical=means.map((x,i)=>({score:x,name:chats[i].name})).sort((a,b)=>a.score-b.score)[0];
+   var summary='<div class="shg-result" style="padding:6px 0"><div class="shg-score">'+score+'%</div><h2>Смена завершена</h2><p>Ответов с оценкой: '+answered+' · Закрыто: '+countDone()+'/3</p><p class="sha-rule">'+(critical?.score<75?'Для следующей тренировки обрати внимание на диалог с '+esc(critical.name)+' — '+Math.round(critical.score)+'%.':'Все диалоги разобраны: подробные рекомендации ИИ ниже.')+'</p><p class="sha-rule">Средняя оценка трёх чатов '+raw+'%; неотработанные чаты — 0. Штраф за ожидание −'+penalty+' п.п. Оценка ИИ учебная, не результат проверки банковского регламента.</p></div>'+chats.map((ch,i)=>'<div class="sha-worktop"><div class="sha-chathead" style="padding:0 0 10px;background:none">'+shaAvatar(ch.name,i)+'<div><b>'+esc(ch.name)+'</b><small>'+esc(ch.subject)+'</small></div><span class="sha-spacer"></span><b>'+Math.round(means[i])+'%</b></div>'+(ch.reviews.length?ch.reviews.map((r,j)=>'<div class="sha-review"><b>Ответ '+(j+1)+' · '+r.quality+'%</b><p>'+esc(r.feedback)+'</p></div>').join(''):'<p class="sha-rule">Нет ответа с оценкой.</p>')+'</div>').join('')+'<div class="shg-actions"><button class="shg-primary" id="shaAgain">Ещё раз</button><button class="shg-secondary" id="shaHome">К играм</button></div>';
   cleanup();p=shaPanel(shell('multichat','Разбор смены',summary));p.querySelector('#shaAgain').onclick=multichat;p.querySelector('#shaHome').onclick=renderZone;
  }
  function remember(){var t=p.querySelector('#shaInput');if(t)chats[selected].draft=t.value}
@@ -365,7 +366,7 @@ function multichat(){
   }catch(e){if(dead||finished)return;ch.transcript.pop();ch.pending=false;ch.draft=reply;ch.error=e.message||'Не удалось получить ответ. Повтори отправку.';ch.unread=1;if(chats[selected]===ch)draw();else update()}
  }
  draw();
- timer=setInterval(()=>{if(dead||finished)return;var now=Date.now(),elapsed=Math.floor((now-last)/1000);if(elapsed<1)return;last+=elapsed*1000;elapsed=Math.min(elapsed,remaining);remaining=Math.max(0,remaining-elapsed);chats.forEach(ch=>{if(!ch.done&&!ch.pending)ch.wait+=elapsed});if(remaining===0)return complete();update()},250);
+ timer=setInterval(()=>{if(dead||finished)return;var now=Date.now(),elapsed=Math.floor((now-last)/1000);if(elapsed<1)return;last+=elapsed*1000;elapsed=Math.min(elapsed,remaining);if(chats.every(ch=>ch.done||ch.pending)){return}remaining=Math.max(0,remaining-elapsed);chats.forEach(ch=>{if(!ch.done&&!ch.pending)ch.wait+=elapsed});if(remaining===0)return complete();update()},250);
  }
 }
 
