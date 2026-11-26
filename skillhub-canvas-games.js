@@ -261,6 +261,124 @@ function start(opts){
   }
   if(gameTime<=0||lives<=0||correct>=runnerTarget)gameOver();
  }
+
+ function drawFootball(){
+  fillBg();
+  // stadium floodlights, crowd tiers, pitch
+  var halo=c.createRadialGradient(550,180,30,550,180,520);halo.addColorStop(0,'#f7da8339');halo.addColorStop(1,'#213c5b00');c.fillStyle=halo;c.fillRect(0,0,W,H);
+  for(var n=0;n<9;n++){var x=n*144-20;c.fillStyle=n%2?'#19283a':'#26354a';c.fillRect(x,185,130,80);for(var j=0;j<14;j++){c.fillStyle=j%2?'#e7c9748c':'#66a1d182';c.fillRect(x+j*9,209+(j%3)*11,4,4)}}
+  var grass=c.createLinearGradient(0,360,0,590);grass.addColorStop(0,'#205747');grass.addColorStop(.7,'#15513d');grass.addColorStop(1,'#092f2f');c.fillStyle=grass;c.beginPath();c.moveTo(90,364);c.lineTo(1010,364);c.lineTo(1098,590);c.lineTo(2,590);c.fill();
+  c.lineWidth=3;c.strokeStyle='#b6f1d04e';c.beginPath();c.moveTo(150,366);c.lineTo(950,366);c.lineTo(1060,585);c.lineTo(40,585);c.closePath();c.stroke();
+  for(var j=0;j<6;j++){var p=j/6,y=400+185*p*p;c.beginPath();c.moveTo(110-p*110,y);c.lineTo(990+p*110,y);c.strokeStyle='#d0ffda16';c.stroke()}
+  // goal, net and glowing answer targets
+  c.save();c.shadowColor='#94d5eb';c.shadowBlur=17;c.strokeStyle='#e1f5f8';c.lineWidth=11;rr(c,77,165,946,215,8);c.stroke();c.restore();
+  c.lineWidth=1;c.strokeStyle='#d7eff138';
+  for(var k=0;k<18;k++){var x=94+k*52;c.beginPath();c.moveTo(x,175);c.lineTo(x,375);c.stroke()}
+  for(var k=0;k<8;k++){var y=188+k*26;c.beginPath();c.moveTo(88,y);c.lineTo(1010,y);c.stroke()}
+  for(var i=0;i<3;i++){
+   var x=105+i*299,color=i===aim?'#ffd47f':'#80b2d6',bg=i===aim?'#806129b5':'#152f4fc2';
+   glowRect(c,x,188,280,138,13,bg,color,i===aim?28:8);
+   text(c,'ЗОНА '+(i+1),x+18,213,12,color,900);
+   c.font='800 20px system-ui';fitLines(c,tennisCases[Math.min(current,5)].a[i],246,3).forEach((v,j)=>text(c,v,x+18,247+j*28,19,'#f8fafd',900));
+  }
+  // goalkeeper movement is intentionally visible and game-like
+  var gx=goalkeeper;
+  c.save();c.translate(gx,356);c.shadowColor='#62bcff';c.shadowBlur=23;
+  c.fillStyle='#15263a';rr(c,-24,-31,48,78,9);c.fill();
+  c.strokeStyle='#71d5fc';c.lineWidth=7;c.beginPath();c.moveTo(-18,0);c.lineTo(-52,-28);c.moveTo(18,0);c.lineTo(52,-28);c.moveTo(-10,37);c.lineTo(-24,56);c.moveTo(10,37);c.lineTo(24,56);c.stroke();
+  c.beginPath();c.arc(0,-54,22,0,Math.PI*2);c.fillStyle='#d7ab8b';c.fill();c.strokeStyle='#ffe2bf';c.lineWidth=3;c.stroke();
+  c.fillStyle='#26222e';c.beginPath();c.arc(0,-62,20,Math.PI,2*Math.PI);c.fill();
+  text(c,'SH',0,7,21,'#ffda8b',900,'center');c.restore();
+  // Alexey voice bubble, portrait
+  glowRect(c,55,20,91,91,24,'#2d3e55','#e8bf77',15);
+  if(portrait&&portrait.complete&&portrait.naturalWidth){c.save();rr(c,62,27,77,77,20);c.clip();c.drawImage(portrait,62,27,77,77);c.restore()}else text(c,'😏',101,66,42,'#fff',900,'center');
+  glowRect(c,165,22,878,86,16,'#152438ed','#7ba9c877',7);
+  text(c,'АЛЕКСЕЙ АТАКУЕТ',184,40,12,'#ffca7e',950);
+  c.font='800 25px system-ui';fitLines(c,tennisCases[Math.min(current,5)].q,828,2).forEach((v,j)=>text(c,v,184,69+j*26,24,'#f8faff',850));
+  // shooting ball, curve + glowing accuracy meter
+  var bx=550,by=503;
+  if(kick.active){
+   var p=clamp(kick.progress,0,1);bx=mix(550,kick.tx,p);by=mix(502,286,p)-122*Math.sin(Math.PI*p);
+   c.save();c.strokeStyle='#f8d48b77';c.lineWidth=8;c.shadowColor='#ffdc8a';c.shadowBlur=24;c.beginPath();c.moveTo(550,502);c.quadraticCurveTo(mix(550,kick.tx,.5),340,bx,by);c.stroke();c.restore();
+  }
+  c.save();c.shadowColor='#ffe29a';c.shadowBlur=25;c.fillStyle='#fff4cf';c.beginPath();c.arc(bx,by,kick.active?14-5*kick.progress:23,0,Math.PI*2);c.fill();c.strokeStyle='#5d6e77';c.lineWidth=3;c.stroke();text(c,'★',bx,by,15,'#384d5f',900,'center');c.restore();
+  glowRect(c,350,548,400,25,12,'#071625bd','#b3cbe766',4);
+  c.fillStyle='#3fdf9675';c.fillRect(350+400*.35,553,400*.48,15);
+  c.fillStyle='#f4d27b';c.fillRect(350,553,clamp(kickPower,0,1)*400,15);
+  c.save();c.shadowColor='#ffe4a6';c.shadowBlur=18;c.fillStyle='#fff4bc';c.fillRect(348+clamp(kickPower,0,1)*400,545,5,31);c.restore();
+  text(c,'СИЛА УДАРА · ЛОВИ ЗЕЛЁНУЮ ЗОНУ',550,536,12,'#e8f2ff',850,'center');
+  if(kickDelay>0){glowRect(c,365,419,370,56,13,msgGood?'#16513fe8':'#5c2f3beb',msgGood?'#74f2bd':'#ff9a99',23);text(c,msg,550,447,23,'#fff',900,'center')}
+  drawFx();
+ }
+ function shoot(){
+  if(mode!=='football'||!playing||paused||finished||kick.active||kickDelay>0)return;
+  kick={active:true,progress:0,tx:228+322*aim,power:kickPower,good:aim===tennisCases[current].good&&kickPower>=.35&&kickPower<=.83};
+  beep(true);
+  var b=root.querySelector('#shcgKick');if(b)b.disabled=true;
+ }
+ function updateFootball(dt){
+  goalkeeper=550+140*Math.sin(time*1.75);
+  if(kickDelay>0){kickDelay-=dt;if(kickDelay<=0){current++;if(current>=tennisCases.length||lives<=0)gameOver();else{aim=(current+1)%3;kick.active=false;kickDelay=0;updateControls();hud()}}return}
+  if(!kick.active){kickPower=(Math.sin(time*3.6)+1)/2;return}
+  kick.progress+=dt*1.18;
+  if(kick.progress>=1){
+   kick.active=false;var good=kick.good;
+   if(good){correct++;combo++;maxCombo=Math.max(combo,maxCombo);trust=clamp(trust+12,0,100);score+=240+combo*75;msg='⚽ ГОООЛ! +'+(240+combo*75)+' XP';particles(kick.tx,280,'#7cffbe',38)}
+   else{lives--;combo=0;trust=clamp(trust-13,0,100);msg=kick.power<.35||kick.power>.83?'СИЛА УДАРА ПОДВЕЛА!':'СЕЙВ АЛЕКСЕЯ!';particles(kick.tx,280,'#fa929c',30)}
+   msgGood=good;kickDelay=1.65;beep(good);hud();
+  }
+ }
+ function drawDispatch(){
+  fillBg();
+  var lens=c.createRadialGradient(550,280,50,550,280,500);lens.addColorStop(0,'#79c7ff34');lens.addColorStop(1,'#243f5f00');c.fillStyle=lens;c.fillRect(0,0,W,H);
+  // animated support floor and three customer service portals
+  glowRect(c,255,20,590,83,16,'#142638e8','#c7ad6b9b',16);
+  text(c,'ВОЗЬМИ ОБРАЩЕНИЕ И НАПРАВЬ В ПРАВИЛЬНЫЙ ОТДЕЛ',550,47,17,'#edf6fd',900,'center');
+  text(c,'КЛИЕНТЫ ЖДУТ · РЕШЕНИЕ ЗА СЕКУНДЫ',550,77,12,'#bbcede',800,'center');
+  for(var i=0;i<3;i++){
+   var d=departments[i],x=50+i*339,high=dispatchDrag&&Math.abs(dispatchDragX-(x+151))<170;
+   glowRect(c,x,152,317,165,17,high?'#2b4d61':'#15283be8',d.color,high?30:13);
+   glowRect(c,x+24,171,51,51,12,d.color+'26',d.color,7);
+   text(c,i===0?'▤':i===1?'◇':'⇄',x+50,196,31,d.color,900,'center');
+   text(c,d.label,x+91,197,21,'#f7fbff',900);
+   text(c,d.sub,x+24,252,15,'#bdcede',730);
+   text(c,'СТОЙКА 0'+(i+1),x+286,293,11,d.color,900,'right');
+  }
+  // conveyor
+  c.fillStyle='#0c2335';rr(c,80,352,940,198,20);c.fill();c.strokeStyle='#61bada89';c.lineWidth=3;c.stroke();
+  for(var j=0;j<12;j++){var xx=(j*110+(time*115)%110)%940+80;c.fillStyle='#e9cf8d28';c.fillRect(xx,363,5,178)}
+  text(c,'ОЧЕРЕДЬ ЧАТОВ',110,376,12,'#8cbcd4',880);
+  text(c,'ЗАЯВКА '+String(Math.min(current+1,dispatchCases.length)).padStart(2,'0')+' / '+dispatchCases.length,982,376,12,'#e2c47a',880,'right');
+  var dcase=dispatchCases[Math.min(current,dispatchCases.length-1)];
+  var tx=dispatchDrag?dispatchDragX:550,ty=dispatchDrag?dispatchDragY:455;
+  if(dispatchDelay>0&&dispatchChoice>=0){var z=1-clamp(dispatchDelay/.75,0,1);tx=mix(550,211+339*dispatchChoice,z);ty=mix(455,236,z)}
+  c.save();c.translate(tx,ty);c.rotate(dispatchDrag?Math.sin(time*5)*.025:0);
+  glowRect(c,-335,-69,670,138,17,'#e8f1fa','#a2cfe5',dispatchDrag?30:14);
+  c.fillStyle='#1f5672';rr(c,-317,-50,82,98,14);c.fill();text(c,dcase.name[0],-276,0,47,'#ffe4a5',950,'center');
+  text(c,dcase.name,-217,-31,19,'#273d53',900);
+  c.font='800 24px system-ui';fitLines(c,dcase.q,500,2).forEach((v,j)=>text(c,v,-217,7+j*29,23,'#182f44',880));
+  c.restore();
+  // deadline urgency indicator
+  glowRect(c,344,558,411,18,9,'#0d1c2b','#b4cfdd7b',4);
+  var ratio=clamp(dispatchTime/((current%4===3)?6:9),0,1);c.fillStyle=ratio>.4?'#76deb1':'#ff9e8f';rr(c,347,561,Math.max(0,405*ratio),12,6);c.fill();
+  text(c,'ВРЕМЯ НА ОБРАЩЕНИЕ: '+Math.max(0,Math.ceil(dispatchTime))+' с',550,536,13,'#d8ebf7',850,'center');
+  if(dispatchDelay>0){glowRect(c,365,335,370,52,12,msgGood?'#1a624fec':'#603741ed',msgGood?'#79f1bc':'#fb999b',18);text(c,msg,550,360,20,'#fff',900,'center')}
+  drawFx();
+ }
+ function dispatchChoose(lane){
+  if(mode!=='dispatch'||!playing||paused||finished||dispatchDelay>0)return;
+  var good=lane===dispatchCases[current].kind;
+  dispatchChoice=lane;
+  if(good){correct++;combo++;maxCombo=Math.max(maxCombo,combo);score+=160+combo*60+(dispatchTime>4?100:0);msg='★ ОТПРАВЛЕНО ВЕРНО!';particles(211+339*lane,244,'#79eec0',24)}
+  else{lives--;combo=0;msg=lane<0?'ВРЕМЯ ИСТЕКЛО!':'НЕ ТОТ ОТДЕЛ!';particles(550,440,'#fb8f95',22)}
+  msgGood=good;dispatchDelay=.75;beep(good);hud();
+ }
+ function updateDispatch(dt){
+  if(dispatchDelay>0){dispatchDelay-=dt;if(dispatchDelay<=0){current++;if(current>=dispatchCases.length||lives<=0)gameOver();else{dispatchTime=current%4===3?6:9;dispatchChoice=-1;dispatchDrag=false;hud()}}return}
+  dispatchTime-=dt;if(Math.ceil(dispatchTime)!==Math.ceil(dispatchTime+dt))hud();
+  if(dispatchTime<=0)dispatchChoose(-1);
+ }
+
  function gameOver(){
   if(finished||!alive)return;finished=true;playing=false;paused=false;root.querySelector('#shcgPause').disabled=true;
   var pct=mode==='tennis'?Math.round(correct/tennisCases.length*100):Math.round(clamp(correct/runnerTarget,0,1)*100);
