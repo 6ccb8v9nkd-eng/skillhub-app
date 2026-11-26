@@ -4,10 +4,10 @@
 var KEY='sh_game_best_arcade_v3', timer=null, cloudBest=null, cloudPlays=null, cloudLoading=false;
 
 var games=[
-{id:'detective',title:'Банковский детектив',level:'Сложный',text:'Играй в настоящий банковский раннер: три дорожки, операции, бонусы и жизни.'},
-{id:'negative',title:'Негативный клиент',level:'Босс',text:'Отбивай претензии ракеткой! Выбирай ответ, лови мяч и удерживай доверие.'},
-{id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Лови входящие обращения и распределяй по отделам. Полный ИИ-режим — отдельно.'},
-{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Два решения по банковскому кейсу — затем пенальти с Алексеем. Голосовой ИИ — отдельно.'}
+{id:'detective',title:'Банковский детектив',arcadeTitle:'Банковский раннер',genre:'ГОНКА · ОПЕРАЦИИ',meta:'3 дорожки · платежи и резервы',level:'Аркада',text:'Меняй дорожки, собирай нужные операции и избегай ложных следов.'},
+{id:'negative',title:'Негативный клиент',arcadeTitle:'Клиентский теннис',genre:'ТЕННИС · ДИАЛОГ',meta:'Ракетка · ответы · доверие',level:'Аркада',text:'Отбивай претензии мячом и выбирай решения, которые сохраняют доверие.'},
+{id:'multichat',title:'Чат на максималках',arcadeTitle:'Чат-переполох',genre:'АРКАДА · СОРТИРОВКА',meta:'12 обращений · 3 отдела',level:'Аркада',text:'Перетаскивай обращения в нужные отделы, пока очередь не вышла из-под контроля.'},
+{id:'voice',title:'Голосовой поединок',arcadeTitle:'Футбольная дуэль',genre:'ФУТБОЛ · РАССЛЕДОВАНИЕ',meta:'6 кейсов · 2 решения · пенальти',level:'Босс',text:'Разбери банковское дело, выбери действия и забей пенальти Алексею.'}
 ];
 var activeCleanup=null;
 function cleanup(){clearInterval(timer);timer=null;if(activeCleanup){var f=activeCleanup;activeCleanup=null;try{f()}catch(e){}}}
@@ -38,53 +38,87 @@ async function loadCloudProgress(){
 }
 
 function gameArt(id){
-const defs='<defs>'+
-'<linearGradient id="gold" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff5b1"/><stop offset=".3" stop-color="#ffdf65"/><stop offset=".68" stop-color="#ed9f16"/><stop offset="1" stop-color="#a85b06"/></linearGradient>'+
-'<linearGradient id="goldEdge" x2=".8" y2="1"><stop stop-color="#ca7908"/><stop offset="1" stop-color="#6a3505"/></linearGradient>'+
-'<linearGradient id="black" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#727782"/><stop offset=".23" stop-color="#393b46"/><stop offset=".65" stop-color="#191a21"/><stop offset="1" stop-color="#090a0e"/></linearGradient>'+
-'<linearGradient id="purple" x2=".85" y2="1"><stop stop-color="#eee5ff"/><stop offset=".24" stop-color="#b399ff"/><stop offset=".63" stop-color="#7652e4"/><stop offset="1" stop-color="#3b238f"/></linearGradient>'+
-'<linearGradient id="purpleEdge" x2=".8" y2="1"><stop stop-color="#6440be"/><stop offset="1" stop-color="#291951"/></linearGradient>'+
-'<linearGradient id="blue" x2=".8" y2="1"><stop stop-color="#e6ffff"/><stop offset=".28" stop-color="#86e5ff"/><stop offset=".65" stop-color="#279fc5"/><stop offset="1" stop-color="#135376"/></linearGradient>'+
-'<linearGradient id="silver" x2=".8" y2="1"><stop stop-color="#ffffff"/><stop offset=".35" stop-color="#bdc8d9"/><stop offset=".7" stop-color="#63738c"/><stop offset="1" stop-color="#303a50"/></linearGradient>'+
-'<radialGradient id="halo"><stop stop-color="#ffcc55" stop-opacity=".45"/><stop offset="1" stop-color="#ffb500" stop-opacity="0"/></radialGradient>'+
-'<radialGradient id="violetHalo"><stop stop-color="#ad86ff" stop-opacity=".5"/><stop offset="1" stop-color="#8c55ff" stop-opacity="0"/></radialGradient>'+
-'<radialGradient id="blueHalo"><stop stop-color="#62dbff" stop-opacity=".4"/><stop offset="1" stop-color="#41d4ff" stop-opacity="0"/></radialGradient>'+
-'<filter id="blur"><feGaussianBlur stdDeviation="6"/></filter>'+
-'<filter id="depth" x="-35%" y="-35%" width="170%" height="190%"><feDropShadow dx="2" dy="9" stdDeviation="5" flood-color="#000" flood-opacity=".42"/></filter>'+
-'</defs>';
-const spark=(x,y,s,color)=>'<path d="M'+x+' '+(y-s)+' Q'+x+' '+y+' '+(x+s)+' '+y+' Q'+x+' '+y+' '+x+' '+(y+s)+' Q'+x+' '+y+' '+(x-s)+' '+y+' Q'+x+' '+y+' '+x+' '+(y-s)+'" fill="'+color+'" opacity=".8"/>';
-const shadow='<ellipse cx="120" cy="212" rx="72" ry="9" fill="#000" opacity=".5" filter="url(#blur)"/>';
-const body={
-negative:'<circle cx="120" cy="115" r="116" fill="url(#halo)"/>'+shadow+
-'<g filter="url(#depth)" transform="rotate(-9 120 116)">'+
-'<path d="M46 143V105C46 61 79 30 122 30s76 34 76 75v38" fill="none" stroke="#130e0a" stroke-width="26" stroke-linecap="round"/>'+
-'<path d="M46 140V104C46 61 79 30 122 30s76 34 76 75v36" fill="none" stroke="url(#goldEdge)" stroke-width="21" stroke-linecap="round"/>'+
-'<path d="M46 132V101C46 60 80 29 121 29s77 34 77 76v25" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round"/>'+
-'<path d="M56 98C58 66 86 39 122 39s61 25 66 56" fill="none" stroke="#ffeeb7" stroke-width="3" opacity=".8" stroke-linecap="round"/>'+
-'<path d="M61 101C62 69 87 48 122 48s61 21 63 54" fill="none" stroke="url(#black)" stroke-width="9" stroke-linecap="round"/>'+
-'<g transform="rotate(-8 51 142)"><rect x="27" y="109" width="46" height="76" rx="20" fill="url(#goldEdge)"/><rect x="24" y="104" width="46" height="76" rx="20" fill="url(#gold)"/><rect x="34" y="111" width="35" height="62" rx="15" fill="url(#black)"/><path d="M38 119q9-9 20-3" fill="none" stroke="#a8a5a6" stroke-width="2" opacity=".5"/></g>'+
-'<g transform="rotate(7 190 142)"><rect x="172" y="111" width="46" height="76" rx="20" fill="url(#goldEdge)"/><rect x="169" y="105" width="46" height="76" rx="20" fill="url(#gold)"/><rect x="169" y="111" width="34" height="62" rx="15" fill="url(#black)"/></g>'+
-'<path d="M192 174Q190 203 139 204" stroke="#49300b" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M190 171Q189 198 139 199" stroke="url(#gold)" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="119" y="190" width="34" height="16" rx="8" fill="url(#black)" stroke="#f5ba4c" stroke-width="2"/>'+
-'</g><g filter="url(#depth)" transform="rotate(7 120 114)"><path d="M84 79h65q18 0 18 18v40q0 18-18 18h-26l-23 19 3-19H84q-18 0-18-18V97q0-18 18-18" fill="#975706" transform="translate(0 7)"/><path d="M84 79h65q18 0 18 18v40q0 18-18 18h-26l-23 19 3-19H84q-18 0-18-18V97q0-18 18-18" fill="url(#gold)" stroke="#ffe7a0" stroke-width="1.5"/><path d="M80 91q4-7 13-7h51" stroke="#fff7ca" stroke-width="3" fill="none" stroke-linecap="round"/><g fill="#74430f"><circle cx="94" cy="118" r="6"/><circle cx="117" cy="118" r="6"/><circle cx="140" cy="118" r="6"/></g></g>'+spark(37,47,9,'#ffe89a')+spark(209,62,7,'#ffe89a'),
-pairs:'<circle cx="120" cy="115" r="116" fill="url(#violetHalo)"/>'+shadow+
-'<g transform="rotate(-22 81 112)" filter="url(#depth)"><rect x="30" y="42" width="103" height="145" rx="19" fill="url(#purpleEdge)" transform="translate(5 8)"/><rect x="30" y="42" width="103" height="145" rx="19" fill="url(#purple)" stroke="#d4c1ff" stroke-width="1.5"/><rect x="38" y="50" width="87" height="129" rx="13" fill="#5132b5" opacity=".35" stroke="#eee2ff" stroke-opacity=".7"/><path d="m81 78 23 34-23 35-23-35Z" fill="#ede5ff"/><path d="m81 90 15 22-15 22-15-22Z" fill="#9e79f7"/></g>'+
-'<g transform="rotate(15 151 116)" filter="url(#depth)"><rect x="98" y="43" width="103" height="145" rx="19" fill="url(#purpleEdge)" transform="translate(4 8)"/><rect x="98" y="43" width="103" height="145" rx="19" fill="url(#purple)" stroke="#e5d6ff" stroke-width="1.5"/><rect x="106" y="51" width="87" height="129" rx="13" fill="#38246f" stroke="#d4b9ff" stroke-width="1.5"/><path d="m149 80 24 34-24 34-24-34Z" fill="url(#gold)" stroke="#fff0b6" stroke-width="1.2"/><path d="m149 89 17 25-17 25-17-25Z" fill="#ffe9a1" opacity=".6"/><circle cx="119" cy="63" r="4" fill="#c6aaff"/><circle cx="180" cy="167" r="4" fill="#c6aaff"/></g>'+spark(25,65,9,'#dcc7ff')+spark(214,39,8,'#e2d5ff')+spark(205,185,5,'#d7c0ff'),
-quick:'<circle cx="120" cy="115" r="116" fill="url(#blueHalo)"/>'+shadow+
-'<g transform="rotate(-13 120 120)" filter="url(#depth)"><rect x="101" y="18" width="37" height="27" rx="8" fill="url(#silver)"/><rect x="92" y="14" width="55" height="15" rx="7" fill="url(#blue)" stroke="#b8f6ff"/><rect x="170" y="41" width="25" height="13" rx="5" fill="url(#silver)" transform="rotate(40 182 47)"/>'+
-'<circle cx="120" cy="123" r="78" fill="#12405b" transform="translate(5 8)"/><circle cx="120" cy="123" r="78" fill="url(#blue)" stroke="#d8faff" stroke-width="1.5"/><circle cx="120" cy="123" r="66" fill="url(#black)" stroke="#184a69" stroke-width="4"/><circle cx="120" cy="123" r="59" fill="#102f42" stroke="#59b8d5" stroke-width="1.5"/>'+
-Array.from({length:12},(_,i)=>'<path d="M120 70v'+(i%3===0?10:5)+'" stroke="#bcf2ff" stroke-width="'+(i%3===0?3:1.5)+'" stroke-linecap="round" transform="rotate('+i*30+' 120 123)"/>').join('')+
-'<path d="M120 123l27-30" stroke="#a1f7ff" stroke-width="6" stroke-linecap="round"/><circle cx="120" cy="123" r="7" fill="#d8ffff"/><path d="M70 86a60 60 0 0 1 79-21" stroke="#fff" stroke-opacity=".5" stroke-width="3" fill="none" stroke-linecap="round"/></g>'+
-'<g transform="translate(32 14) rotate(8 140 135)" filter="url(#depth)"><path d="m144 83-44 60h32l-12 44 56-68h-34l17-36z" fill="#a4660b" transform="translate(4 5)"/><path d="m144 83-44 60h32l-12 44 56-68h-34l17-36z" fill="url(#gold)" stroke="#fff1ac" stroke-width="1.5"/></g>'+spark(29,74,8,'#ccfbff')+spark(215,67,6,'#ccfbff'),
-voice:'<circle cx="120" cy="115" r="116" fill="url(#violetHalo)"/>'+shadow+
-'<g opacity=".8" fill="none" stroke="#b69aff" stroke-width="4" stroke-linecap="round"><path d="M47 79q-24 36 0 72M32 61q-38 54 0 106M193 79q24 36 0 72M208 61q38 54 0 106"/></g>'+
-'<g transform="rotate(-8 120 120)" filter="url(#depth)"><path d="M72 111v16a48 48 0 0 0 96 0v-16" stroke="#241c41" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M70 108v16a50 50 0 0 0 100 0v-16" stroke="url(#silver)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M120 175v27" stroke="url(#silver)" stroke-width="15"/><ellipse cx="120" cy="205" rx="39" ry="9" fill="#1d1835"/><ellipse cx="120" cy="199" rx="39" ry="9" fill="url(#purple)"/><rect x="83" y="32" width="74" height="123" rx="36" fill="url(#purpleEdge)" transform="translate(4 5)"/><rect x="83" y="32" width="74" height="123" rx="36" fill="url(#purple)" stroke="#ddc9ff" stroke-width="1.5"/><rect x="91" y="40" width="58" height="75" rx="28" fill="url(#black)" stroke="#a68be4" stroke-width="2"/>'+
-Array.from({length:8},(_,i)=>'<path d="M98 '+(52+i*7)+'h44" stroke="#bdb0d8" stroke-opacity=".65" stroke-width="2" stroke-linecap="round"/>').join('')+
-'<path d="M92 64q0-20 19-24" stroke="#fff" stroke-opacity=".65" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="120" cy="132" r="6" fill="#eedbff" stroke="#fff"/></g>'+spark(42,38,6,'#ded2ff')+spark(201,169,7,'#ded2ff')
-};
-body.detective='<circle cx="120" cy="115" r="116" fill="url(#blueHalo)"/>'+shadow+'<g transform="rotate(-12 101 114)" filter="url(#depth)"><rect x="41" y="38" width="125" height="154" rx="17" fill="#12364e" transform="translate(5 8)"/><rect x="41" y="38" width="125" height="154" rx="17" fill="url(#silver)" stroke="#f2f8ff"/><rect x="50" y="48" width="107" height="134" rx="12" fill="#dcecf7"/><rect x="62" y="64" width="63" height="11" rx="4" fill="#497c9b"/><path d="M62 90h77M62 110h77M62 130h49M62 150h60" stroke="#8daec0" stroke-width="7" stroke-linecap="round"/></g><g filter="url(#depth)" transform="rotate(-14 155 150)"><path d="M169 159l43 44" stroke="#162632" stroke-width="25" stroke-linecap="round"/><path d="M169 155l43 44" stroke="url(#gold)" stroke-width="18" stroke-linecap="round"/><circle cx="139" cy="126" r="49" fill="#264f65" stroke="#112331" stroke-width="16"/><circle cx="137" cy="122" r="49" fill="#80dded" fill-opacity=".2" stroke="url(#blue)" stroke-width="13"/><path d="M108 105q14-22 36-22" stroke="#fff" opacity=".7" stroke-width="4" fill="none" stroke-linecap="round"/></g>'+spark(27,65,8,'#b6efff')+spark(205,47,8,'#c5faff');
-body.multichat='<circle cx="120" cy="115" r="116" fill="url(#violetHalo)"/>'+shadow+'<g filter="url(#depth)" transform="rotate(-12 75 85)"><rect x="24" y="37" width="101" height="72" rx="20" fill="url(#purpleEdge)" transform="translate(2 7)"/><path d="M43 35h62q20 0 20 20v30q0 20-20 20H69l-23 18 4-18h-7q-20 0-20-20V55q0-20 20-20" fill="url(#purple)" stroke="#d9c9ff"/><path d="M45 60h57M45 79h37" stroke="#fff" opacity=".85" stroke-width="6" stroke-linecap="round"/></g><g filter="url(#depth)" transform="rotate(11 164 119)"><path d="M135 67h60q20 0 20 20v38q0 20-20 20h-8l4 20-27-20h-29q-20 0-20-20V87q0-20 20-20" fill="#194c61" transform="translate(3 7)"/><path d="M135 67h60q20 0 20 20v38q0 20-20 20h-8l4 20-27-20h-29q-20 0-20-20V87q0-20 20-20" fill="url(#blue)" stroke="#c4faff"/><g fill="#18506a"><circle cx="143" cy="108" r="6"/><circle cx="165" cy="108" r="6"/><circle cx="187" cy="108" r="6"/></g></g><g filter="url(#depth)" transform="rotate(-7 99 168)"><path d="M62 131h69q17 0 17 17v30q0 17-17 17h-39l-19 16 3-16H62q-17 0-17-17v-30q0-17 17-17" fill="url(#goldEdge)" transform="translate(3 6)"/><path d="M62 131h69q17 0 17 17v30q0 17-17 17h-39l-19 16 3-16H62q-17 0-17-17v-30q0-17 17-17" fill="url(#gold)" stroke="#ffeb9f"/><path d="M72 166l15 14 29-30" stroke="#7b4b0e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>'+spark(205,43,8,'#e7d9ff');
-return '<svg viewBox="0 0 240 240" aria-hidden="true">'+defs+body[id]+'</svg>'}
-
+ // Each arcade card previews the actual action of its game rather than an unrelated generic icon.
+ var themes={
+  detective:{bg1:'#0a2534',bg2:'#092137',accent:'#58e0ff',second:'#f2c66f',name:'БАНКОВСКИЙ РАННЕР'},
+  negative:{bg1:'#162744',bg2:'#092c41',accent:'#62e7ff',second:'#ffd37e',name:'КЛИЕНТСКИЙ ТЕННИС'},
+  multichat:{bg1:'#192646',bg2:'#151c35',accent:'#c4a0ff',second:'#77edc6',name:'ЧАТ-ПЕРЕПОЛОХ'},
+  voice:{bg1:'#173742',bg2:'#112438',accent:'#f1d078',second:'#69d3ff',name:'ФУТБОЛЬНАЯ ДУЭЛЬ'}
+ };
+ var t=themes[id]||themes.detective,k=id==='negative'?'ten':id==='detective'?'run':id==='multichat'?'chat':'ball';
+ var D='<defs>'+
+  '<linearGradient id="shcard-bg-'+k+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+t.bg1+'"/><stop offset="1" stop-color="'+t.bg2+'"/></linearGradient>'+
+  '<linearGradient id="shcard-metal-'+k+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset=".38" stop-color="#cfe1ee"/><stop offset="1" stop-color="#566a82"/></linearGradient>'+
+  '<linearGradient id="shcard-gold-'+k+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1b5"/><stop offset=".52" stop-color="#ffcc69"/><stop offset="1" stop-color="#bc7931"/></linearGradient>'+
+  '<linearGradient id="shcard-road-'+k+'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#377f99"/><stop offset="1" stop-color="#0c2c52"/></linearGradient>'+
+  '<radialGradient id="shcard-light-'+k+'"><stop stop-color="'+t.accent+'" stop-opacity=".32"/><stop offset="1" stop-color="'+t.accent+'" stop-opacity="0"/></radialGradient>'+
+  '<filter id="shcard-glow-'+k+'" x="-75%" y="-75%" width="250%" height="250%"><feGaussianBlur stdDeviation="7"/></filter>'+
+  '<filter id="shcard-shadow-'+k+'" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#000" flood-opacity=".55"/></filter>'+
+ '</defs>';
+ var g='';
+ if(id==='detective'){
+  g='<g><path d="M142 83L216 83 349 220H11Z" fill="url(#shcard-road-'+k+')" stroke="#71e1ff" stroke-width="2.5"/>'+
+   '<path d="M166 83L119 220M192 83L242 220" stroke="#bdedff" stroke-opacity=".55" stroke-width="2" stroke-dasharray="9 7"/>'+
+   '<path d="M11 219L142 83M349 219L216 83" stroke="#60cfff" stroke-width="4" opacity=".7"/>'+
+   Array.from({length:5},(_,i)=>'<path d="M'+(147-i*25)+' '+(105+i*23)+'h'+(66+i*50)+'" stroke="#a4e9fa" stroke-opacity="'+(.15+i*.055)+'" stroke-width="2"/>').join('')+
+   '<g filter="url(#shcard-shadow-'+k+')"><path d="M80 104l65-1 14 46h-91z" fill="#233b56" stroke="#76c8ed" stroke-width="2"/><rect x="76" y="110" width="72" height="24" rx="7" fill="#19324b"/><text x="112" y="126" text-anchor="middle" font-size="11" font-weight="900" fill="#88dfff">РЕЗЕРВ</text><text x="112" y="143" text-anchor="middle" font-size="9" fill="#fff">−1 200 ₽</text></g>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><path d="M153 93h66l16 47h-97z" fill="#194e4a" stroke="#6febc1" stroke-width="2.5"/><rect x="147" y="101" width="77" height="24" rx="6" fill="#0d3936"/><text x="186" y="117" text-anchor="middle" font-size="10.5" font-weight="900" fill="#a0ffda">ОПЛАТА</text><text x="186" y="133" text-anchor="middle" font-size="10" fill="#f8fff8">−650 ₽</text></g>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><path d="M243 106h57l18 46h-84z" fill="#3b3158" stroke="#d4a1ff" stroke-width="2.5"/><rect x="244" y="112" width="62" height="23" rx="6" fill="#2b2149"/><text x="275" y="127" text-anchor="middle" font-size="9" font-weight="900" fill="#e9c6ff">ВОЗВРАТ</text><text x="275" y="144" text-anchor="middle" font-size="10" fill="#f5efff">+700 ₽</text></g>'+
+   '<path d="M177 146l-9 17 9 3-13 15 23-12-10-4 9-19z" fill="#fff1a1" stroke="#ffaa4c" stroke-width="2"/>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><rect x="149" y="173" width="73" height="36" rx="10" fill="#153f58" stroke="#70eaff" stroke-width="3"/><path d="M183 176l-11 10 11 10 11-10z" fill="#f9dc93"/><path d="M157 193h57" stroke="#93efff" stroke-width="2"/></g>'+
+   '<g><rect x="10" y="182" width="103" height="28" rx="10" fill="#0c2436" stroke="#5cb9d882"/><text x="62" y="199" fill="#b5efff" font-size="11" font-weight="850" text-anchor="middle">3 ДОРОЖКИ</text></g></g>';
+ }else if(id==='negative'){
+  g='<g><path d="M105 73h150l102 145H3z" fill="#103c5f" stroke="#73dcff" stroke-width="2"/>'+
+   '<path d="M180 73V218M105 73L3 218M255 73l102 145M61 156H302" stroke="#70d6fc" stroke-width="2" opacity=".55"/>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><rect x="17" y="82" width="96" height="32" rx="10" fill="#4b2939" stroke="#ee8c97"/><text x="65" y="102" font-size="11" text-anchor="middle" font-weight="850" fill="#ffe7e7">ЖАЛОБА</text>'+
+   '<rect x="126" y="82" width="109" height="32" rx="10" fill="#244d40" stroke="#81eab4"/><text x="180" y="102" font-size="11" text-anchor="middle" font-weight="850" fill="#c2ffe0">ПРОВЕРКА</text>'+
+   '<rect x="250" y="82" width="93" height="32" rx="10" fill="#293d5d" stroke="#8cc5fb"/><text x="296" y="102" font-size="11" text-anchor="middle" font-weight="850" fill="#ddf2ff">ОТВЕТ</text></g>'+
+   '<g><rect x="132" y="24" width="97" height="52" rx="17" fill="#2c3041" stroke="#ffcf90" stroke-width="2"/><circle cx="180" cy="45" r="17" fill="#cc987a"/><path d="M165 42q9-20 29-6l2 12-5-10-12 4-10-3z" fill="#302534"/><path d="M172 49l5-2m9 0 5 2" stroke="#352934" stroke-width="2.5"/><path d="M175 57q5-4 11 0" fill="none" stroke="#693b37" stroke-width="2"/><path d="M132 34h-7l-5-9" stroke="#fa887b" stroke-width="3"/></g>'+
+   '<circle cx="181" cy="144" r="29" fill="'+t.second+'" opacity=".24" filter="url(#shcard-glow-'+k+')"/><circle cx="181" cy="144" r="13" fill="#ffebbc" stroke="#fbc777" stroke-width="4"/><path d="M168 156l-33 34" stroke="#e9edff" stroke-opacity=".5" stroke-width="4" stroke-dasharray="6 5"/>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><rect x="104" y="194" width="155" height="16" rx="8" fill="#234455" stroke="#54e2ff" stroke-width="4"/><path d="M125 199h112" stroke="#fff5ce" stroke-width="4" stroke-linecap="round"/></g>'+
+   '<g><rect x="11" y="123" width="89" height="28" rx="10" fill="#14283f" stroke="#e0bb7755"/><text x="55" y="141" font-size="10" font-weight="900" fill="#ffe2a9" text-anchor="middle">КОМБО ×4</text></g></g>';
+ }else if(id==='multichat'){
+  g='<g><path d="M17 102h326v109H17z" fill="#17243b" stroke="#7d9ed255" stroke-width="2"/>'+
+   Array.from({length:11},(_,i)=>'<path d="M'+(20+i*30)+' 105v105" stroke="#8abcf322" stroke-width="2"/>').join('')+
+   '<g filter="url(#shcard-shadow-'+k+')">'+
+   '<rect x="13" y="75" width="106" height="68" rx="13" fill="#213c54" stroke="#80def9" stroke-width="2"/><rect x="127" y="75" width="106" height="68" rx="13" fill="#3f324d" stroke="#e4aeff" stroke-width="2"/><rect x="241" y="75" width="106" height="68" rx="13" fill="#1c4845" stroke="#7aeac6" stroke-width="2"/>'+
+   '<circle cx="35" cy="100" r="13" fill="#78dfff"/><circle cx="149" cy="100" r="13" fill="#d3a4ff"/><circle cx="263" cy="100" r="13" fill="#6aebc6"/>'+
+   '<text x="53" y="99" font-size="10" font-weight="950" fill="#f9ffff">ВЫПИСКИ</text><text x="167" y="99" font-size="10" font-weight="950" fill="#f9ffff">СПИСАНИЯ</text><text x="281" y="99" font-size="10" font-weight="950" fill="#f9ffff">ПЛАТЕЖИ</text>'+
+   '<path d="M25 119h75M138 119h75M252 119h75" stroke="#e1eafa66" stroke-width="3" stroke-linecap="round"/>'+
+   '</g>'+
+   '<path d="M180 145v22m0 0-8-9m8 9 8-9" stroke="#ffd886" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><rect x="64" y="171" width="234" height="40" rx="12" fill="#ecf2fc" stroke="#b5d9ff" stroke-width="2"/>'+
+   '<circle cx="85" cy="191" r="12" fill="#9c74e5"/><text x="85" y="195" font-size="12" text-anchor="middle" font-weight="900" fill="#fff">М</text>'+
+   '<text x="107" y="187" font-size="12" font-weight="900" fill="#344561">Максим · обращение</text><text x="107" y="201" font-size="11" fill="#4f6680">Почему списали 290 ₽?</text>'+
+   '<circle cx="286" cy="177" r="10" fill="#f39f5b"/><text x="286" y="181" font-size="12" text-anchor="middle" fill="#fff" font-weight="950">!</text></g>'+
+   '<g><rect x="15" y="27" width="101" height="31" rx="10" fill="#1e314c" stroke="#bc9cfe77"/><text x="65" y="47" font-size="11" text-anchor="middle" font-weight="900" fill="#e4d2ff">3 ОТДЕЛА</text>'+
+   '<rect x="244" y="27" width="101" height="31" rx="10" fill="#382841" stroke="#ffa6aa77"/><text x="294" y="47" font-size="11" text-anchor="middle" font-weight="900" fill="#ffd9de">ОЧЕРЕДЬ 04</text></g></g>';
+ }else{
+  g='<g><rect x="15" y="73" width="330" height="136" rx="14" fill="#12483f" stroke="#7cd3c5" stroke-width="2"/>'+
+   '<path d="M22 195h315M22 114h315M180 73v136" stroke="#b9e8e3" stroke-opacity=".45" stroke-width="2"/>'+
+   '<rect x="50" y="85" width="260" height="100" rx="4" fill="#093529" stroke="#f7f4db" stroke-width="5"/>'+
+   '<path d="M136 185v-44q0-18 44-18t44 18v44" fill="none" stroke="#edf4db" stroke-opacity=".6" stroke-width="2"/>'+
+   Array.from({length:13},(_,i)=>'<path d="M'+(52+i*21)+' 86v96" stroke="#e2f5f0" stroke-opacity=".16"/>').join('')+
+   '<g filter="url(#shcard-shadow-'+k+')"><path d="M78 116l31-29M282 116l-31-29M180 133v31" stroke="#c6f4ff" stroke-width="6" stroke-linecap="round"/>'+
+   '<circle cx="180" cy="128" r="17" fill="#d5a88f" stroke="#fff4cc" stroke-width="2"/>'+
+   '<path d="M151 151q29-20 58 0l9 32h-76z" fill="#244f75" stroke="#65deff" stroke-width="2"/><path d="M157 160l-35 10m79-10 35 10" stroke="#b9e5ff" stroke-width="10" stroke-linecap="round"/></g>'+
+   '<circle cx="184" cy="192" r="12" fill="#ffefd2" stroke="#e6bb6c" stroke-width="3"/><path d="M177 190l7-4 7 4-3 8h-8z" fill="#3e4958"/>'+
+   '<path d="M184 192Q111 165 99 100" fill="none" stroke="#ffcd6c" stroke-width="4" stroke-dasharray="9 6"/>'+
+   '<circle cx="99" cy="100" r="13" fill="#fde19b" opacity=".5" filter="url(#shcard-glow-'+k+')"/>'+
+   '<g filter="url(#shcard-shadow-'+k+')"><rect x="24" y="25" width="148" height="36" rx="11" fill="#26394a" stroke="#eeca7775"/><text x="98" y="40" font-size="10" fill="#ffe5a8" font-weight="950" text-anchor="middle">3 ФАКТА · 2 РЕШЕНИЯ</text><text x="98" y="52" font-size="10" fill="#eaf4ff" font-weight="820" text-anchor="middle">1 ПЕНАЛЬТИ</text>'+
+   '<rect x="246" y="25" width="99" height="36" rx="11" fill="#3b3233" stroke="#f4ac9565"/><text x="295" y="41" font-size="11" fill="#fff1bf" font-weight="900" text-anchor="middle">АЛЕКСЕЙ</text><text x="295" y="53" font-size="9" fill="#f1c9ae" font-weight="850" text-anchor="middle">БОСС</text></g></g>';
+ }
+ var overlay='<rect x="0.8" y="0.8" width="358.4" height="222.4" rx="18" fill="none" stroke="'+t.accent+'" stroke-opacity=".45" stroke-width="1.6"/>'+
+  '<rect x="13" y="11" width="80" height="20" rx="8" fill="#071827cc" stroke="'+t.accent+'" stroke-opacity=".48"/>'+
+  '<text x="53" y="25" text-anchor="middle" font-size="10" font-weight="900" letter-spacing="1" fill="'+t.accent+'">● LIVE GAME</text>'+
+  '<rect x="281" y="11" width="65" height="20" rx="8" fill="#101c2b" stroke="#ffd98870"/>'+
+  '<text x="313" y="25" text-anchor="middle" font-size="10" font-weight="900" fill="#ffdf9d">★ XP</text>';
+ return '<svg xmlns="http://www.w3.org/2000/svg" class="shg-game-art-svg" viewBox="0 0 360 224" role="img" aria-label="'+t.name+' — игровая сцена" preserveAspectRatio="xMidYMid meet">'+D+
+  '<rect width="360" height="224" rx="18" fill="url(#shcard-bg-'+k+')"/>'+
+  '<circle cx="186" cy="113" r="135" fill="url(#shcard-light-'+k+')"/>'+
+  Array.from({length:15},(_,i)=>'<circle cx="'+((i*59+23)%349)+'" cy="'+((i*31+27)%205)+'" r="'+(i%3?1:2)+'" fill="#ffffff" opacity=".24"/>').join('')+
+  g+overlay+'</svg>';
+}
 function addStyle(){
   if(q('#shGameZoneStyle'))return;
   var s=document.createElement('style');s.id='shGameZoneStyle';
