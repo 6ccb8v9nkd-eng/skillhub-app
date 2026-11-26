@@ -143,7 +143,7 @@ function patchHome(){
   var card=[].slice.call(h.querySelectorAll('article')).find(function(x){return /поиграть|игров/i.test(x.textContent||'')});
   if(card){
     var p=card.querySelector('p'),b=card.querySelector('button');
-    if(p)p.textContent='Мини-игры SkillHub: негатив, скорость ответа и рабочие ситуации.';
+    if(p&&p.textContent!=='Мини-игры SkillHub: негатив, скорость ответа и рабочие ситуации.')p.textContent='Мини-игры SkillHub: негатив, скорость ответа и рабочие ситуации.';
     if(b&&!b.disabled){b.onclick=function(e){e.stopPropagation();openGameZone()};card.onclick=openGameZone}
   }
 }
