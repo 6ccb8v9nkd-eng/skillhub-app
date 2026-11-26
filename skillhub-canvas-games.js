@@ -134,7 +134,7 @@ function start(opts){
    var x=55+i*338,col=i===aim?'#f5cd73':'#6295b5',shade=i===aim?'#5a472dcc':'#1c2d42e6';
    glowRect(c,x,154,312,123,15,shade,col,i===aim?30:9);
    text(c,'0'+(i+1),x+22,177,14,col,900);
-   c.font='800 21px system-ui';var lines=fitLines(c,tennisCases[current].a[i],262,2);
+   c.font='800 21px system-ui';var lines=fitLines(c,tennisCases[Math.min(current,tennisCases.length-1)].a[i],262,2);
    lines.forEach((v,j)=>text(c,v,x+22,207+j*30,20,'#f6f7ff',800));
    if(i===aim){text(c,'● НАВЕДЕНО',x+289,176,11,'#ffe4a8',900,'right')}
   }
@@ -142,7 +142,7 @@ function start(opts){
   if(portrait&&portrait.complete&&portrait.naturalWidth){c.save();rr(c,72,36,79,79,22);c.clip();c.drawImage(portrait,72,36,79,79);c.restore()}else text(c,'😠',112,80,47,'#fff',900,'center');
   glowRect(c,175,34,870,92,18,'#17253bf5','#78a9bd88',6);
   text(c,'КЛИЕНТ АТАКУЕТ',197,55,12,'#f4bb74',900);
-  c.font='800 26px system-ui';fitLines(c,tennisCases[current].q,808,2).forEach((v,i)=>text(c,v,197,83+i*27,25,'#f9fbff',800));
+  c.font='800 26px system-ui';fitLines(c,tennisCases[Math.min(current,tennisCases.length-1)].q,808,2).forEach((v,i)=>text(c,v,197,83+i*27,25,'#f9fbff',800));
   // paddle and tennis ball
   c.save();c.shadowColor='#45d5f9';c.shadowBlur=33;glowRect(c,position-102,517,204,22,10,'#5ce0ff','#b7f7ff',21);glowRect(c,position-67,519,134,11,5,'#e8c77c','#fff5c1',13);c.restore();
   if(ball.trail.length){c.save();for(var q=0;q<ball.trail.length;q++){var t=ball.trail[q];c.globalAlpha=(q+1)/ball.trail.length*.36;c.fillStyle='#6edaff';c.beginPath();c.arc(t.x,t.y,ball.r*(q+1)/ball.trail.length,0,Math.PI*2);c.fill()}c.restore()}
@@ -151,7 +151,7 @@ function start(opts){
   drawFx();
  }
  function resetBall(){
-  aim=tennisCases[current].good===0?1:0;position=550;ball.x=280+Math.random()*540;ball.y=303;ball.vx=(Math.random()-.5)*95;ball.vy=190+current*17;ball.flying=false;ball.progress=0;ball.trail=[];roundDelay=0;updateControls();hud();
+  aim=tennisCases[current].good===0?1:0;position=550;ball.x=280+Math.random()*540;ball.y=303;ball.vx=(Math.random()-.5)*95;ball.vy=112+current*12;ball.flying=false;ball.progress=0;ball.trail=[];roundDelay=0;updateControls();hud();
  }
  function tennisResolve(good,hitX,miss){
   if(roundDelay>0||finished)return;
@@ -226,6 +226,7 @@ function start(opts){
     hud();
    }}
   }
+  hud();
   if(gameTime<=0||lives<=0||correct>=runnerTarget)gameOver();
  }
  function gameOver(){
