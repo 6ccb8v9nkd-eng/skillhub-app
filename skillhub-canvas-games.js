@@ -64,6 +64,27 @@ var tennisCases=[
  {q:'«Я вам жалобу напишу!»',a:['Не надо угрожать','Помогу и зафиксирую','Тогда я отказываюсь'],good:1,why:'Право на жалобу нужно уважать и продолжать помощь.'},
  {q:'«Что в итоге вы сделали по моему вопросу?»',a:['Всё написано выше','Читайте договор','Подытожу проверку и действия'],good:2,why:'Чёткое резюме помогает клиенту понять результат.'}
 ];
+
+var dispatchCases=[
+ {name:'Анна',q:'Нужна выписка за прошлый месяц',kind:0},
+ {name:'Максим',q:'Почему списалась комиссия?',kind:1},
+ {name:'Ирина',q:'Не дошёл перевод поставщику',kind:2},
+ {name:'Руслан',q:'Хочу скачать историю операций',kind:0},
+ {name:'София',q:'Как отключить платную подписку?',kind:1},
+ {name:'Марат',q:'Платёж отклонён, что делать?',kind:2},
+ {name:'Елена',q:'Нужен документ по движению денег',kind:0},
+ {name:'Олег',q:'Не согласен с платой за пакет',kind:1},
+ {name:'Диана',q:'Проверить статус перевода',kind:2},
+ {name:'Наталья',q:'Где посмотреть старые операции?',kind:0},
+ {name:'Тимур',q:'Два списания за сервис, помогите',kind:1},
+ {name:'Артур',q:'Деньги получателю не пришли',kind:2}
+];
+var departments=[
+ {label:'ВЫПИСКИ',color:'#7adcf1',sub:'История и справки'},
+ {label:'СПИСАНИЯ',color:'#efc778',sub:'Комиссии и услуги'},
+ {label:'ПЛАТЕЖИ',color:'#b7a2ff',sub:'Переводы и статус'}
+];
+
 var kinds=[
  {id:'refund',label:'ВОЗВРАТ',hint:'Средства вернулись',amt:'+ 1 200 ₽',color:'#5febc4',sign:'↩'},
  {id:'hold',label:'РЕЗЕРВ',hint:'Временная блокировка',amt:'− 1 200 ₽',color:'#f6c76d',sign:'◷'},
@@ -79,16 +100,16 @@ function fitLines(c,str,maxWidth,max){var words=str.split(/\s+/),out=[],line='';
 function stars(c,t){for(var i=0;i<45;i++){var x=(i*131+37)%W,y=(i*91+17)%H,a=.1+(.12+.09*Math.sin(t*1.3+i));c.fillStyle='rgba(188,218,255,'+a+')';c.fillRect(x,y,i%7?2:3,i%7?2:3)}}
 function start(opts){
  opts=opts||{};if(!opts.root)throw Error('Root missing');
- style();var mode=opts.mode==='runner'?'runner':'tennis',root=opts.root;
- var title=mode==='runner'?'Банковский раннер':'Клиентский теннис';
- var description=mode==='runner'?'Перестраивайся между полосами и собирай нужные операции. Ловушки отнимают жизни.':'Выбери правильный ответ и поймай мяч ракеткой. Держи доверие клиента.';
- var html='<section class="shcg"><div class="shcg-inner"><header class="shcg-head"><button type="button" class="shcg-back" id="shcgExit">← К играм</button><div class="shcg-logo">Skill<span>Hub</span><small class="shcg-sub">ARCADE · LIVE GAME</small></div><div class="shcg-headright"><button type="button" class="shcg-audio" id="shcgSound" title="Звуковые эффекты">♫ Вкл.</button><button type="button" class="shcg-pause" id="shcgPause">Ⅱ Пауза</button></div></header><div class="shcg-title"><div><h1>'+title+'</h1><p>'+description+'</p></div><span class="shcg-difficulty">⚡ ИГРОВОЙ РЕЖИМ</span></div><div class="shcg-stats"><div class="shcg-stat"><label>СЧЁТ</label><b id="shcgPoints">0 XP</b></div><div class="shcg-stat"><label>КОМБО</label><b id="shcgCombo">×0</b></div><div class="shcg-stat"><label>'+(mode==='tennis'?'ДОВЕРИЕ':'ЦЕЛЬ')+'</label><b id="shcgTrust">'+(mode==='tennis'?'48%':'0/12')+'</b></div><div class="shcg-stat"><label>ЖИЗНИ / ВРЕМЯ</label><b id="shcgLives">♥ ♥ ♥</b></div></div><div class="shcg-stage"><canvas id="shcgCanvas" width="1100" height="590" tabindex="0" role="img" aria-label="Игровое поле: управление мышью, касанием и клавиатурой"></canvas><div class="shcg-overlay" id="shcgOverlay"><div class="shcg-modal"><span class="shcg-badge">SKILLHUB · ARCADE</span><h2>'+title+'</h2><p>'+(mode==='tennis'?'Выбирай ответ кнопками снизу или клавишами 1–3. Передвигай ракетку мышью, пальцем или стрелками. <strong>Отбей летящий мяч</strong>!':'Лови только нужные банковские операции. <strong>Меняй дорожку</strong> стрелками ← →, A/D или касанием. Не собирай неверные записи!')+'</p><button type="button" class="shcg-cta" id="shcgStart">▶ Начать игру</button><button type="button" class="shcg-soft" id="shcgTraining">Полный тренажёр</button></div></div></div><div class="shcg-info"><div class="shcg-controls" id="shcgControls"></div><div class="shcg-hint" id="shcgHint"></div></div></div></section>';
+ style();var mode=['runner','tennis','football','dispatch'].includes(opts.mode)?opts.mode:'tennis',root=opts.root;
+ var title={runner:'Банковский раннер',tennis:'Клиентский теннис',football:'Футбольная дуэль',dispatch:'Чат-переполох'}[mode];
+ var description={runner:'Перестраивайся между полосами и собирай нужные операции. Ловушки отнимают жизни.',tennis:'Выбери правильный ответ и поймай мяч ракеткой. Держи доверие клиента.',football:'Выбери ответ Алексею, поймай силу удара и забей гол.',dispatch:'Распределяй сообщения по правильным стойкам. Перетаскивай обращения и спасай очередь.'}[mode];
+ var html='<section class="shcg"><div class="shcg-inner"><header class="shcg-head"><button type="button" class="shcg-back" id="shcgExit">← К играм</button><div class="shcg-logo">Skill<span>Hub</span><small class="shcg-sub">ARCADE · LIVE GAME</small></div><div class="shcg-headright"><button type="button" class="shcg-audio" id="shcgSound" title="Звуковые эффекты">♫ Вкл.</button><button type="button" class="shcg-pause" id="shcgPause">Ⅱ Пауза</button></div></header><div class="shcg-title"><div><h1>'+title+'</h1><p>'+description+'</p></div><span class="shcg-difficulty">⚡ ИГРОВОЙ РЕЖИМ</span></div><div class="shcg-stats"><div class="shcg-stat"><label>СЧЁТ</label><b id="shcgPoints">0 XP</b></div><div class="shcg-stat"><label>КОМБО</label><b id="shcgCombo">×0</b></div><div class="shcg-stat"><label>'+((mode==='tennis'||mode==='football')?'ДОВЕРИЕ':'ЦЕЛЬ')+'</label><b id="shcgTrust">'+((mode==='tennis'||mode==='football')?'48%':'0/12')+'</b></div><div class="shcg-stat"><label>ЖИЗНИ / ВРЕМЯ</label><b id="shcgLives">♥ ♥ ♥</b></div></div><div class="shcg-stage"><canvas id="shcgCanvas" width="1100" height="590" tabindex="0" role="img" aria-label="Игровое поле: управление мышью, касанием и клавиатурой"></canvas><div class="shcg-overlay" id="shcgOverlay"><div class="shcg-modal"><span class="shcg-badge">SKILLHUB · ARCADE</span><h2>'+title+'</h2><p>'+(({tennis:'Выбирай ответ клавишами 1–3. Двигай ракетку мышью или пальцем и <strong>отбивай мяч</strong>!',runner:'Лови нужные операции и <strong>меняй дорожку</strong> ← →, A/D или касанием.',football:'Выбирай ответ, затем <strong>бей по воротам</strong>, когда сила удара в зелёной зоне. Управление: 1–3 и пробел.',dispatch:'<strong>Перетащи обращение</strong> в подходящий отдел или нажми его кнопку. Спеши, клиенты ждут!'}[mode]))+'</p><button type="button" class="shcg-cta" id="shcgStart">▶ Начать игру</button><button type="button" class="shcg-soft" id="shcgTraining">Полный тренажёр</button></div></div></div><div class="shcg-info"><div class="shcg-controls" id="shcgControls"></div><div class="shcg-hint" id="shcgHint"></div></div></div></section>';
  root.innerHTML=html;
  var canvas=root.querySelector('#shcgCanvas'),c=canvas.getContext('2d');
  if(!c){root.querySelector('#shcgOverlay').innerHTML='<div class="shcg-modal"><h2>Игра недоступна</h2><p>Браузер не поддерживает Canvas 2D.</p><button class="shcg-cta" id="shcgBackFallback">К играм</button></div>';root.querySelector('#shcgBackFallback').onclick=opts.onExit;return function(){}}
  var overlay=root.querySelector('#shcgOverlay'),button=root.querySelector('#shcgPause'),soundBtn=root.querySelector('#shcgSound');
  var alive=true,playing=false,paused=false,finished=false,raf=0,last=0,time=0,score=0,combo=0,maxCombo=0,lives=3,hearts=3,correct=0,shot=0,trust=48,aim=0,position=550,keys={},effects=[],noise=0,audioEnabled=true,audioCtx=null;
- var current=0,ball={x:550,y:330,vx:100,vy:235,r:15,trail:[],flying:false,tx:0,ty:0,startX:0,startY:0,progress:0},roundDelay=0,msg='',msgGood=false,gameTime=48,runnerLane=1,spawnClock=.5,objects=[],mission=0,missionTimer=0,missionId=0,runnerTarget=12,ranAt=0;
+ var current=0,ball={x:550,y:330,vx:100,vy:235,r:15,trail:[],flying:false,tx:0,ty:0,startX:0,startY:0,progress:0},roundDelay=0,msg='',msgGood=false,gameTime=48,runnerLane=1,spawnClock=.5,objects=[],mission=0,missionTimer=0,missionId=0,runnerTarget=12,ranAt=0,kick={active:false,progress:0,tx:550,good:false,power:0},kickDelay=0,kickPower=.5,goalkeeper=550,dispatchTime=9,dispatchDelay=0,dispatchChoice=-1,dispatchDrag=false,dispatchDragX=550,dispatchDragY=440;
  var portrait=null;
  if(opts.portrait){portrait=new Image();portrait.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(opts.portrait)}
  function beep(ok){
@@ -101,7 +122,7 @@ function start(opts){
  function particles(x,y,color,n){for(var i=0;i<n;i++){var ang=Math.random()*Math.PI*2,v=60+Math.random()*220;effects.push({x:x,y:y,vx:Math.cos(ang)*v,vy:Math.sin(ang)*v,life:.6+Math.random()*.5,max:1,color:color,r:2+Math.random()*5})}}
  function updateFx(dt){for(var i=effects.length-1;i>=0;i--){var a=effects[i];a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=65*dt;a.life-=dt;if(a.life<=0)effects.splice(i,1)}}
  function drawFx(){for(var i=0;i<effects.length;i++){var p=effects[i];c.globalAlpha=clamp(p.life,0,1);c.shadowBlur=17;c.shadowColor=p.color;c.fillStyle=p.color;c.beginPath();c.arc(p.x,p.y,p.r*clamp(p.life,0,1),0,Math.PI*2);c.fill()}c.globalAlpha=1;c.shadowBlur=0}
- function hud(){root.querySelector('#shcgPoints').textContent=score.toLocaleString('ru-RU')+' XP';root.querySelector('#shcgCombo').textContent='×'+combo;root.querySelector('#shcgTrust').textContent=mode==='tennis'?trust+'%':correct+'/'+runnerTarget;root.querySelector('#shcgLives').textContent=(mode==='tennis'?'♥ '.repeat(Math.max(0,lives))+'♡ '.repeat(3-Math.max(0,lives)):'♥ '.repeat(Math.max(0,lives))+' · '+Math.max(0,Math.ceil(gameTime))+'с')}
+ function hud(){root.querySelector('#shcgPoints').textContent=score.toLocaleString('ru-RU')+' XP';root.querySelector('#shcgCombo').textContent='×'+combo;root.querySelector('#shcgTrust').textContent=(mode==='tennis'||mode==='football')?trust+'%':correct+'/'+runnerTarget;root.querySelector('#shcgLives').textContent=(mode==='tennis'||mode==='football'?'♥ '.repeat(Math.max(0,lives))+'♡ '.repeat(3-Math.max(0,lives)):'♥ '.repeat(Math.max(0,lives))+' · '+Math.max(0,Math.ceil(mode==='runner'?gameTime:dispatchTime))+'с')}
  function steer(l){runnerLane=clamp(l,0,2)}
  function updateControls(){
   var el=root.querySelector('#shcgControls');
