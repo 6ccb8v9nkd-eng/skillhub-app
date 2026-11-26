@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><title>SkillHub — Игровая зона</title><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#121419;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button{font:inherit}button:focus-visible{outline:2px solid #ffd21b}#page-games{min-height:100vh}</style><script src="./skillhub-canvas-games.js?v=20261126_canvas_v1"></script></head><body><main id="page-games"></main><script>/* SkillHub native game zone — 2026-11-26 */
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><title>SkillHub — Игровая зона</title><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#121419;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button{font:inherit}button:focus-visible{outline:2px solid #ffd21b}#page-games{min-height:100vh}</style><script src="./skillhub-canvas-games.js?v=20261126_canvas_v2"></script></head><body><main id="page-games"></main><script>/* SkillHub native game zone — 2026-11-26 */
 (function(){
 'use strict';
 var KEY='sh_game_best_arcade_v3', timer=null, cloudBest=null, cloudPlays=null, cloudLoading=false;
@@ -6,8 +6,8 @@ var KEY='sh_game_best_arcade_v3', timer=null, cloudBest=null, cloudPlays=null, c
 var games=[
 {id:'detective',title:'Банковский детектив',level:'Сложный',text:'Играй в настоящий банковский раннер: три дорожки, операции, бонусы и жизни.'},
 {id:'negative',title:'Негативный клиент',level:'Босс',text:'Отбивай претензии ракеткой! Выбирай ответ, лови мяч и удерживай доверие.'},
-{id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Чат-спринт с тремя клиентами. Полный ИИ-режим — отдельно.'},
-{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Сразись с Алексеем в текстовой разминке или поговори с ним голосом в ИИ-режиме.'}
+{id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Лови входящие обращения и распределяй по отделам. Полный ИИ-режим — отдельно.'},
+{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Забивай голы Алексею, выбирай ответы и силу удара. Голосовой ИИ — отдельно.'}
 ];
 var activeCleanup=null;
 function cleanup(){clearInterval(timer);timer=null;if(activeCleanup){var f=activeCleanup;activeCleanup=null;try{f()}catch(e){}}}
@@ -122,10 +122,10 @@ function gameHead(g,meta){return '<div class="shg-head"><button data-zone aria-l
 function renderZone(){
   cleanup();var p=ensurePage(),b=best(),html='';
   html+='<div class="shg"><div class="shg-top"><button data-close aria-label="Выйти в SkillHub">‹</button><div class="shg-brand">Skill<b>Hub</b></div><button data-info>ⓘ</button></div>';
-  html+='<div class="shg-hero"><div class="shg-hero-icon">🎮</div><h1>Игровая зона</h1><p>Настоящие аркады: теннис с клиентом и банковский раннер. А ещё быстрые чаты, голосовая разминка и полные тренажёры.</p><p id="shgInfo" hidden>Выбирай игру, проходи задания и улучшай личный результат.</p><div class="shg-career"><span>Сыграно режимов <b>'+games.filter(x=>b[x.id]!=null||arcadeBest(x.id)>0).length+' из '+games.length+'</b></span><span>Результат 85%+ <b>'+games.filter(x=>Math.max(Number(b[x.id]||0),arcadeBest(x.id))>=85).length+'</b></span></div></div>';
+  html+='<div class="shg-hero"><div class="shg-hero-icon">🎮</div><h1>Игровая зона</h1><p>Четыре настоящие мини-игры: теннис, банковский раннер, чат-переполох и футбольная дуэль. Профессиональные тренажёры — отдельно.</p><p id="shgInfo" hidden>Выбирай игру, проходи задания и улучшай личный результат.</p><div class="shg-career"><span>Сыграно режимов <b>'+games.filter(x=>b[x.id]!=null||arcadeBest(x.id)>0).length+' из '+games.length+'</b></span><span>Результат 85%+ <b>'+games.filter(x=>Math.max(Number(b[x.id]||0),arcadeBest(x.id))>=85).length+'</b></span></div></div>';
   html+='<div class="shg-carousel" id="shgCarousel">';
   games.forEach(function(g){
-    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><div class="shg-mode-actions"><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':g.id==='negative'?'Теннис ▶':g.id==='detective'?'Раннер ▶':'Аркада ▶')+'</button><button type="button" class="shg-pro" data-pro="'+g.id+'">Полный тренажёр</button></div><div class="shg-best">'+(arcadeBest(g.id)?'Аркада '+arcadeBest(g.id)+'%':'Аркада: первый забег')+(b[g.id]!=null?' · Тренажёр '+b[g.id]+'%':'')+'</div></article>';
+    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><div class="shg-mode-actions"><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':g.id==='negative'?'Теннис ▶':g.id==='detective'?'Раннер ▶':g.id==='multichat'?'Чат-аркада ▶':'Футбол ▶')+'</button><button type="button" class="shg-pro" data-pro="'+g.id+'">Полный тренажёр</button></div><div class="shg-best">'+(arcadeBest(g.id)?'Аркада '+arcadeBest(g.id)+'%':'Аркада: первый забег')+(b[g.id]!=null?' · Тренажёр '+b[g.id]+'%':'')+'</div></article>';
   });
   html+='</div><div class="shg-nav"><button data-prev aria-label="Предыдущая игра">‹</button><div class="shg-dots">'+games.map(function(g,i){return '<button data-dot="'+i+'" aria-label="'+esc(g.title)+'"><i class="'+(i===1?'on':'')+'"></i></button>'}).join('')+'</div><button data-next aria-label="Следующая игра">›</button></div></div>';
   p.innerHTML=html;
@@ -706,12 +706,13 @@ function arcadeRun(id){
 }
 function playPro(id){cleanup();if(id==='negative')boss();else if(id==='detective')detective();else if(id==='multichat')multichat();else if(id==='voice')voice()}
 function play(id){
- if(id==='negative'||id==='detective'){
-  cleanup();
-  if(window.SkillHubCanvasGames&&typeof window.SkillHubCanvasGames.start==='function'){
+ cleanup();
+ if(window.SkillHubCanvasGames&&typeof window.SkillHubCanvasGames.start==='function'){
+  var arcadeModes={negative:'tennis',detective:'runner',multichat:'dispatch',voice:'football'};
+  if(arcadeModes[id]){
    activeCleanup=window.SkillHubCanvasGames.start({
-    root:ensurePage(),mode:id==='negative'?'tennis':'runner',
-    portrait:id==='negative'?shaAlexeyPortrait('angry'):'',
+    root:ensurePage(),mode:arcadeModes[id],
+    portrait:(id==='negative'||id==='voice')?shaAlexeyPortrait('angry'):'',
     onExit:renderZone,onTraining:function(){playPro(id)},
     onSave:function(score){arcadeSave(id,score)},
     onRestart:function(){play(id)}
