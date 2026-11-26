@@ -601,7 +601,110 @@ function voice(){
  check();
 }
 
-function play(id){cleanup();if(id==='negative')boss();else if(id==='detective')detective();else if(id==='multichat')multichat();else if(id==='voice')voice()}
+
+/* Arcade-first game modes. Fast local rounds never send player text or scores to AI. */
+var arcadeCases={
+ detective:[
+ {q:'Клиент видит две строки по 1 200 ₽. Что НЕ является вторым списанием?',options:[['РЕЗЕРВ','−1 200 ₽ · Временно заблокировано'],['ОПЛАТА','−1 200 ₽ · Исполнено'],['ПЕРЕВОД','−900 ₽ · Исполнено']],ok:0,why:'Резерв — временная блокировка, а не второе окончательное списание.'},
+ {q:'Остаток уменьшился на 650 ₽. Найди фактическую причину.',options:[['СЕРВИС А','−650 ₽ · Исполнено'],['ПРОВЕРКА КАРТЫ','0 ₽ · Успешно'],['РЕЗЕРВ','−650 ₽ · Отменён']],ok:0,why:'Исполненная оплата сервиса А изменила остаток.'},
+ {q:'Платёж 4 800 ₽ отклонили. Какая строка показывает возврат резерва?',options:[['СОЗДАН РЕЗЕРВ','−4 800 ₽ · В обработке'],['ВОЗВРАТ РЕЗЕРВА','+4 800 ₽ · Исполнено'],['СТАРЫЙ ПЛАТЁЖ','−4 800 ₽ · Неделю назад']],ok:1,why:'Положительная запись о возврате резерва подтверждает его освобождение.'},
+ {q:'Клиент спорит из-за 290 ₽. Какая запись объясняет начисление?',options:[['КОМИССИЯ','−290 ₽ · Пакет B · Новый период'],['ПЕРЕВОД','−290 ₽ · Получателю'],['ПРОВЕРКА','0 ₽ · Авторизация']],ok:0,why:'Назначение «Пакет B» помогает найти основание списания в условиях услуги.'},
+ {q:'В похожих платежах нашёлся риск ошибки. На что смотреть в первую очередь?',options:[['ПОЛУЧАТЕЛЬ','Счёт …4187 вместо …4189'],['ДАТА','Обе записи сделаны сегодня'],['ЗНАЧОК','Одинаковые иконки платежей']],ok:0,why:'Различие в реквизитах требует проверки перед повторной отправкой.'},
+ {q:'В истории три события одной покупки. Что подтверждает одно списание?',options:[['ID ТРАНЗАКЦИИ','Один ID у резерва и оплаты'],['ДВЕ СТРОКИ','Два одинаковых числа'],['ЦВЕТ','Одинаковые цвета в истории']],ok:0,why:'Связанные события одного ID могут относиться к одному платежу.'}
+ ],
+ negative:[
+ {q:'Клиент: «Вы опять списали деньги! Вы вообще проверяли?!»',options:['«Понимаю ваше недовольство. Сейчас проверю операцию».','«Успокойтесь, ничего страшного».','«Это не моя проблема».'],ok:0,why:'Признание эмоции и конкретная проверка снижают напряжение.'},
+ {q:'Клиент: «Верните деньги прямо сейчас!»',options:['«Обязательно верну, даже не проверяя».','«Сначала сверю основание списания и расскажу о возможных действиях».','«Ничего не вернём».'],ok:1,why:'Нельзя обещать возврат без проверки.'},
+ {q:'Клиент: «Я уже третий раз рассказываю одно и то же!»',options:['«Расскажите всё ещё раз».','«Да, но так надо».','«Вижу, что вы повторяетесь. Кратко уточню детали и продолжу проверку».'],ok:2,why:'Сокращаем повторные вопросы и показываем, что слышим клиента.'},
+ {q:'Клиент: «Почему так долго?»',options:['«Назову следующий шаг и сообщу, если срок изменится».','«Ждите».','«Завтра точно всё решится».'],ok:0,why:'Ориентир и честное обновление лучше выдуманной гарантии.'},
+ {q:'Клиент: «Я напишу жалобу!»',options:['«Пишите, всё равно».','«Это ваше право. Я зафиксирую обращение и помогу с проверкой».','«Тогда я ничего проверять не буду».'],ok:1,why:'Угроза жалобы не должна мешать профессиональной помощи.'},
+ {q:'Клиент: «Ну и что в итоге вы сделали?»',options:['«Сами посмотрите в приложении».','«Ничего, просто поговорили».','«Проверил статус, объяснил причину и обозначил дальнейшие шаги».'],ok:2,why:'Конкретное резюме помогает завершить разговор.'}
+ ],
+ voice:[
+ {q:'Алексей: «Блин, деньги исчезли! Вы там что, в лотерею играете?!»',options:['«Понимаю, что это тревожно. Давайте проверим операцию».','«Не кричите».','«Скорее всего, сами виноваты».'],ok:0,why:'Сначала признать проблему, потом перейти к проверке.'},
+ {q:'Алексей: «Да какого хрена у меня два списания?!»',options:['«Всё нормально, не переживайте».','«Проверю, не является ли одна строка резервом».','«Так и должно быть».'],ok:1,why:'Нужно отличить резервирование от реального повторного списания.'},
+ {q:'Алексей: «У меня нет времени! Что вы конкретно делаете?»',options:['«Обязательно решу за минуту».','«Сейчас разберусь, потом скажу».','«Сверяю статус и дату операции, после этого назову следующий шаг».'],ok:2,why:'Короткое объяснение действия полезнее пустого обещания.'},
+ {q:'Алексей: «Ваш бот мне уже десять раз это писал!»',options:['«Не буду повторять шаблон. Проверим конкретно ваше обращение».','«Тогда зачем звоните?»','«Следуйте инструкции бота».'],ok:0,why:'Персональный следующий шаг помогает выйти из тупика.'},
+ {q:'Алексей: «Значит, деньги всё-таки вернутся сегодня?»',options:['«Да, гарантирую».','«Уточню подтверждённый статус и сроки, не буду обещать без данных».','«Наверное».'],ok:1,why:'Не называем гарантированный срок без подтверждения.'},
+ {q:'Алексей: «Ладно. Скажите коротко, что теперь?»',options:['«Читайте договор».','«Дальше сами разберётесь».','«Подытожу проверенное и объясню одно ближайшее действие».'],ok:2,why:'Понятный итог и один конкретный шаг завершают разговор.'}
+ ]
+};
+function arcadeBest(id){try{return Number(JSON.parse(localStorage.getItem(storeKey())||'{}')['arcade_'+id]||0)}catch(_){return 0}}
+function arcadeSave(id,n){try{var b=JSON.parse(localStorage.getItem(storeKey())||'{}')||{};b['arcade_'+id]=Math.max(Number(b['arcade_'+id]||0),Math.round(n));localStorage.setItem(storeKey(),JSON.stringify(b))}catch(_){}}
+function arcadeRun(id){
+ cleanup();
+ var g=games.find(x=>x.id===id);if(!g)return;
+ var rounds=id==='multichat'?chatCases.flatMap(c=>c.turns.map(t=>({q:t.q,options:t.a,ok:t.ok,why:'В ответе важно помочь с вопросом и не давать непроверенных обещаний.',client:c.name}))):arcadeCases[id];
+ if(!rounds||!rounds.length)return;
+ var current=0,points=0,correct=0,streak=0,bestStreak=0,speed=0,trust=48,answering=false,remaining=12,endAt=0,stopped=false,resetRound=null;
+ var heading={detective:'Охота за уликами',negative:'Победи недовольство',multichat:'Чат-спринт',voice:'Разминка с Алексеем'}[id];
+ function hud(){
+  return '<div class="sharc-hud"><span class="sharc-round">РАУНД <b id="sharcRound">1/'+rounds.length+'</b></span><span class="sharc-points">★ <b id="sharcPoints">0</b> XP</span><span class="sharc-streak">⚡ <b id="sharcCombo">0</b> комбо</span></div>'+
+   '<div class="sharc-progress">'+rounds.map((_,i)=>'<i data-sharc-progress="'+i+'"></i>').join('')+'</div>';
+ }
+ function makePage(){
+  var intro=id==='voice'?'Быстрая текстовая разминка. Для настоящего голосового ИИ-звонка выбери «Полный тренажёр».':id==='multichat'?'Шесть коротких ответов трём клиентам. Здесь не нужно писать длинные сообщения.':id==='detective'?'Находи нужную операцию в ленте, не читай длинные досье.':'Ответь клиенту, пока не истекло время. Береги доверие.';
+  var html='<div class="sharc-shell" data-arcade="'+id+'"><div class="sharc-title"><span class="sharc-eyebrow">МИССИЯ НА СКОРОСТЬ · '+rounds.length+' РАУНДОВ</span><h3>'+heading+'</h3><p>'+intro+'</p></div>'+hud()+
+  '<div class="sharc-arena"><div class="sharc-arena-top"><span id="sharcSubhead">ПОИСК РЕШЕНИЯ</span><span class="sharc-clock">⏱ <b id="sharcClock">12</b> с</span></div><div class="sharc-timebar"><i id="sharcTimebar"></i></div><div id="sharcCharacter"></div><h4 id="sharcQuestion"></h4><div id="sharcOptions" class="sharc-options"></div><div id="sharcResponse" aria-live="polite"></div></div>'+
+  '<div class="sharc-footer"><span id="sharcFooter">Быстро выбирай, но проверяй факты.</span><button type="button" id="sharcExit">К играм</button></div></div>';
+  var p=shell(id,'Аркада · короткий режим',html);p.querySelector('.shg-view').classList.add('sharc-view');
+  p.querySelector('.shg-panel').classList.add('sharc-panel');
+  p.querySelector('#sharcExit').onclick=renderZone;
+  return p;
+ }
+ var p=makePage();
+ function stopClock(){clearInterval(timer);timer=null}
+ function renderHud(){
+  p.querySelector('#sharcRound').textContent=(current+1)+'/'+rounds.length;
+  p.querySelector('#sharcPoints').textContent=points;
+  p.querySelector('#sharcCombo').textContent=streak;
+  p.querySelectorAll('[data-sharc-progress]').forEach((e,i)=>{e.classList.toggle('done',i<current);e.classList.toggle('active',i===current)});
+ }
+ function gameOver(){
+  stopClock();stopped=true;
+  var pct=Math.max(0,Math.min(100,Math.round((correct/rounds.length)*85+(speed/(rounds.length*12))*15)));
+  arcadeSave(id,pct);
+  var previous=arcadeBest(id);
+  var grade=pct>=90?'Легенда смены':pct>=70?'Отличный забег':pct>=50?'Хорошая попытка':'Новый забег — новые очки';
+  var result='<div class="sharc-summary"><div class="sharc-award">🏆</div><div class="sharc-eyebrow">МИССИЯ ЗАВЕРШЕНА</div><div class="sharc-score">'+pct+'<small>%</small></div><h3>'+grade+'</h3><p>Верных решений: '+correct+' из '+rounds.length+' · Лучшее комбо: '+bestStreak+' · Очки: '+points+' XP</p><div class="sharc-record">Личный рекорд аркады: '+previous+'%</div><div class="sharc-result-actions"><button type="button" id="sharcAgain">Играть ещё ▶</button><button type="button" id="sharcPro">Полный тренажёр</button><button type="button" id="sharcHome">К играм</button></div><p class="sharc-disclaimer">Аркадный результат хранится в этом браузере отдельно от оценок ИИ и профессиональных тренажёров.</p></div>';
+  p=shell(id,'Результат аркады',result);p.querySelector('.shg-view').classList.add('sharc-view');p.querySelector('.shg-panel').classList.add('sharc-panel');p.querySelector('#sharcAgain').onclick=()=>arcadeRun(id);p.querySelector('#sharcPro').onclick=()=>playPro(id);p.querySelector('#sharcHome').onclick=renderZone;
+ }
+ function resolve(choice,timeout){
+  if(stopped||answering)return;answering=true;stopClock();
+  var round=rounds[current],good=choice===round.ok;
+  if(good){correct++;streak++;bestStreak=Math.max(streak,bestStreak);speed+=Math.max(0,remaining);var earn=100+streak*25+Math.max(0,remaining)*10;points+=earn}
+  else streak=0;
+  if(id==='negative'||id==='voice')trust=Math.min(100,Math.max(0,trust+(good?11:-13)));
+  p.querySelectorAll('[data-choice]').forEach((b,i)=>{b.disabled=true;b.classList.toggle('correct',i===round.ok);b.classList.toggle('wrong',i===choice&&!good)});
+  p.querySelector('#sharcClock').textContent=String(remaining);
+  var response=p.querySelector('#sharcResponse');
+  response.innerHTML='<div class="sharc-feedback '+(good?'good':'bad')+'"><strong>'+(good?'★ '+(streak>=2?'КОМБО x'+streak:'ТОЧНО В ЦЕЛЬ'):timeout?'ВРЕМЯ ВЫШЛО':'ЕСТЬ ОШИБКА')+'</strong><p>'+esc(round.why)+'</p><button type="button" id="sharcContinue">'+(current+1>=rounds.length?'Результат →':'Дальше →')+'</button></div>';
+  p.querySelector('#sharcContinue').onclick=()=>{current++;if(current>=rounds.length)gameOver();else renderRound()};
+  p.querySelector('#sharcPoints').textContent=points;p.querySelector('#sharcCombo').textContent=streak;
+  p.querySelector('#sharcFooter').textContent=good?'Верное решение! Держи серию.':'Попробуй следующую ситуацию.';
+ }
+ function renderRound(){
+  answering=false;remaining=12;renderHud();var round=rounds[current],opts=p.querySelector('#sharcOptions'),visual=p.querySelector('#sharcCharacter');
+  p.querySelector('#sharcResponse').innerHTML='';
+  p.querySelector('#sharcQuestion').textContent=round.q;
+  p.querySelector('#sharcSubhead').textContent=id==='detective'?'ОПЕРАЦИИ · НАЙДИ НУЖНУЮ':id==='multichat'?'ВХОДЯЩИЕ СООБЩЕНИЯ':id==='negative'?'КЛИЕНТ НА ВЗВОДЕ':'АЛЕКСЕЙ НА ЛИНИИ';
+  if(id==='voice')visual.innerHTML='<div class="sharc-client"><div class="sharc-portrait '+(trust<50?'angry':trust>=75?'calm':'doubtful')+'">'+shaAlexeyPortrait(trust<50?'angry':trust>=75?'calm':'doubtful')+'</div><div><b>Алексей</b><small>Настроение: '+(trust<40?'злится':trust<70?'напряжён':'успокаивается')+'</small><div class="sharc-trust"><i style="width:'+trust+'%"></i></div></div></div>';
+  else if(id==='negative')visual.innerHTML='<div class="sharc-client"><span class="sharc-boss-icon">😠</span><div><b>Недовольный клиент</b><small>Доверие '+trust+'%</small><div class="sharc-trust"><i style="width:'+trust+'%"></i></div></div></div>';
+  else if(id==='multichat')visual.innerHTML='<div class="sharc-chat-queue">'+chatCases.map(x=>'<span class="'+(x.name===round.client?'active':'')+'">'+esc(x.name)+'</span>').join('')+'</div>';
+  else visual.innerHTML='<div class="sharc-detective-sign">◈ ОПЕРАЦИОННАЯ ЛЕНТА <span>УЧЕБНЫЕ ДАННЫЕ</span></div>';
+  var choices=round.options.map((v,i)=>({v,i})).sort(()=>Math.random()-.5);
+  opts.innerHTML=choices.map(x=>'<button type="button" data-choice="'+x.i+'" class="sharc-choice">'+(id==='detective'?'<span class="sharc-op-icon">▤</span><span><strong>'+esc(x.v[0])+'</strong><small>'+esc(x.v[1])+'</small></span><span class="sharc-choice-arrow">›</span>':'<span class="sharc-choice-arrow">›</span><span>'+esc(x.v)+'</span>')+'</button>').join('');
+  opts.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>resolve(Number(b.dataset.choice),false));
+  var start=Date.now(),duration=12000;endAt=start+duration;
+  p.querySelector('#sharcClock').textContent='12';p.querySelector('#sharcTimebar').style.width='100%';
+  stopClock();
+  timer=setInterval(()=>{if(answering||stopped)return;var left=Math.max(0,endAt-Date.now());remaining=Math.ceil(left/1000);p.querySelector('#sharcClock').textContent=remaining;p.querySelector('#sharcTimebar').style.width=(left/duration*100)+'%';if(left<=0)resolve(-1,true)},100);
+ }
+ renderRound();
+}
+function playPro(id){cleanup();if(id==='negative')boss();else if(id==='detective')detective();else if(id==='multichat')multichat();else if(id==='voice')voice()}
+function play(id){arcadeRun(id)}
+
 
 
 window.shGameCleanup=cleanup;window.addEventListener('pagehide',cleanup);
