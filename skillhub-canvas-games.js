@@ -45,6 +45,8 @@ function style(){
  '.shcg-answer:disabled{cursor:default;opacity:.65}',
  '.shcg-steer{display:flex;gap:7px;justify-content:center}',
  '.shcg-steer button{min-width:58px;min-height:59px;border:1px solid #91c8df6b;background:#22526b6b;color:#d7f5ff;font-size:25px;font-weight:900;border-radius:13px;touch-action:manipulation;cursor:pointer}',
+ '.shcg-shot{min-width:155px;min-height:62px;border:1px solid #ffdf9b;background:linear-gradient(120deg,#ffdd88,#e8a942);color:#2d200d;font-size:16px;font-weight:950;border-radius:13px;box-shadow:0 9px 25px #f6ca6c29;cursor:pointer}',
+ '.shcg-shot:disabled{opacity:.6;cursor:default}',
  '.shcg-mission{font-weight:850;color:#ffe29d;font-size:14px;flex:1;min-width:170px}',
  '.shcg-mission small{display:block;color:#aac3d9;font-size:11px;margin-bottom:3px;letter-spacing:1px}',
  '.shcg-alert{font-size:12px;color:#bfdeec;flex:1;min-width:170px}',
@@ -381,32 +383,54 @@ function start(opts){
 
  function gameOver(){
   if(finished||!alive)return;finished=true;playing=false;paused=false;root.querySelector('#shcgPause').disabled=true;
-  var pct=mode==='tennis'?Math.round(correct/tennisCases.length*100):Math.round(clamp(correct/runnerTarget,0,1)*100);
+  var pct=mode==='tennis'||mode==='football'?Math.round(correct/tennisCases.length*100):Math.round(clamp(correct/runnerTarget,0,1)*100);
   if(typeof opts.onSave==='function')opts.onSave(pct);
-  var win=mode==='tennis'?correct>=4&&lives>0:correct>=runnerTarget;
+  var win=mode==='tennis'||mode==='football'?correct>=4&&lives>0:correct>=runnerTarget;
   overlay.hidden=false;
-  overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">МИССИЯ ЗАВЕРШЕНА</span><h2>'+(win?'🏆 Победа!':'⚡ Новый рекорд ждёт!')+'</h2><div class="shcg-resultscore">'+pct+'%</div><p>'+(mode==='tennis'?'Точных отбиваний: '+correct+' из '+tennisCases.length+'. Доверие клиента: '+trust+'%.':'Верных операций: '+correct+'. Смена закончена, но каждую новую игру можно пройти лучше.')+'</p><div class="shcg-finalstats"><span>★ '+score+' XP</span><span>⚡ Комбо ×'+maxCombo+'</span><span>♥ '+Math.max(0,lives)+' жизни</span></div><button id="shcgAgain" class="shcg-cta">▶ Сыграть ещё раз</button><button id="shcgTrain" class="shcg-soft">Полный тренажёр</button><button id="shcgHome" class="shcg-soft">К игровым режимам</button></div>';
+  overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">МИССИЯ ЗАВЕРШЕНА</span><h2>'+(win?'🏆 Победа!':'⚡ Новый рекорд ждёт!')+'</h2><div class="shcg-resultscore">'+pct+'%</div><p>'+(mode==='tennis'?'Точных отбиваний: '+correct+' из '+tennisCases.length+'. Доверие клиента: '+trust+'%.':mode==='football'?'Забито голов: '+correct+' из '+tennisCases.length+'. Доверие Алексея: '+trust+'%.':mode==='dispatch'?'Правильно распределено обращений: '+correct+' из '+dispatchCases.length+'.':'Верных операций: '+correct+'. Смена закончена, но каждую новую игру можно пройти лучше.')+'</p><div class="shcg-finalstats"><span>★ '+score+' XP</span><span>⚡ Комбо ×'+maxCombo+'</span><span>♥ '+Math.max(0,lives)+' жизни</span></div><button id="shcgAgain" class="shcg-cta">▶ Сыграть ещё раз</button><button id="shcgTrain" class="shcg-soft">Полный тренажёр</button><button id="shcgHome" class="shcg-soft">К игровым режимам</button></div>';
   overlay.querySelector('#shcgAgain').onclick=opts.onRestart||function(){start(opts)};
   overlay.querySelector('#shcgTrain').onclick=opts.onTraining;
   overlay.querySelector('#shcgHome').onclick=opts.onExit;
  }
  function pause(){if(!alive||finished)return;paused=true;playing=false;button.textContent='▶ Продолжить';overlay.hidden=false;overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">ПАУЗА</span><h2>Игра на паузе</h2><p>Продолжишь с того же места. Очки и жизни сохраняются.</p><button type="button" class="shcg-cta" id="shcgResume">▶ Продолжить игру</button><button type="button" class="shcg-soft" id="shcgLeave">К играм</button></div>';overlay.querySelector('#shcgResume').onclick=resume;overlay.querySelector('#shcgLeave').onclick=opts.onExit}
  function resume(){if(!alive||finished)return;paused=false;playing=true;overlay.hidden=true;button.textContent='Ⅱ Пауза';last=performance.now();canvas.focus({preventScroll:true})}
- function begin(){if(!alive)return;playing=true;paused=false;finished=false;overlay.hidden=true;button.disabled=false;last=performance.now();current=0;time=0;score=0;combo=0;correct=0;trust=48;lives=3;gameTime=48;runnerLane=1;spawnClock=.7;mission=0;missionTimer=0;objects=[];effects=[];if(mode==='tennis')resetBall();else updateControls();hud();canvas.focus({preventScroll:true})}
+ function begin(){if(!alive)return;playing=true;paused=false;finished=false;overlay.hidden=true;button.disabled=false;last=performance.now();current=0;time=0;score=0;combo=0;correct=0;trust=48;lives=3;gameTime=48;runnerLane=1;spawnClock=.7;mission=0;missionTimer=0;objects=[];effects=[];kick.active=false;kickDelay=0;kickPower=.5;dispatchTime=9;dispatchDelay=0;dispatchChoice=-1;dispatchDrag=false;aim=0;if(mode==='tennis')resetBall();else updateControls();hud();canvas.focus({preventScroll:true})}
  function pointer(e){
-  if(!playing||paused)return;
-  var b=canvas.getBoundingClientRect();var x=clamp((e.clientX-b.left)*W/b.width,0,W);if(mode==='tennis')position=clamp(x,112,988);else steer(clamp(Math.floor(x/W*3),0,2));
+  if(!playing||paused||finished)return;
+  var b=canvas.getBoundingClientRect(),x=clamp((e.clientX-b.left)*W/b.width,0,W),y=clamp((e.clientY-b.top)*H/b.height,0,H);
+  if(mode==='tennis')position=clamp(x,112,988);
+  else if(mode==='runner')steer(clamp(Math.floor(x/W*3),0,2));
+  else if(mode==='dispatch'&&dispatchDrag){dispatchDragX=x;dispatchDragY=y}
+ }
+ function onDown(e){
+  if(!playing||paused||finished)return;
+  var b=canvas.getBoundingClientRect(),x=clamp((e.clientX-b.left)*W/b.width,0,W),y=clamp((e.clientY-b.top)*H/b.height,0,H);
+  if(mode==='dispatch'&&dispatchDelay<=0&&y>=340&&y<=545){dispatchDrag=true;dispatchDragX=x;dispatchDragY=y;if(canvas.setPointerCapture)try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
+  else if(mode==='dispatch'&&y>=135&&y<=330)dispatchChoose(clamp(Math.floor(x/W*3),0,2));
+  else if(mode==='football'&&y>160&&y<350&&!kick.active&&kickDelay<=0){aim=clamp(Math.floor(x/W*3),0,2);updateControls()}
+  else pointer(e);
+ }
+ function onPointerUp(e){
+  if(!playing||paused||finished||mode!=='dispatch'||!dispatchDrag)return;
+  var b=canvas.getBoundingClientRect(),x=clamp((e.clientX-b.left)*W/b.width,0,W);
+  dispatchDrag=false;dispatchChoose(clamp(Math.floor(x/W*3),0,2));
  }
  function onKey(e){
   if(!alive||!playing||paused||finished)return;
-  if(['ArrowLeft','ArrowRight','Space','Digit1','Digit2','Digit3','KeyA','KeyD'].includes(e.code)){e.preventDefault()}
+  if(['ArrowLeft','ArrowRight','Space','Digit1','Digit2','Digit3','KeyA','KeyD'].includes(e.code))e.preventDefault();
   keys[e.code]=true;
-  if(mode==='tennis'){if(/^Digit[123]$/.test(e.code)&&roundDelay<=0&&!ball.flying){aim=Number(e.code.slice(-1))-1;updateControls()}}
-  else if(e.code==='ArrowLeft'||e.code==='KeyA')steer(runnerLane-1);else if(e.code==='ArrowRight'||e.code==='KeyD')steer(runnerLane+1);else if(/^Digit[123]$/.test(e.code))steer(Number(e.code.slice(-1))-1);
+  if(mode==='tennis'||mode==='football'){
+   if(/^Digit[123]$/.test(e.code)&&roundDelay<=0&&!ball.flying&&!kick.active&&kickDelay<=0){aim=Number(e.code.slice(-1))-1;updateControls()}
+   if(mode==='football'&&e.code==='Space')shoot();
+  }else if(mode==='runner'){
+   if(e.code==='ArrowLeft'||e.code==='KeyA')steer(runnerLane-1);
+   else if(e.code==='ArrowRight'||e.code==='KeyD')steer(runnerLane+1);
+   else if(/^Digit[123]$/.test(e.code))steer(Number(e.code.slice(-1))-1);
+  }else if(mode==='dispatch'&&/^Digit[123]$/.test(e.code))dispatchChoose(Number(e.code.slice(-1))-1);
  }
  function onUp(e){keys[e.code]=false}
  function onVisibility(){if(document.hidden&&playing)pause()}
- canvas.addEventListener('pointermove',pointer);canvas.addEventListener('pointerdown',pointer);
+ canvas.addEventListener('pointermove',pointer);canvas.addEventListener('pointerdown',onDown);canvas.addEventListener('pointerup',onPointerUp);canvas.addEventListener('pointercancel',onPointerUp);
  window.addEventListener('keydown',onKey);window.addEventListener('keyup',onUp);document.addEventListener('visibilitychange',onVisibility);
  root.querySelector('#shcgExit').onclick=opts.onExit;
  root.querySelector('#shcgStart').onclick=begin;
@@ -417,14 +441,14 @@ function start(opts){
  function tick(now){
   if(!alive)return;var dt=clamp((now-(last||now))/1000,0,.05);last=now;time+=dt*.8;
   c.clearRect(0,0,W,H);
-  if(playing&&!paused&&!finished){if(mode==='tennis')updateTennis(dt);else updateRunner(dt);updateFx(dt)}
-  if(mode==='tennis')drawTennis();else drawRunner();
+  if(playing&&!paused&&!finished){if(mode==='tennis')updateTennis(dt);else if(mode==='runner')updateRunner(dt);else if(mode==='football')updateFootball(dt);else updateDispatch(dt);updateFx(dt)}
+  if(mode==='tennis')drawTennis();else if(mode==='runner')drawRunner();else if(mode==='football')drawFootball();else drawDispatch();
   raf=requestAnimationFrame(tick);
  }
  fit();updateControls();hud();raf=requestAnimationFrame(tick);
  return function stop(){
   if(!alive)return;alive=false;cancelAnimationFrame(raf);window.removeEventListener('resize',fit);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onUp);document.removeEventListener('visibilitychange',onVisibility);
-  if(resizeObserver)resizeObserver.disconnect();canvas.removeEventListener('pointermove',pointer);canvas.removeEventListener('pointerdown',pointer);if(audioCtx){audioCtx.close().catch(function(){});audioCtx=null}
+  if(resizeObserver)resizeObserver.disconnect();canvas.removeEventListener('pointermove',pointer);canvas.removeEventListener('pointerdown',onDown);canvas.removeEventListener('pointerup',onPointerUp);canvas.removeEventListener('pointercancel',onPointerUp);if(audioCtx){audioCtx.close().catch(function(){});audioCtx=null}
  };
 }
 window.SkillHubCanvasGames={start:start,version:'1.0'};
