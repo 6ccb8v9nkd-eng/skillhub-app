@@ -4,10 +4,10 @@
 var KEY='sh_game_best_arcade_v3', timer=null, cloudBest=null, cloudPlays=null, cloudLoading=false;
 
 var games=[
-{id:'detective',title:'Банковский детектив',level:'Сложный',text:'Изучи документы, найди улику и раскрой причину проблемы.'},
-{id:'negative',title:'Негативный клиент',level:'Босс',text:'Пройди живой диалог: каждое решение меняет настроение клиента.'},
-{id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Веди три живых диалога с ИИ. Пиши ответы сам и успей помочь каждому.'},
-{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Позвони Алексею: живой голосовой ИИ-клиент и разбор твоих ответов.'}
+{id:'detective',title:'Банковский детектив',level:'Сложный',text:'За 12 секунд найди нужную операцию. Никаких длинных досье в аркаде!'},
+{id:'negative',title:'Негативный клиент',level:'Босс',text:'Отбивай жалобы быстрыми ответами и удерживай доверие клиента.'},
+{id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Чат-спринт с тремя клиентами. Полный ИИ-режим — отдельно.'},
+{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Сразись с Алексеем в текстовой разминке или поговори с ним голосом в ИИ-режиме.'}
 ];
 var activeCleanup=null;
 function cleanup(){clearInterval(timer);timer=null;if(activeCleanup){var f=activeCleanup;activeCleanup=null;try{f()}catch(e){}}}
@@ -121,16 +121,17 @@ function gameHead(g,meta){return '<div class="shg-head"><button data-zone aria-l
 function renderZone(){
   cleanup();var p=ensurePage(),b=best(),html='';
   html+='<div class="shg"><div class="shg-top"><button data-close aria-label="Выйти в SkillHub">‹</button><div class="shg-brand">Skill<b>Hub</b></div><button data-info>ⓘ</button></div>';
-  html+='<div class="shg-hero"><div class="shg-hero-icon">🎮</div><h1>Игровая зона</h1><p>Прокачивай рабочие навыки в коротких мини-играх. Листай карточки и выбирай свой вызов.</p><p id="shgInfo" hidden>Выбирай игру, проходи задания и улучшай личный результат.</p><div class="shg-career"><span>Сыграно режимов <b>'+games.filter(x=>b[x.id]!=null).length+' из '+games.length+'</b></span><span>Результат 85%+ <b>'+games.filter(x=>Number(b[x.id]||0)>=85).length+'</b></span></div></div>';
+  html+='<div class="shg-hero"><div class="shg-hero-icon">🎮</div><h1>Игровая зона</h1><p>Шесть быстрых раундов, очки и комбо. Или выбирай полный тренажёр с рабочим сценарием.</p><p id="shgInfo" hidden>Выбирай игру, проходи задания и улучшай личный результат.</p><div class="shg-career"><span>Сыграно режимов <b>'+games.filter(x=>b[x.id]!=null).length+' из '+games.length+'</b></span><span>Результат 85%+ <b>'+games.filter(x=>Number(b[x.id]||0)>=85).length+'</b></span></div></div>';
   html+='<div class="shg-carousel" id="shgCarousel">';
   games.forEach(function(g){
-    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':'Играть ▶')+'</button><div class="shg-best">'+(b[g.id]!=null?'Лучший результат '+b[g.id]+'%'+(cloudPlays?.[g.id]?' · Игр: '+cloudPlays[g.id]:''):'Сыграй впервые')+'</div></article>';
+    html+='<article class="shg-card" data-id="'+g.id+'"><div class="shg-art">'+gameArt(g.id)+'</div><span class="shg-tag">'+(g.level==='Босс'?'♛ ':'')+esc(g.level)+'</span><h2>'+esc(g.title)+'</h2><p>'+esc(g.text)+'</p><div class="shg-mode-actions"><button class="shg-play" data-play="'+g.id+'" '+(g.disabled?'disabled':'')+'>'+(g.disabled?'Скоро':'Аркада ▶')+'</button><button type="button" class="shg-pro" data-pro="'+g.id+'">Полный тренажёр</button></div><div class="shg-best">'+(arcadeBest(g.id)?'Аркада '+arcadeBest(g.id)+'%':'Аркада: первый забег')+(b[g.id]!=null?' · Тренажёр '+b[g.id]+'%':'')+'</div></article>';
   });
   html+='</div><div class="shg-nav"><button data-prev aria-label="Предыдущая игра">‹</button><div class="shg-dots">'+games.map(function(g,i){return '<button data-dot="'+i+'" aria-label="'+esc(g.title)+'"><i class="'+(i===1?'on':'')+'"></i></button>'}).join('')+'</div><button data-next aria-label="Следующая игра">›</button></div></div>';
   p.innerHTML=html;
   p.querySelector('[data-close]').onclick=closeGameZone;
   p.querySelector('[data-info]').onclick=function(){var x=q('#shgInfo');if(x)x.hidden=!x.hidden};
   p.querySelectorAll('[data-play]').forEach(function(x){x.onclick=function(){play(x.dataset.play)}});
+   p.querySelectorAll('[data-pro]').forEach(function(x){x.onclick=function(){playPro(x.dataset.pro)}});
   var c=q('#shgCarousel');
   function mark(){
     var cards=[].slice.call(c.children),center=c.scrollLeft+c.clientWidth/2,ix=0,d=1e9;
@@ -675,7 +676,7 @@ function arcadeRun(id){
   if(good){correct++;streak++;bestStreak=Math.max(streak,bestStreak);speed+=Math.max(0,remaining);var earn=100+streak*25+Math.max(0,remaining)*10;points+=earn}
   else streak=0;
   if(id==='negative'||id==='voice')trust=Math.min(100,Math.max(0,trust+(good?11:-13)));
-  p.querySelectorAll('[data-choice]').forEach((b,i)=>{b.disabled=true;b.classList.toggle('correct',i===round.ok);b.classList.toggle('wrong',i===choice&&!good)});
+  p.querySelectorAll('[data-choice]').forEach(b=>{var i=Number(b.dataset.choice);b.disabled=true;b.classList.toggle('correct',i===round.ok);b.classList.toggle('wrong',i===choice&&!good)});
   p.querySelector('#sharcClock').textContent=String(remaining);
   var response=p.querySelector('#sharcResponse');
   response.innerHTML='<div class="sharc-feedback '+(good?'good':'bad')+'"><strong>'+(good?'★ '+(streak>=2?'КОМБО x'+streak:'ТОЧНО В ЦЕЛЬ'):timeout?'ВРЕМЯ ВЫШЛО':'ЕСТЬ ОШИБКА')+'</strong><p>'+esc(round.why)+'</p><button type="button" id="sharcContinue">'+(current+1>=rounds.length?'Результат →':'Дальше →')+'</button></div>';
