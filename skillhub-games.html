@@ -288,13 +288,13 @@ function detective(step,total){
   count.textContent=seen.size+' / 4';progress.style.width=(seen.size/4*100)+'%';progress.parentNode.setAttribute('aria-valuenow',String(seen.size));
   solve.disabled=seen.size<2||solved;solve.textContent='Проверить гипотезу · '+seen.size+'/4';
   p.querySelector('#shdPrev').disabled=current===0;p.querySelector('#shdNext').disabled=current===3;refreshNotebook();
-  if(scroll&&window.innerWidth<800){
+  if(scroll){
    p.querySelector('.shd-stage').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
  }
  p.querySelectorAll('[data-evidence]').forEach(b=>b.onclick=()=>showEvidence(Number(b.dataset.evidence),true));
- p.querySelector('#shdPrev').onclick=()=>showEvidence(current-1,false);
- p.querySelector('#shdNext').onclick=()=>showEvidence(current+1,false);
+ p.querySelector('#shdPrev').onclick=()=>showEvidence(current-1,true);
+ p.querySelector('#shdNext').onclick=()=>showEvidence(current+1,true);
  pinButton.onclick=()=>{if(pinned.has(current))pinned.delete(current);else pinned.add(current);refreshNotebook()};
  p.querySelector('#shdHint').onclick=function(){
   var el=p.querySelector('#shdHintText'),willOpen=el.hidden;el.hidden=!willOpen;
