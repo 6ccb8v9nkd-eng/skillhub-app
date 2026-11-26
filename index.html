@@ -136,6 +136,7 @@ function closeGames(){
  try{if(frame&&frame.contentWindow&&typeof frame.contentWindow.shGameCleanup==='function')frame.contentWindow.shGameCleanup()}catch(_){}
  overlay.remove();overlay=null;frame=null;document.body.style.overflow=oldOverflow;
  if(previousFocus&&previousFocus.isConnected)try{previousFocus.focus({preventScroll:true})}catch(_){}
+  window.dispatchEvent(new Event('skillhub-games-closed'));
 }
 window.shCloseGames=closeGames;
 window.shArcadeChatAI=async function(body){
@@ -153,6 +154,15 @@ window.shArcadeChatAI=async function(body){
  }finally{clearTimeout(timeout)}
 };
 
+window.shArcadeProfileKey=function(){try{return String(S.profile?.id||S.profile?.login||'guest')}catch(_){return 'guest'}};
+window.shArcadeProgress=async function(body){
+ if(!overlay||!frame||!frame.isConnected)throw new Error('Игровая зона закрыта.');
+ if(typeof S==='undefined'||!S.sb||!S.profile?.active)throw new Error('Войдите в SkillHub.');
+ if(!body||!['list','save'].includes(body.action))throw new Error('Недоступная операция.');
+ const {data,error}=await S.sb.functions.invoke('arcade-progress',{body:JSON.parse(JSON.stringify(body))});
+ if(error||!data||data.error)throw new Error(data?.error||'Не удалось сохранить игровой прогресс.');
+ return data;
+};
 window.shArcadeVoiceAI=async function(body){
  if(!overlay||!frame||!frame.isConnected)throw new Error('Игровая зона закрыта.');
  if(typeof S==='undefined'||!S.sb||!S.profile?.active||!['employee','mentor','rs','tech_admin'].includes(S.profile.role))throw new Error('Войдите в SkillHub для тренировки.');
@@ -171,7 +181,7 @@ window.shArcadeVoiceAI=async function(body){
 window.shOpenGames=function(){
  if(overlay)return;
  previousFocus=document.activeElement;oldOverflow=document.body.style.overflow;
- overlay=document.createElement('div');overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Игровая зона');
+ overlay=document.createElement('div');overlay.id='shGamesOverlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Игровая зона');
  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#121419;display:flex;flex-direction:column;overflow:hidden;';
  var top=document.createElement('div');top.style.cssText='display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex:none;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;border-bottom:1px solid #ffffff15;background:#121419;color:#fff;';
  var close=document.createElement('button');close.type='button';close.setAttribute('aria-label','Выйти из игровой зоны');close.textContent='‹ Назад';close.style.cssText='justify-self:start;position:relative;z-index:2;min-height:40px;padding:0 12px;border:1px solid #ffffff30;background:#ffffff10;border-radius:12px;color:#fff;font:700 15px system-ui;cursor:pointer;touch-action:manipulation;';close.addEventListener('click',closeGames);
