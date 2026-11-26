@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><title>SkillHub — Игровая зона</title><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#121419;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button{font:inherit}button:focus-visible{outline:2px solid #ffd21b}#page-games{min-height:100vh}</style><script src="./skillhub-canvas-games.js?v=20261126_canvas_v3"></script></head><body><main id="page-games"></main><script>/* SkillHub native game zone — 2026-11-26 */
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><title>SkillHub — Игровая зона</title><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#121419;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button{font:inherit}button:focus-visible{outline:2px solid #ffd21b}#page-games{min-height:100vh}</style><script src="./skillhub-canvas-games.js?v=20261126_canvas_v4"></script></head><body><main id="page-games"></main><script>/* SkillHub native game zone — 2026-11-26 */
 (function(){
 'use strict';
 var KEY='sh_game_best_arcade_v3', timer=null, cloudBest=null, cloudPlays=null, cloudLoading=false;
@@ -7,7 +7,7 @@ var games=[
 {id:'detective',title:'Банковский детектив',level:'Сложный',text:'Играй в настоящий банковский раннер: три дорожки, операции, бонусы и жизни.'},
 {id:'negative',title:'Негативный клиент',level:'Босс',text:'Отбивай претензии ракеткой! Выбирай ответ, лови мяч и удерживай доверие.'},
 {id:'multichat',title:'Чат на максималках',level:'Сложный',text:'Лови входящие обращения и распределяй по отделам. Полный ИИ-режим — отдельно.'},
-{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Забивай голы Алексею, выбирай ответы и силу удара. Голосовой ИИ — отдельно.'}
+{id:'voice',title:'Голосовой поединок',level:'Босс',text:'Два решения по банковскому кейсу — затем пенальти с Алексеем. Голосовой ИИ — отдельно.'}
 ];
 var activeCleanup=null;
 function cleanup(){clearInterval(timer);timer=null;if(activeCleanup){var f=activeCleanup;activeCleanup=null;try{f()}catch(e){}}}
