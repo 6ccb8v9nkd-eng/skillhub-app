@@ -384,10 +384,12 @@ function start(opts){
   for(var k=0;k<18;k++){var x=94+k*52;c.beginPath();c.moveTo(x,175);c.lineTo(x,375);c.stroke()}
   for(var k=0;k<8;k++){var y=188+k*26;c.beginPath();c.moveTo(88,y);c.lineTo(1010,y);c.stroke()}
   for(var i=0;i<3;i++){
-   var x=105+i*299,color=i===aim?'#ffd47f':'#80b2d6',bg=i===aim?'#806129b5':'#152f4fc2';
-   glowRect(c,x,188,280,138,13,bg,color,i===aim?28:8);
-   text(c,'ЗОНА '+(i+1),x+18,213,12,color,900);
-   c.font='800 20px system-ui';fitLines(c,tennisCases[Math.min(current,5)].a[i],246,3).forEach((v,j)=>text(c,v,x+18,247+j*28,19,'#f8fafd',900));
+   var focused=footballPhase===2?i===aim:i===footballPhase;
+   var x=105+i*299,color=focused?'#ffd47f':'#80b2d6',bg=focused?'#806129b5':'#152f4fc2';
+   glowRect(c,x,188,280,138,13,bg,color,focused?28:8);
+   text(c,footballPhase===2?'НАПРАВЛЕНИЕ '+(i+1):'ЭТАП '+(i+1),x+18,213,12,color,900);
+   var targets=footballPhase===2?['ЛЕВЫЙ УГОЛ','ПО ЦЕНТРУ','ПРАВЫЙ УГОЛ']:['АНАЛИЗ ФАКТОВ','ТАКТИКА ОТВЕТА','УДАР ПО ВОРОТАМ'];
+   c.font='800 20px system-ui';fitLines(c,targets[i],246,2).forEach((v,j)=>text(c,v,x+18,250+j*28,19,'#f8fafd',900));
   }
   // goalkeeper movement is intentionally visible and game-like
   var gx=goalkeeper;
@@ -402,7 +404,7 @@ function start(opts){
   if(portrait&&portrait.complete&&portrait.naturalWidth){c.save();rr(c,62,27,77,77,20);c.clip();c.drawImage(portrait,62,27,77,77);c.restore()}else text(c,'😏',101,66,42,'#fff',900,'center');
   glowRect(c,165,22,878,86,16,'#152438ed','#7ba9c877',7);
   text(c,'АЛЕКСЕЙ АТАКУЕТ',184,40,12,'#ffca7e',950);
-  c.font='800 25px system-ui';fitLines(c,tennisCases[Math.min(current,5)].q,828,2).forEach((v,j)=>text(c,v,184,69+j*26,24,'#f8faff',850));
+  c.font='800 25px system-ui';fitLines(c,footballCases[Math.min(current,footballCases.length-1)].client,828,2).forEach((v,j)=>text(c,v,184,69+j*26,24,'#f8faff',850));
   // shooting ball, curve + glowing accuracy meter
   var bx=550,by=503;
   if(kick.active){
@@ -411,28 +413,51 @@ function start(opts){
   }
   c.save();c.shadowColor='#ffe29a';c.shadowBlur=25;c.fillStyle='#fff4cf';c.beginPath();c.arc(bx,by,kick.active?14-5*kick.progress:23,0,Math.PI*2);c.fill();c.strokeStyle='#5d6e77';c.lineWidth=3;c.stroke();text(c,'★',bx,by,15,'#384d5f',900,'center');c.restore();
   glowRect(c,350,548,400,25,12,'#071625bd','#b3cbe766',4);
-  c.fillStyle='#3fdf9675';c.fillRect(350+400*.35,553,400*.48,15);
+  var tolerance=footballErrors===0?.28:footballErrors===1?.22:.16,powerLow=.58-tolerance,powerHigh=.58+tolerance;
+  c.fillStyle='#3fdf9675';c.fillRect(350+400*powerLow,553,400*(powerHigh-powerLow),15);
   c.fillStyle='#f4d27b';c.fillRect(350,553,clamp(kickPower,0,1)*400,15);
   c.save();c.shadowColor='#ffe4a6';c.shadowBlur=18;c.fillStyle='#fff4bc';c.fillRect(348+clamp(kickPower,0,1)*400,545,5,31);c.restore();
-  text(c,'СИЛА УДАРА · ЛОВИ ЗЕЛЁНУЮ ЗОНУ',550,536,12,'#e8f2ff',850,'center');
+  text(c,footballPhase===2?'СИЛА УДАРА · ЛОВИ ЗЕЛЁНУЮ ЗОНУ':'РАЗБЕРИ ДЕЛО — ЗАТЕМ ПЕНАЛЬТИ',550,536,12,'#e8f2ff',850,'center');
   if(kickDelay>0){glowRect(c,365,419,370,56,13,msgGood?'#16513fe8':'#5c2f3beb',msgGood?'#74f2bd':'#ff9a99',23);text(c,msg,550,447,23,'#fff',900,'center')}
   drawFx();
  }
  function shoot(){
-  if(mode!=='football'||!playing||paused||finished||kick.active||kickDelay>0)return;
-  kick={active:true,progress:0,tx:228+322*aim,power:kickPower,good:aim===tennisCases[current].good&&kickPower>=.35&&kickPower<=.83};
+  if(mode!=='football'||!playing||paused||finished||footballPhase!==2||kick.active||kickDelay>0)return;
+  var tolerance=footballErrors===0?.28:footballErrors===1?.22:.16;
+  var farFromKeeper=Math.abs((228+322*aim)-goalkeeper)>110;
+  kick={active:true,progress:0,tx:228+322*aim,power:kickPower,good:Math.abs(kickPower-.58)<=tolerance&&farFromKeeper};
   beep(true);
   var b=root.querySelector('#shcgKick');if(b)b.disabled=true;
  }
  function updateFootball(dt){
-  goalkeeper=550+140*Math.sin(time*1.75);
-  if(kickDelay>0){kickDelay-=dt;if(kickDelay<=0){current++;if(current>=tennisCases.length||lives<=0)gameOver();else{aim=(current+1)%3;kick.active=false;kickDelay=0;updateControls();hud()}}return}
+  goalkeeper=550+190*Math.sin(time*1.75);
+  if(kickDelay>0){
+   kickDelay-=dt;
+   if(kickDelay<=0){
+    current++;
+    if(current>=footballCases.length||lives<=0)gameOver();
+    else{
+     aim=1;kick.active=false;kickDelay=0;footballPhase=0;footballAnswered=false;footballTried=false;footballErrors=0;footballNote='';footballChoice=-1;
+     updateControls();hud();
+    }
+   }
+   return;
+  }
   if(!kick.active){kickPower=(Math.sin(time*3.6)+1)/2;return}
   kick.progress+=dt*1.18;
   if(kick.progress>=1){
-   kick.active=false;var good=kick.good;
-   if(good){correct++;combo++;maxCombo=Math.max(combo,maxCombo);trust=clamp(trust+12,0,100);score+=240+combo*75;msg='⚽ ГОООЛ! +'+(240+combo*75)+' XP';particles(kick.tx,280,'#7cffbe',38)}
-   else{lives--;combo=0;trust=clamp(trust-13,0,100);msg=kick.power<.35||kick.power>.83?'СИЛА УДАРА ПОДВЕЛА!':'СЕЙВ АЛЕКСЕЯ!';particles(kick.tx,280,'#fa929c',30)}
+   kick.active=false;
+   var good=kick.good;
+   if(good){
+    correct++;combo++;maxCombo=Math.max(combo,maxCombo);trust=clamp(trust+9,0,100);
+    var earn=240+combo*75+Math.max(0,100-footballErrors*30);score+=earn;
+    msg='⚽ ГОООЛ! +'+earn+' XP';particles(kick.tx,280,'#7cffbe',38);
+   }else{
+    lives--;combo=0;trust=clamp(trust-8,0,100);
+    var tolerance=footballErrors===0?.28:footballErrors===1?.22:.16;
+    msg=Math.abs(kick.power-.58)>tolerance?'СИЛА УДАРА ПОДВЕЛА!':'ВРАТАРЬ ОТРАЗИЛ УДАР!';
+    particles(kick.tx,280,'#fa929c',30);
+   }
    msgGood=good;kickDelay=1.65;beep(good);hud();
   }
  }
@@ -489,18 +514,18 @@ function start(opts){
 
  function gameOver(){
   if(finished||!alive)return;finished=true;playing=false;paused=false;root.querySelector('#shcgPause').disabled=true;
-  var pct=mode==='tennis'||mode==='football'?Math.round(correct/tennisCases.length*100):Math.round(clamp(correct/runnerTarget,0,1)*100);
+  var pct=mode==='football'?Math.round((correct/footballCases.length)*70+(footballFirstTry/(footballCases.length*2))*30):mode==='tennis'?Math.round(correct/tennisCases.length*100):Math.round(clamp(correct/runnerTarget,0,1)*100);
   if(typeof opts.onSave==='function')opts.onSave(pct);
-  var win=mode==='tennis'||mode==='football'?correct>=4&&lives>0:correct>=runnerTarget;
+  var win=mode==='tennis'?correct>=4&&lives>0:mode==='football'?correct>=4&&lives>0:correct>=runnerTarget;
   overlay.hidden=false;
-  overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">МИССИЯ ЗАВЕРШЕНА</span><h2>'+(win?'🏆 Победа!':'⚡ Новый рекорд ждёт!')+'</h2><div class="shcg-resultscore">'+pct+'%</div><p>'+(mode==='tennis'?'Точных отбиваний: '+correct+' из '+tennisCases.length+'. Доверие клиента: '+trust+'%.':mode==='football'?'Забито голов: '+correct+' из '+tennisCases.length+'. Доверие Алексея: '+trust+'%.':mode==='dispatch'?'Правильно распределено обращений: '+correct+' из '+dispatchCases.length+'.':'Верных операций: '+correct+'. Смена закончена, но каждую новую игру можно пройти лучше.')+'</p><div class="shcg-finalstats"><span>★ '+score+' XP</span><span>⚡ Комбо ×'+maxCombo+'</span><span>♥ '+Math.max(0,lives)+' жизни</span></div><button id="shcgAgain" class="shcg-cta">▶ Сыграть ещё раз</button><button id="shcgTrain" class="shcg-soft">Полный тренажёр</button><button id="shcgHome" class="shcg-soft">К игровым режимам</button></div>';
+  overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">МИССИЯ ЗАВЕРШЕНА</span><h2>'+(win?'🏆 Победа!':'⚡ Новый рекорд ждёт!')+'</h2><div class="shcg-resultscore">'+pct+'%</div><p>'+(mode==='tennis'?'Точных отбиваний: '+correct+' из '+tennisCases.length+'. Доверие клиента: '+trust+'%.':mode==='football'?'Забито голов: '+correct+' из '+footballCases.length+'. Решений с первого раза: '+footballFirstTry+' из '+(footballCases.length*2)+'. Доверие Алексея: '+trust+'%.':mode==='dispatch'?'Правильно распределено обращений: '+correct+' из '+dispatchCases.length+'.':'Верных операций: '+correct+'. Смена закончена, но каждую новую игру можно пройти лучше.')+'</p><div class="shcg-finalstats"><span>★ '+score+' XP</span><span>⚡ Комбо ×'+maxCombo+'</span><span>♥ '+Math.max(0,lives)+' жизни</span></div><button id="shcgAgain" class="shcg-cta">▶ Сыграть ещё раз</button><button id="shcgTrain" class="shcg-soft">Полный тренажёр</button><button id="shcgHome" class="shcg-soft">К игровым режимам</button></div>';
   overlay.querySelector('#shcgAgain').onclick=opts.onRestart||function(){start(opts)};
   overlay.querySelector('#shcgTrain').onclick=opts.onTraining;
   overlay.querySelector('#shcgHome').onclick=opts.onExit;
  }
  function pause(){if(!alive||finished)return;paused=true;playing=false;button.textContent='▶ Продолжить';overlay.hidden=false;overlay.innerHTML='<div class="shcg-modal"><span class="shcg-badge">ПАУЗА</span><h2>Игра на паузе</h2><p>Продолжишь с того же места. Очки и жизни сохраняются.</p><button type="button" class="shcg-cta" id="shcgResume">▶ Продолжить игру</button><button type="button" class="shcg-soft" id="shcgLeave">К играм</button></div>';overlay.querySelector('#shcgResume').onclick=resume;overlay.querySelector('#shcgLeave').onclick=opts.onExit}
  function resume(){if(!alive||finished)return;paused=false;playing=true;overlay.hidden=true;button.textContent='Ⅱ Пауза';last=performance.now();canvas.focus({preventScroll:true})}
- function begin(){if(!alive)return;try{if(audioEnabled&&!audioCtx&&(window.AudioContext||window.webkitAudioContext))audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(_){}playing=true;paused=false;finished=false;overlay.hidden=true;button.disabled=false;last=performance.now();current=0;time=0;score=0;combo=0;correct=0;trust=48;lives=3;gameTime=48;runnerLane=1;spawnClock=.7;mission=0;missionTimer=0;objects=[];effects=[];kick.active=false;kickDelay=0;kickPower=.5;dispatchTime=9;dispatchDelay=0;dispatchChoice=-1;dispatchDrag=false;aim=0;if(mode==='tennis')resetBall();else updateControls();hud();canvas.focus({preventScroll:true})}
+ function begin(){if(!alive)return;try{if(audioEnabled&&!audioCtx&&(window.AudioContext||window.webkitAudioContext))audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(_){}playing=true;paused=false;finished=false;overlay.hidden=true;button.disabled=false;last=performance.now();current=0;time=0;score=0;combo=0;correct=0;trust=48;lives=3;gameTime=48;runnerLane=1;spawnClock=.7;mission=0;missionTimer=0;objects=[];effects=[];kick.active=false;kickDelay=0;kickPower=.5;footballPhase=0;footballAnswered=false;footballTried=false;footballErrors=0;footballFirstTry=0;footballSolved=0;footballNote='';footballChoice=-1;dispatchTime=9;dispatchDelay=0;dispatchChoice=-1;dispatchDrag=false;aim=0;if(mode==='tennis')resetBall();else updateControls();hud();canvas.focus({preventScroll:true})}
  function pointer(e){
   if(!playing||paused||finished)return;
   var b=canvas.getBoundingClientRect(),x=clamp((e.clientX-b.left)*W/b.width,0,W),y=clamp((e.clientY-b.top)*H/b.height,0,H);
@@ -513,7 +538,7 @@ function start(opts){
   var b=canvas.getBoundingClientRect(),x=clamp((e.clientX-b.left)*W/b.width,0,W),y=clamp((e.clientY-b.top)*H/b.height,0,H);
   if(mode==='dispatch'&&dispatchDelay<=0&&y>=340&&y<=545){dispatchDrag=true;dispatchDragX=x;dispatchDragY=y;if(canvas.setPointerCapture)try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
   else if(mode==='dispatch'&&y>=135&&y<=330)dispatchChoose(clamp(Math.floor(x/W*3),0,2));
-  else if(mode==='football'&&y>160&&y<350&&!kick.active&&kickDelay<=0){aim=clamp(Math.floor(x/W*3),0,2);updateControls()}
+  else if(mode==='football'&&footballPhase===2&&y>160&&y<350&&!kick.active&&kickDelay<=0){aim=clamp(Math.floor(x/W*3),0,2);updateControls()}
   else pointer(e);
  }
  function onPointerUp(e){
@@ -526,8 +551,8 @@ function start(opts){
   if(['ArrowLeft','ArrowRight','Space','Digit1','Digit2','Digit3','KeyA','KeyD'].includes(e.code))e.preventDefault();
   keys[e.code]=true;
   if(mode==='tennis'||mode==='football'){
-   if(/^Digit[123]$/.test(e.code)&&roundDelay<=0&&!ball.flying&&!kick.active&&kickDelay<=0){aim=Number(e.code.slice(-1))-1;updateControls()}
-   if(mode==='football'&&e.code==='Space')shoot();
+   if(mode==='football'){if(/^Digit[123]$/.test(e.code)){if(footballPhase<2)footballPick(Number(e.code.slice(-1))-1);else if(!kick.active&&kickDelay<=0){aim=Number(e.code.slice(-1))-1;updateControls()}}if(e.code==='Space')shoot()}
+   else if(/^Digit[123]$/.test(e.code)&&roundDelay<=0&&!ball.flying){aim=Number(e.code.slice(-1))-1;updateControls()}
   }else if(mode==='runner'){
    if(e.code==='ArrowLeft'||e.code==='KeyA')steer(runnerLane-1);
    else if(e.code==='ArrowRight'||e.code==='KeyD')steer(runnerLane+1);
